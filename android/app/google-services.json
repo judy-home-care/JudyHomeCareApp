@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "847259151598",
+    "project_id": "judy-home-healthcare",
+    "storage_bucket": "judy-home-healthcare.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:847259151598:android:a5c7c507a0f8fec028d7ff",
+        "android_client_info": {
+          "package_name": "com.example.judy_home_healthcare"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQFnwD-r3ltQdaMdjrKprmat3Uw8hIqBg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
