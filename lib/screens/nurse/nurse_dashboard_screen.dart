@@ -141,7 +141,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
       }
       
       // Refresh notification count on app resume
-      _loadUnreadNotificationCount();
+      _notificationService.refreshBadge();
     } else if (state == AppLifecycleState.paused) {
       _isScreenVisible = false;
       _lastVisibleTime = DateTime.now();
@@ -172,15 +172,11 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   /// Load unread notification count (only called once on init and resume)
   Future<void> _loadUnreadNotificationCount() async {
     try {
-      final response = await _notificationService.getUnreadCount();
-      if (mounted) {
-        setState(() {
-          _unreadNotificationCount = response.unreadCount;
-        });
-        debugPrint('📊 [Nurse Dashboard] Initial notification count loaded: ${response.unreadCount}');
-      }
+      // Just call refreshBadge() - it updates BOTH count AND badge
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [Nurse Dashboard] Badge refreshed and count updated');
     } catch (e) {
-      debugPrint('❌ [Nurse Dashboard] Error loading unread count: $e');
+      debugPrint('❌ [Nurse Dashboard] Error refreshing badge: $e');
     }
   }
 
@@ -188,8 +184,9 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   void _openNotificationsSheet() async {
     await showNotificationsSheet(context);
     
-    // Refresh count after closing (in case user marked as read)
-    _loadUnreadNotificationCount();
+    // Refresh badge after closing
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Nurse Dashboard] Badge refreshed after closing notifications');
   }
 
   // ==================== END NOTIFICATION UPDATES ====================
@@ -948,6 +945,8 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
       } else {
         debugPrint('📦 Using cached data (valid for ${_getRemainingCacheTime()})');
       }
+      
+      _notificationService.refreshBadge(); 
       
       // Always sync timer if running
       if (_isTimerRunning) {

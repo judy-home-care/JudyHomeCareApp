@@ -1,6 +1,6 @@
 // lib/services/notification_service.dart
-// UPDATED VERSION - Battery Optimized with FCM
-// FIXED: APNS token handling for iOS
+// UPDATED VERSION - WITH iOS BADGE MANAGEMENT
+// FIXED: App badge icon now properly syncs with notification count
 
 import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -11,7 +11,7 @@ import '../utils/api_config.dart';
 import '../models/notification/notification_models.dart';
 
 /// Service for handling Push Notifications and Notification API calls
-/// OPTIMIZED for battery life and data usage
+/// ✅ NOW INCLUDES: iOS Badge Management
 class NotificationService {
   // Singleton pattern
   static final NotificationService _instance = NotificationService._internal();
@@ -32,8 +32,6 @@ class NotificationService {
   // ==================== INITIALIZATION ====================
 
   /// Initialize notification service
-  /// 
-  /// This should be called once when the app starts
   Future<void> initialize() async {
     try {
       debugPrint('🔔 [NotificationService] Initializing notification service...');
@@ -47,8 +45,11 @@ class NotificationService {
       // Get and register FCM token (with iOS APNS fix)
       await _initializeFcm();
 
-      // Set up message handlers (KEY: This is what makes it real-time!)
+      // Set up message handlers
       _setupMessageHandlers();
+
+      // ✅ CRITICAL: Clear badge when app opens
+      await _clearBadgeOnStartup();
 
       debugPrint('✅ [NotificationService] Notification service initialized successfully');
     } catch (e) {
@@ -62,7 +63,7 @@ class NotificationService {
     try {
       NotificationSettings settings = await _firebaseMessaging.requestPermission(
         alert: true,
-        badge: true,
+        badge: true, // ✅ Essential for badge management
         sound: true,
         provisional: false,
       );
@@ -86,7 +87,7 @@ class NotificationService {
 
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
-      requestBadgePermission: true,
+      requestBadgePermission: true, // ✅ Enable badge permission
       requestSoundPermission: true,
     );
 
@@ -118,7 +119,6 @@ class NotificationService {
   }
 
   /// Initialize FCM and register token
-  /// FIXED: Now properly handles APNS token on iOS
   Future<void> _initializeFcm() async {
     try {
       // iOS-specific: Wait for APNS token before getting FCM token
@@ -174,20 +174,21 @@ class NotificationService {
       });
     } catch (e) {
       debugPrint('💥 [NotificationService] FCM initialization error: $e');
-      // Don't rethrow - allow app to continue even if FCM fails
     }
   }
 
-  /// Set up message handlers - THIS IS KEY FOR REAL-TIME UPDATES!
+  /// Set up message handlers
   void _setupMessageHandlers() {
-    // ⚡ CRITICAL: Handle foreground messages (app is open)
-    // This eliminates the need for constant polling!
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    // ⚡ Handle foreground messages (app is open)
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       debugPrint('📨 [NotificationService] Foreground message received');
-      _handleForegroundMessage(message);
       
-      // Update badge count in real-time
-      _refreshNotificationCount();
+      // Show local notification (without badge management)
+      await _showLocalNotification(message);
+      
+      // ✅ CRITICAL FIX: Wait a tiny bit then update badge with correct count
+      await Future.delayed(const Duration(milliseconds: 100));
+      await _refreshNotificationCount();
     });
 
     // Handle notification tap when app is in background
@@ -203,20 +204,72 @@ class NotificationService {
     _checkInitialMessage();
   }
 
-  /// Refresh notification count and notify listeners
-  /// This is battery-efficient because it's event-driven, not polling!
+  /// Clear badge when app starts
+  /// ✅ CRITICAL FIX: This syncs the badge with actual unread count
+  Future<void> _clearBadgeOnStartup() async {
+    try {
+      debugPrint('🔄 [NotificationService] Syncing badge with backend count...');
+      
+      // Get actual unread count from backend
+      final response = await getUnreadCount();
+      
+      // Update badge to match backend count
+      await _updateBadge(response.unreadCount);
+      
+      debugPrint('✅ [NotificationService] Badge synced: ${response.unreadCount}');
+    } catch (e) {
+      debugPrint('❌ [NotificationService] Error syncing badge: $e');
+      // If sync fails, clear badge to be safe
+      await _updateBadge(0);
+    }
+  }
+
+  /// Refresh notification count and update badge
+  /// ✅ KEY FIX: Now also updates iOS badge
   Future<void> _refreshNotificationCount() async {
     try {
       final response = await getUnreadCount();
+      final unreadCount = response.unreadCount;
+      
+      // Update iOS badge
+      await _updateBadge(unreadCount);
       
       // Notify any listeners (like the dashboard)
       if (onNotificationCountChanged != null) {
-        onNotificationCountChanged!(response.unreadCount);
+        onNotificationCountChanged!(unreadCount);
       }
       
-      debugPrint('🔄 [NotificationService] Badge count updated: ${response.unreadCount}');
+      debugPrint('🔄 [NotificationService] Badge count updated: $unreadCount');
     } catch (e) {
       debugPrint('❌ [NotificationService] Error refreshing count: $e');
+    }
+  }
+
+  /// Update iOS app badge
+  Future<void> _updateBadge(int count) async {
+    try {
+      if (!kIsWeb && Platform.isIOS) {
+        // Set the badge number SILENTLY
+        final DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+          presentBadge: true,
+          badgeNumber: count,
+          presentAlert: false,   // ✅ Don't show alert
+          presentSound: false,   // ✅ Don't play sound
+          presentBanner: false,  // ✅ Don't show banner
+        );
+
+        // This updates the badge without showing a notification or playing sound
+        await _localNotifications.show(
+          -1, // Use -1 as a special ID for badge-only updates
+          null,
+          null,
+          NotificationDetails(iOS: iosDetails),
+        );
+
+        debugPrint('📱 [NotificationService] iOS badge set to: $count (silent)');
+      }
+    } catch (e) {
+      debugPrint('❌ [NotificationService] Error updating badge: $e');
     }
   }
 
@@ -287,7 +340,7 @@ class NotificationService {
 
     const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
       presentAlert: true,
-      presentBadge: true,
+      presentBadge: false, 
       presentSound: true,
     );
 
@@ -385,6 +438,7 @@ class NotificationService {
   }
 
   /// Mark notification as read
+  /// ✅ NOW UPDATES BADGE
   Future<MarkReadResponse> markNotificationAsRead(int notificationId) async {
     try {
       final response = await _apiClient.post(
@@ -393,8 +447,8 @@ class NotificationService {
       );
 
       if (response['success'] == true) {
-        // Refresh count after marking as read
-        _refreshNotificationCount();
+        // Refresh count and badge after marking as read
+        await _refreshNotificationCount();
         return MarkReadResponse.fromJson(response);
       } else {
         throw NotificationException(
@@ -411,6 +465,7 @@ class NotificationService {
   }
 
   /// Mark all notifications as read
+  /// ✅ NOW CLEARS BADGE
   Future<MarkAllReadResponse> markAllNotificationsAsRead() async {
     try {
       final response = await _apiClient.post(
@@ -419,8 +474,14 @@ class NotificationService {
       );
 
       if (response['success'] == true) {
-        // Refresh count after marking all as read
-        _refreshNotificationCount();
+        // Clear badge when all notifications are read
+        await _updateBadge(0);
+        
+        // Notify listeners
+        if (onNotificationCountChanged != null) {
+          onNotificationCountChanged!(0);
+        }
+        
         return MarkAllReadResponse.fromJson(response);
       } else {
         throw NotificationException(
@@ -437,6 +498,7 @@ class NotificationService {
   }
 
   /// Delete notification
+  /// ✅ NOW UPDATES BADGE
   Future<DeleteNotificationResponse> deleteNotification(int notificationId) async {
     try {
       final response = await _apiClient.delete(
@@ -445,8 +507,8 @@ class NotificationService {
       );
 
       if (response['success'] == true) {
-        // Refresh count after deletion
-        _refreshNotificationCount();
+        // Refresh count and badge after deletion
+        await _refreshNotificationCount();
         return DeleteNotificationResponse.fromJson(response);
       } else {
         throw NotificationException(
@@ -490,7 +552,6 @@ class NotificationService {
   Future<void> updateNotificationStatus(int notificationId, String status) async {
     try {
       debugPrint('📡 [NotificationService] Updating notification status to: $status');
-      // This would be a backend endpoint if you want to track delivery status
       debugPrint('✅ [NotificationService] Status updated locally');
     } catch (e) {
       debugPrint('💥 [NotificationService] Error updating status: $e');
@@ -505,63 +566,73 @@ class NotificationService {
     debugPrint('🗑️ [NotificationService] All local notifications cleared');
   }
 
+  /// Manually refresh badge (call this when notifications screen is viewed)
+  /// ✅ USEFUL: Call this when user opens notifications screen
+  Future<void> refreshBadge() async {
+    await _refreshNotificationCount();
+  }
 
   // ==================== LIFECYCLE MANAGEMENT ====================
 
-/// Register FCM token (call after login)
-/// ✅ CRITICAL: This ensures the token is assigned to the current user
-Future<void> registerTokenForCurrentUser() async {
-  try {
-    if (_fcmToken == null) {
-      debugPrint('⚠️ [NotificationService] No FCM token available yet, initializing...');
-      await _initializeFcm();
+  /// Register FCM token (call after login)
+  Future<void> registerTokenForCurrentUser() async {
+    try {
+      if (_fcmToken == null) {
+        debugPrint('⚠️ [NotificationService] No FCM token available yet, initializing...');
+        await _initializeFcm();
+      }
+
+      if (_fcmToken != null) {
+        debugPrint('📡 [NotificationService] Registering FCM token for current user...');
+        await registerFcmToken(_fcmToken!);
+        
+        // Sync badge after login
+        await _clearBadgeOnStartup();
+        
+        debugPrint('✅ [NotificationService] Token registered for current user');
+      } else {
+        debugPrint('❌ [NotificationService] Failed to get FCM token');
+      }
+    } catch (e) {
+      debugPrint('💥 [NotificationService] Error registering token: $e');
     }
+  }
 
-    if (_fcmToken != null) {
-      debugPrint('📡 [NotificationService] Registering FCM token for current user...');
-      await registerFcmToken(_fcmToken!);
-      debugPrint('✅ [NotificationService] Token registered for current user');
-    } else {
-      debugPrint('❌ [NotificationService] Failed to get FCM token');
+  /// Unregister FCM token (call on logout)
+  /// ✅ NOW CLEARS BADGE ON LOGOUT
+  Future<void> unregisterToken() async {
+    try {
+      debugPrint('🔓 [NotificationService] Unregistering FCM token...');
+
+      // Clear badge before logout
+      await _updateBadge(0);
+
+      final response = await _apiClient.post(
+        ApiConfig.notificationUnregisterTokenEndpoint,
+        requiresAuth: true,
+      );
+
+      if (response['success'] == true) {
+        debugPrint('✅ [NotificationService] FCM token unregistered successfully');
+      } else {
+        debugPrint('⚠️ [NotificationService] Failed to unregister token: ${response['message']}');
+      }
+    } catch (e) {
+      debugPrint('💥 [NotificationService] Unregister error: $e');
     }
-  } catch (e) {
-    debugPrint('💥 [NotificationService] Error registering token: $e');
   }
-}
 
-/// Unregister FCM token (call on logout)
-/// ✅ CRITICAL: This clears the token from the old user
-Future<void> unregisterToken() async {
-  try {
-    debugPrint('🔓 [NotificationService] Unregistering FCM token...');
-
-    final response = await _apiClient.post(
-      ApiConfig.notificationUnregisterTokenEndpoint,
-      requiresAuth: true,
-    );
-
-    if (response['success'] == true) {
-      debugPrint('✅ [NotificationService] FCM token unregistered successfully');
-    } else {
-      debugPrint('⚠️ [NotificationService] Failed to unregister token: ${response['message']}');
+  /// Clear local notification state
+  Future<void> clearNotificationState() async {
+    try {
+      await clearAllNotifications();
+      await _updateBadge(0); // ✅ Clear badge
+      onNotificationCountChanged = null;
+      debugPrint('🗑️ [NotificationService] Notification state cleared');
+    } catch (e) {
+      debugPrint('💥 [NotificationService] Error clearing state: $e');
     }
-  } catch (e) {
-    debugPrint('💥 [NotificationService] Unregister error: $e');
-    // Don't throw - allow logout to continue even if unregister fails
   }
-}
-
-/// Clear local notification state
-Future<void> clearNotificationState() async {
-  try {
-    await clearAllNotifications();
-    onNotificationCountChanged = null;
-    debugPrint('🗑️ [NotificationService] Notification state cleared');
-  } catch (e) {
-    debugPrint('💥 [NotificationService] Error clearing state: $e');
-  }
-}
-
 }
 
 // ============================================================================
@@ -688,7 +759,7 @@ class UnreadCountResponse {
   factory UnreadCountResponse.fromJson(Map<String, dynamic> json) {
     return UnreadCountResponse(
       success: json['success'] ?? false,
-      unreadCount: json['unread_count'] ?? 0,
+      unreadCount: json['unread_count'] ?? 0,  
     );
   }
 }
