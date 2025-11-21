@@ -259,7 +259,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.lowest,
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
       );
 
       _currentPosition = position;

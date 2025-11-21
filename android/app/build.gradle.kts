@@ -1,3 +1,13 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+// Load keystore properties
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -8,12 +18,12 @@ plugins {
 }
 
 android {
-    namespace = "com.example.judy_home_healthcare"
+    namespace = "com.judyhealthcare.mobile"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
     
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true  // ✅ ADDED
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
@@ -22,8 +32,18 @@ android {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
     
+    // Add signing configurations
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties.getProperty("keyAlias")
+            keyPassword = keystoreProperties.getProperty("keyPassword")
+            storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+            storePassword = keystoreProperties.getProperty("storePassword")
+        }
+    }
+    
     defaultConfig {
-        applicationId = "com.example.judy_home_healthcare"
+        applicationId = "com.judyhealthcare.mobile"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -33,7 +53,18 @@ android {
     
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            // Use release signing
+            signingConfig = signingConfigs.getByName("release")
+            
+            // Enable code shrinking for smaller APK
+            isMinifyEnabled = true
+            isShrinkResources = true
+            
+            // Proguard rules
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -55,6 +86,6 @@ dependencies {
     // MultiDex support
     implementation("androidx.multidex:multidex:2.0.1")
     
-    // Core library desugaring ✅ ADDED
+    // Core library desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

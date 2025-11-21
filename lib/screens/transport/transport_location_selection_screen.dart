@@ -86,8 +86,8 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
       }
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 10),
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
       );
       
       if (_isDisposed) return;

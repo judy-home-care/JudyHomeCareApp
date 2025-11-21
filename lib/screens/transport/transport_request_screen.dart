@@ -5,6 +5,7 @@ import '../../services/transport/transport_service.dart';
 import '../../models/transport/transport_models.dart';
 import 'package:geolocator/geolocator.dart';
 import 'transport_patient_selection_screen.dart';
+import 'transport_location_selection_screen.dart';
 import 'package:intl/intl.dart';
 
 class TransportRequestScreen extends StatefulWidget {
@@ -140,7 +141,8 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
       }
       
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
       );
       if (mounted) {
         setState(() {
@@ -318,17 +320,50 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
-          // Navigate to patient selection screen first (for nurses)
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TransportPatientSelectionScreen(),
-            ),
-          );
+          // Check if user is a patient
+          final userRole = widget.userData['role']?.toString().toLowerCase() ?? '';
           
-          // Refresh list if transport request was created successfully
-          if (result == true) {
-            _loadTransportRequests(refresh: true);
+          // Safely parse user ID
+          int? userId;
+          final userIdValue = widget.userData['id'];
+          if (userIdValue != null) {
+            if (userIdValue is int) {
+              userId = userIdValue;
+            } else if (userIdValue is String) {
+              userId = int.tryParse(userIdValue);
+            }
+          }
+          
+          final userName = widget.userData['name'] as String? ?? 'User';
+          
+          if (userRole == 'patient' && userId != null) {
+            // For patients, show transport type selector directly
+            _showTransportTypeSelector(userId, userName);
+          } else if (userRole == 'patient' && userId == null) {
+            // Patient but no valid ID - show error
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Unable to create request. User ID not found.'),
+                backgroundColor: Colors.red,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+          } else {
+            // For nurses, navigate to patient selection screen first
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TransportPatientSelectionScreen(),
+              ),
+            );
+            
+            // Refresh list if transport request was created successfully
+            if (result == true) {
+              _loadTransportRequests(refresh: true);
+            }
           }
         },
         backgroundColor: AppColors.primaryGreen,
@@ -346,6 +381,175 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
       ),
     );
   }
+
+  /// Show transport type selector for patients
+void _showTransportTypeSelector(int patientId, String patientName) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    builder: (context) => Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Request Transport',
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose the type of transport you need',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey.shade600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          _buildTransportOption(
+            title: 'Emergency Ambulance',
+            subtitle: 'Urgent medical transport',
+            icon: Icons.emergency,
+            color: const Color(0xFFFF4757),
+            onTap: () async {
+              Navigator.pop(context); // Close the modal
+              
+              // Navigate to location selection
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransportLocationSelectionScreen(
+                    transportType: 'ambulance',
+                    isEmergency: true,
+                    patientId: patientId,
+                    patientName: patientName,
+                  ),
+                ),
+              );
+              
+              // Refresh if transport request was created
+              if (result == true && mounted) {
+                _loadTransportRequests(refresh: true);
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildTransportOption(
+            title: 'Medical Transport',
+            subtitle: 'Non-emergency patient transfer',
+            icon: Icons.local_shipping,
+            color: AppColors.primaryGreen,
+            onTap: () async {
+              Navigator.pop(context); // Close the modal
+              
+              // Navigate to location selection
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransportLocationSelectionScreen(
+                    transportType: 'regular',
+                    isEmergency: false,
+                    patientId: patientId,
+                    patientName: patientName,
+                  ),
+                ),
+              );
+              
+              // Refresh if transport request was created
+              if (result == true && mounted) {
+                _loadTransportRequests(refresh: true);
+              }
+            },
+          ),
+          SizedBox(height: MediaQuery.of(context).padding.bottom + 32),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildTransportOption({
+  required String title,
+  required String subtitle,
+  required IconData icon,
+  required Color color,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(16),
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: Colors.grey.shade400,
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildSearchBar() {
     return Container(

@@ -644,7 +644,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
   }
 
   void _makeCall() async {
-    final phoneNumber = '+233123456789';
+    final phoneNumber = '+233543413513';
     final uri = Uri.parse('tel:$phoneNumber');
     
     if (await canLaunchUrl(uri)) {
@@ -652,9 +652,16 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to make phone call'),
+          SnackBar(
+            content: Text(
+              'Unable to make phone call',
+              style: TextStyle(color: Colors.white), 
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
@@ -1109,7 +1116,10 @@ $description
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Call Ambulance (112)'),
+          child: const Text(
+            'Call Ambulance (112)',
+            style: TextStyle(color: Colors.white),
+          ),
           ),
         ],
       ),

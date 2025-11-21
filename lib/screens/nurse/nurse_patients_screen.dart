@@ -2152,9 +2152,10 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
           width: 2,
         ),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14), 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, 
         children: [
           Row(
             children: [
@@ -2198,15 +2199,14 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                 ),
             ],
           ),
-          const SizedBox(height: 16),
-          
+          const SizedBox(height: 14), 
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 2.2,
+            childAspectRatio: 2.3,
             crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            mainAxisSpacing: 10, 
             children: [
               _buildVitalCard(
                 icon: Icons.favorite,
@@ -2252,7 +2252,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), 
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -2261,18 +2261,20 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min, 
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
+              Icon(icon, size: 14, color: color), 
+              const SizedBox(width: 4), 
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10, 
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
+                    height: 1.0, 
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -2280,14 +2282,17 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2), 
           Text(
             value,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 13, 
               fontWeight: FontWeight.bold,
               color: color,
+              height: 1.0,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

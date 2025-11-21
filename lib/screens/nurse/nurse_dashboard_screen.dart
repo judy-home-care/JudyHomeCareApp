@@ -280,8 +280,8 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
       );
 
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.lowest,
-        timeLimit: const Duration(seconds: 10),
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
       );
 
       // Close loading dialog

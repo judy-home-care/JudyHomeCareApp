@@ -184,8 +184,8 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-        timeLimit: const Duration(seconds: 10),
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
       );
 
       List<Placemark> placemarks = await placemarkFromCoordinates(

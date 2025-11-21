@@ -111,16 +111,148 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
       ),
       body: Column(
         children: [
-          _buildRouteInfoCard(),
+          // Make route info card more compact
+          _buildCompactRouteInfoCard(),
+          
+          // Drivers section with flexible space
           Expanded(
             child: _buildDriversSection(),
           ),
+          
+          // Bottom button (if driver selected)
           if (_selectedDriver != null)
             _buildSelectButton(),
         ],
       ),
     );
   }
+  
+
+  Widget _buildCompactRouteInfoCard() {
+  return Container(
+    margin: const EdgeInsets.fromLTRB(20, 16, 20, 12), // Reduced margins
+    padding: const EdgeInsets.all(16), // Reduced padding
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16), // Slightly smaller radius
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // IMPORTANT: Use minimum space needed
+      children: [
+        // Header row - more compact
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8), // Reduced from 10
+              decoration: BoxDecoration(
+                color: widget.isEmergency 
+                    ? const Color(0xFFFF4757).withOpacity(0.1)
+                    : AppColors.primaryGreen.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                widget.isEmergency ? Icons.emergency : Icons.local_shipping,
+                color: widget.isEmergency 
+                    ? const Color(0xFFFF4757) 
+                    : AppColors.primaryGreen,
+                size: 20, // Reduced from 24
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.patientName,
+                    style: const TextStyle(
+                      fontSize: 16, // Reduced from 18
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    widget.isEmergency ? 'Emergency' : 'Medical Transport',
+                    style: TextStyle(
+                      fontSize: 12, // Reduced from 13
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: 12), // Reduced from 20
+        
+        // Compact location info
+        _buildCompactLocationRow(
+          icon: Icons.my_location,
+          location: widget.pickupLocation,
+          color: AppColors.primaryGreen,
+        ),
+        
+        const SizedBox(height: 8),
+        
+        _buildCompactLocationRow(
+          icon: Icons.location_on,
+          location: widget.destinationLocation,
+          color: const Color(0xFFFF4757),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildCompactLocationRow({
+  required IconData icon,
+  required String location,
+  required Color color,
+}) {
+  return Row(
+    children: [
+      Container(
+        width: 28, // Reduced from 36
+        height: 28,
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          color: color,
+          size: 14, // Reduced from 18
+        ),
+      ),
+      const SizedBox(width: 10), // Reduced from 12
+      Expanded(
+        child: Text(
+          location,
+          style: const TextStyle(
+            fontSize: 14, // Reduced from 15
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1A1A1A),
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    ],
+  );
+}
+
+
 
   Widget _buildRouteInfoCard() {
     return Container(
@@ -392,6 +524,7 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,  // Add this
         children: [
           CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
@@ -400,7 +533,7 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
           const Text(
             'Loading available drivers...',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13,  // Reduced from 12
               color: Colors.grey,
             ),
           ),
@@ -410,63 +543,65 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
   }
 
   Widget _buildNoDriversState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                shape: BoxShape.circle,
+    return SingleChildScrollView(  // Make it scrollable
+      padding: const EdgeInsets.all(24),  // Reduced from 32
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,  // IMPORTANT: Use minimum space
+        children: [
+          Container(
+            width: 80,  // Reduced from 120
+            height: 80,  // Reduced from 120
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.local_shipping_outlined,
+              size: 40,  // Reduced from 60
+              color: Colors.grey.shade400,
+            ),
+          ),
+          const SizedBox(height: 16),  // Reduced from 24
+          Text(
+            'No Drivers Available',
+            style: TextStyle(
+              fontSize: 16,  // Reduced from 18
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),  // Reduced from 12
+          Text(
+            'No drivers available at the moment. Please try again later.',  // Shorter text
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,  // Reduced from 14
+              color: Colors.grey.shade500,
+              height: 1.4,  // Reduced line height
+            ),
+          ),
+          const SizedBox(height: 20),  // Reduced from 24
+          ElevatedButton.icon(
+            onPressed: _loadAvailableDrivers,
+            icon: const Icon(Icons.refresh, size: 18),  // Reduced from 20
+            label: const Text(
+              'Refresh',
+              style: TextStyle(fontSize: 14),  // Explicit font size
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,  // Reduced from 24
+                vertical: 10,  // Reduced from 12
               ),
-              child: Icon(
-                Icons.local_shipping_outlined,
-                size: 60,
-                color: Colors.grey.shade400,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'No Drivers Available',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'There are no drivers available for ${widget.transportType} transport at the moment. Please try again later.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade500,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadAvailableDrivers,
-              icon: const Icon(Icons.refresh, size: 20),
-              label: const Text('Refresh'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primaryGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

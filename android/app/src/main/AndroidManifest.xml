@@ -22,7 +22,7 @@
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     
     <application
-        android:label="judy_home_healthcare"
+        android:label="JudyCare"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         

@@ -1,4 +1,4 @@
-package com.example.judy_home_healthcare
+package com.judyhealthcare.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 
