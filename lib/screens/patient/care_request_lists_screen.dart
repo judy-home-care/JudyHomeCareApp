@@ -644,9 +644,9 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   ),
                   const SizedBox(height: 12),
                   _buildCompactInfoRow(
-                    Icons.location_on, 
-                    'Location', 
-                    '${request.city ?? ''}, ${request.region ?? ''}'
+                    Icons.location_on,
+                    'Service Address',
+                    request.serviceAddress
                   ),
                   if (request.preferredTime != null) ...[
                     const SizedBox(height: 12),
@@ -1432,6 +1432,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
         final careRequest = detailResponse.data!;
         
         final response = await _careRequestService.getRequestInfo(
+          id: careRequest.id,
           careType: careRequest.careType,
           region: careRequest.region,
         );
@@ -1868,7 +1869,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${request.city ?? ''}, ${request.region ?? ''}',
+                          request.serviceAddress,
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[700],

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/api_config.dart';
 import '../../services/auth/auth_service.dart';
+import '../../services/messages/message_service.dart';
 import '../profile/profile_screen.dart';
 import '../password_security/password_security.dart';
 import '../transport/transport_request_screen.dart';
 import '../help_center.dart';
 import '../onboarding/login_signup_screen.dart';
+import '../messages/conversations_screen.dart';
 import 'patient_notification_preferences.dart';
 import 'patient_faq_screen.dart';
 import 'help_patient_center.dart'; 
@@ -25,11 +27,15 @@ class PatientAccountScreen extends StatefulWidget {
 
 class _PatientAccountScreenState extends State<PatientAccountScreen>
     with AutomaticKeepAliveClientMixin {
-  
+
   final _authService = AuthService();
-  
+  final _messageService = MessageService();
+
   // ✅ Create a mutable copy of patientData that can be updated
   late Map<String, dynamic> _currentPatientData;
+
+  // Message unread count
+  int _unreadMessageCount = 0;
   
   // Keep screen alive in IndexedStack
   @override
@@ -40,6 +46,20 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
     super.initState();
     // ✅ Initialize with widget data
     _currentPatientData = Map<String, dynamic>.from(widget.patientData);
+    _loadUnreadMessageCount();
+  }
+
+  Future<void> _loadUnreadMessageCount() async {
+    try {
+      final response = await _messageService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadMessageCount = response.unreadCount;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load unread message count: $e');
+    }
   }
 
   String _getFullAvatarUrl(String? avatarPath) {
@@ -47,13 +67,8 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
   }
 
   Future<void> _refreshData() async {
-    // Implement refresh logic here (e.g., fetch updated user data)
-    await Future.delayed(const Duration(seconds: 1));
-    if (mounted) {
-      setState(() {
-        // Update state with refreshed data
-      });
-    }
+    // Refresh unread message count
+    await _loadUnreadMessageCount();
   }
 
   @override
@@ -72,6 +87,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
               child: Column(
                 children: [
                   _buildAccountSettings(),
+                  _buildMessagesSection(),
                   _buildServicesSection(),
                   _buildHelpSection(),
                   _buildLogoutButton(),
@@ -293,6 +309,49 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
             iconColor: const Color(0xFFFF9A00),
             iconBg: const Color(0xFFFFF4E5),
             onTap: () => _navigateToNotificationPreferences(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessagesSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'Communication',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          _buildSettingTile(
+            icon: Icons.chat_bubble_outline,
+            title: 'Messages',
+            subtitle: 'Chat with our care team',
+            iconColor: const Color(0xFF2196F3),
+            iconBg: const Color(0xFFE3F2FD),
+            badge: _unreadMessageCount > 0 ? _unreadMessageCount.toString() : null,
+            onTap: () => _navigateToMessages(),
           ),
         ],
       ),
@@ -546,6 +605,19 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         ),
       ),
     );
+  }
+
+  void _navigateToMessages() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ConversationsScreen(
+          userData: _currentPatientData,
+        ),
+      ),
+    );
+    // Refresh unread count when returning from messages screen
+    _loadUnreadMessageCount();
   }
 
   void _navigateToTransportRequests() {

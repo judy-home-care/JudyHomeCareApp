@@ -137,22 +137,38 @@ class LocationService {
       );
 
       debugPrint('🗺️ Reverse geocoding: $latitude, $longitude');
-      
+      debugPrint('🔗 URL: $url');
+
       final response = await http.get(url);
+
+      debugPrint('📡 Response status code: ${response.statusCode}');
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        
-        if (data['status'] == 'OK' && data['results'].isNotEmpty) {
+        final status = data['status'] as String?;
+
+        debugPrint('📍 API Status: $status');
+
+        if (status == 'OK' && data['results'] != null && (data['results'] as List).isNotEmpty) {
           final address = data['results'][0]['formatted_address'] as String;
           debugPrint('✅ Got address: $address');
           return address;
+        } else {
+          // Log the actual error status
+          debugPrint('⚠️ Geocoding failed with status: $status');
+          if (data['error_message'] != null) {
+            debugPrint('❌ Error message: ${data['error_message']}');
+          }
         }
+      } else {
+        debugPrint('❌ HTTP Error: ${response.statusCode}');
+        debugPrint('📦 Response body: ${response.body}');
       }
-      
+
       return null;
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('💥 Error reverse geocoding: $e');
+      debugPrint('📚 Stack trace: $stackTrace');
       return null;
     }
   }

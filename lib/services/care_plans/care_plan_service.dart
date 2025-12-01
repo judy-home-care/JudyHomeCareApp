@@ -385,8 +385,144 @@ Future<List<Map<String, dynamic>>> getPatientCareRequests(int patientId) async {
     }
   }
 
+  // ==================== CARE PLAN ENTRY METHODS ====================
+
+  /// Create a new care plan entry
+  /// [type] must be either 'intervention' or 'evaluation'
+  /// [notes] is the content of the entry
+  Future<Map<String, dynamic>> createCarePlanEntry({
+    required int carePlanId,
+    required String type,
+    required String notes,
+  }) async {
+    try {
+      print('🌐 [CarePlanService] Creating care plan entry...');
+      print('📋 [CarePlanService] Care Plan ID: $carePlanId');
+      print('📋 [CarePlanService] Type: $type');
+
+      final url = ApiConfig.createCarePlanEntryEndpoint(carePlanId);
+
+      final requestBody = <String, dynamic>{
+        'type': type,
+        'notes': notes,
+      };
+
+      print('📤 [CarePlanService] POST Request URL: $url');
+      print('📤 [CarePlanService] Request body: ${jsonEncode(requestBody)}');
+
+      final response = await _apiClient.post(
+        url,
+        body: requestBody,
+        requiresAuth: true,
+      );
+
+      print('✅ [CarePlanService] Care plan entry created successfully');
+      print('📦 [CarePlanService] Response: ${jsonEncode(response)}');
+
+      return response;
+    } on ApiError catch (e) {
+      print('❌ [CarePlanService] ApiError creating entry: ${e.message}');
+      print('❌ [CarePlanService] Status Code: ${e.statusCode}');
+      print('❌ [CarePlanService] Errors: ${e.errors}');
+
+      throw CarePlanException(
+        message: e.displayMessage,
+        statusCode: e.statusCode,
+        errors: e.errors,
+      );
+    } catch (e, stackTrace) {
+      print('❌ [CarePlanService] Unexpected error creating entry: $e');
+      print('❌ [CarePlanService] Stack trace: $stackTrace');
+
+      throw CarePlanException(
+        message: 'Failed to create care plan entry: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Get all entries for a care plan
+  Future<List<CarePlanEntry>> getCarePlanEntries(int carePlanId) async {
+    try {
+      print('🌐 [CarePlanService] Fetching care plan entries...');
+      print('📋 [CarePlanService] Care Plan ID: $carePlanId');
+
+      final url = ApiConfig.carePlanEntriesEndpoint(carePlanId);
+
+      print('🔗 [CarePlanService] GET Request URL: $url');
+
+      final response = await _apiClient.get(
+        url,
+        requiresAuth: true,
+      );
+
+      print('✅ [CarePlanService] Entries fetched successfully');
+
+      final List<dynamic> data = response['data'] ?? [];
+      return data
+          .map((e) => CarePlanEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on ApiError catch (e) {
+      print('❌ [CarePlanService] ApiError fetching entries: ${e.message}');
+
+      throw CarePlanException(
+        message: e.displayMessage,
+        statusCode: e.statusCode,
+        errors: e.errors,
+      );
+    } catch (e, stackTrace) {
+      print('❌ [CarePlanService] Unexpected error fetching entries: $e');
+      print('❌ [CarePlanService] Stack trace: $stackTrace');
+
+      throw CarePlanException(
+        message: 'Failed to fetch care plan entries: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
+  /// Get all care plan entries for a patient
+  Future<List<CarePlanEntry>> getPatientCarePlanEntries(int patientId) async {
+    try {
+      print('🌐 [CarePlanService] Fetching care plan entries for patient...');
+      print('📋 [CarePlanService] Patient ID: $patientId');
+
+      final url = ApiConfig.patientCarePlanEntriesEndpoint(patientId);
+
+      print('🔗 [CarePlanService] GET Request URL: $url');
+
+      final response = await _apiClient.get(
+        url,
+        requiresAuth: true,
+      );
+
+      print('✅ [CarePlanService] Patient entries fetched successfully');
+
+      final List<dynamic> data = response['data'] ?? [];
+      return data
+          .map((e) => CarePlanEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } on ApiError catch (e) {
+      print('❌ [CarePlanService] ApiError fetching patient entries: ${e.message}');
+
+      throw CarePlanException(
+        message: e.displayMessage,
+        statusCode: e.statusCode,
+        errors: e.errors,
+      );
+    } catch (e, stackTrace) {
+      print('❌ [CarePlanService] Unexpected error fetching patient entries: $e');
+      print('❌ [CarePlanService] Stack trace: $stackTrace');
+
+      throw CarePlanException(
+        message: 'Failed to fetch patient care plan entries: $e',
+        statusCode: 0,
+      );
+    }
+  }
+
   // ==================== TRANSFORMATION METHODS ====================
-  
+
   /// Transform care type from UI format to backend format
   /// Examples:
   ///   "General Care" → "general_care"

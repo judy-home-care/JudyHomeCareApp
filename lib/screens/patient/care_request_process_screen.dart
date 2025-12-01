@@ -35,6 +35,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
   Future<void> _loadProcessInfo() async {
     try {
       final response = await _careRequestService.getRequestInfo(
+        id: widget.requestData['id'],
         careType: widget.requestData['care_type'],
         region: widget.requestData['region'],
       );

@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../../utils/app_colors.dart';
 import '../../services/schedules/schedule_service.dart';
 import '../../models/schedules/schedule_models.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -14,7 +16,7 @@ class PatientSchedulesScreen extends StatefulWidget {
 }
 
 class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, WidgetsBindingObserver {
 
   // Shimmer animation controller
   late AnimationController _shimmerController;
@@ -23,24 +25,106 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
     _isControllerInitialized = true;
     _loadSchedules();
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _shimmerController.dispose();
     _debounceTimer?.cancel();
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
   }
 
   @override
   bool get wantKeepAlive => true;
-  
+
+  // ==================== APP LIFECYCLE ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _isScreenVisible = true;
+      debugPrint('🔄 [Patient Schedules] App resumed - checking for background notifications');
+
+      // Check if notification was received while in background
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+      if (hasBackgroundNotification) {
+        debugPrint('📱 [Patient Schedules] Notification received while away - forcing refresh');
+        _notificationService.clearBackgroundNotificationFlag();
+        _loadSchedules(forceRefresh: true, silent: true);
+      }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [Patient Schedules] App paused');
+    }
+  }
+
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  /// Set up FCM callback for real-time notification count updates
+  /// Uses multi-listener pattern so all screens get updates!
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [Patient Schedules] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+        debugPrint('🔔 [Patient Schedules] Notification count updated: $newCount');
+      }
+    });
+
+    // Refresh data when notification received (foreground)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted && _isScreenVisible) {
+        debugPrint('🔄 [Patient Schedules] Notification received - triggering silent refresh');
+        _loadSchedules(forceRefresh: true, silent: true);
+      }
+    });
+  }
+
+  /// Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [Patient Schedules] Badge refreshed');
+    } catch (e) {
+      debugPrint('❌ [Patient Schedules] Error refreshing badge: $e');
+    }
+  }
+
+  /// Open notifications sheet
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Patient Schedules] Badge refreshed after closing notifications');
+  }
+
+  // ==================== END NOTIFICATION UPDATES ====================
+
   final _scheduleService = ScheduleService();
   
   // Smart cache management
@@ -85,6 +169,15 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
     'In Progress Only',
     'Pending Only',
   ];
+
+  // Notification management
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+  bool _isScreenVisible = true;
+
+  // Listener cleanup functions (multi-listener pattern)
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
 
   // ==================== HELPER METHODS ====================
 
@@ -926,6 +1019,44 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                 ),
               ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today, color: Color(0xFF1A1A1A)),
             onPressed: _showDatePicker,
@@ -1726,221 +1857,462 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
     );
   }
 
-  Widget _buildScheduleCard(ScheduleItem schedule) {
-    final isConfirmed = schedule.status == 'in_progress';
-    final isCompleted = schedule.isCompleted;
+   Widget _buildRescheduleStatusBadge(ScheduleItem schedule) {
+    // Check if schedule has a pending reschedule request
+    // You'll need to add this field to your ScheduleItem model
+    if (schedule.hasPendingRescheduleRequest != true) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+        color: const Color(0xFFFF9A00).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFFFF9A00).withOpacity(0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.schedule_send,
+            size: 14,
+            color: Color(0xFFFF9A00),
+          ),
+          const SizedBox(width: 6),
+          const Text(
+            'Reschedule Requested',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFFFF9A00),
+            ),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showScheduleDetails(schedule),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    );
+  }
+
+Widget _buildScheduleCard(ScheduleItem schedule) {
+  final isConfirmed = schedule.status == 'in_progress';
+  final isCompleted = schedule.isCompleted;
+  final isCancelled = schedule.status == 'cancelled';
+  final canReschedule = !isCompleted && !isCancelled && !isConfirmed;
+  final hasRescheduleRequest = schedule.hasPendingRescheduleRequest || schedule.rescheduleRequest != null;
+
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _showScheduleDetails(schedule),
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? Colors.grey[400]
+                          : isConfirmed
+                              ? const Color(0xFF03DAC6)
+                              : const Color(0xFFFF9A00),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.person_outline,
+                              size: 16,
+                              color: Color(0xFF636E72),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                'Nurse: ${schedule.patientName}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCompleted 
+                                      ? Colors.grey[600]
+                                      : const Color(0xFF1A1A1A),
+                                  decoration: isCompleted 
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            _buildStatusBadge(schedule),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatCareType(schedule.careType),
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isCompleted ? Colors.grey[500] : const Color(0xFF636E72),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F9FA),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _buildInfoRow(
+                      Icons.calendar_today,
+                      DateFormat('EEEE, MMM d').format(schedule.date),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      Icons.access_time,
+                      '${schedule.startTime} - ${schedule.endTime}',
+                    ),
+                    const SizedBox(height: 8),
+                    _buildInfoRow(
+                      Icons.location_on,
+                      schedule.location,
+                    ),
+                  ],
+                ),
+              ),
+              
+              if (schedule.notes.isNotEmpty) ...[
+                const SizedBox(height: 12),
                 Row(
                   children: [
-                    Container(
-                      width: 4,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: isCompleted
-                            ? Colors.grey[400]
-                            : isConfirmed
-                                ? const Color(0xFF03DAC6)
-                                : const Color(0xFFFF9A00),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                    const Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: Color(0xFF1A1A1A),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.person_outline,
-                                size: 16,
-                                color: Color(0xFF636E72),
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  'Nurse: ${schedule.patientName}',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: isCompleted 
-                                        ? Colors.grey[600]
-                                        : const Color(0xFF1A1A1A),
-                                    decoration: isCompleted 
-                                        ? TextDecoration.lineThrough
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                              if (isCompleted)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: const Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.check_circle,
-                                        size: 12,
-                                        color: Colors.green,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        'Completed',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.green,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: isConfirmed
-                                        ? const Color(0xFF03DAC6).withOpacity(0.1)
-                                        : const Color(0xFFFF9A00).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Text(
-                                    isConfirmed ? 'In Progress' : 'Scheduled',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w600,
-                                      color: isConfirmed
-                                          ? const Color(0xFF03DAC6)
-                                          : const Color(0xFFFF9A00),
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _formatCareType(schedule.careType),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: isCompleted ? Colors.grey[500] : const Color(0xFF636E72),
-                                  ),
-                                ),
-                              ),
-                              if (schedule.nursePhone != null && schedule.nursePhone!.isNotEmpty)
-                                GestureDetector(
-                                  onTap: () => _makePhoneCall(schedule.nursePhone!),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryGreen.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: const Icon(
-                                      Icons.phone,
-                                      size: 18,
-                                      color: AppColors.primaryGreen,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ],
+                      child: Text(
+                        schedule.notes,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF636E72),
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                   ],
                 ),
+              ],
+              
+              // Reschedule Request Status Card
+              if (hasRescheduleRequest) ...[
+                const SizedBox(height: 12),
+                _buildRescheduleStatusCard(schedule),
+              ],
+              
+              // Reschedule button (only show if can reschedule and no pending request)
+              if (canReschedule && !hasRescheduleRequest) ...[
                 const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8F9FA),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      _buildInfoRow(
-                        Icons.calendar_today,
-                        DateFormat('EEEE, MMM d').format(schedule.date),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _showRescheduleRequestSheet(schedule),
+                    icon: const Icon(Icons.schedule_send, size: 18),
+                    label: const Text('Request Reschedule'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFFF9A00),
+                      side: const BorderSide(
+                        color: Color(0xFFFF9A00),
+                        width: 1.5,
                       ),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(
-                        Icons.access_time,
-                        '${schedule.startTime} - ${schedule.endTime}',
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(height: 8),
-                      _buildInfoRow(
-                        Icons.location_on,
-                        schedule.location,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-                if (schedule.notes.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  Row(
+              ],
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+
+Widget _buildStatusBadge(ScheduleItem schedule) {
+  final isCompleted = schedule.isCompleted;
+  final isConfirmed = schedule.status == 'in_progress';
+  
+  if (isCompleted) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.check_circle, size: 12, color: Colors.green),
+          SizedBox(width: 4),
+          Text(
+            'Completed',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.green,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+    decoration: BoxDecoration(
+      color: isConfirmed
+          ? const Color(0xFF03DAC6).withOpacity(0.1)
+          : const Color(0xFFFF9A00).withOpacity(0.1),
+      borderRadius: BorderRadius.circular(12),
+    ),
+    child: Text(
+      isConfirmed ? 'In Progress' : 'Scheduled',
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: isConfirmed
+            ? const Color(0xFF03DAC6)
+            : const Color(0xFFFF9A00),
+      ),
+    ),
+  );
+}
+
+Widget _buildRescheduleStatusCard(ScheduleItem schedule) {
+  final request = schedule.rescheduleRequest;
+  
+  // Determine status and styling
+  String statusText;
+  Color statusColor;
+  Color bgColor;
+  IconData statusIcon;
+  String statusMessage;
+  
+  if (request != null) {
+    switch (request.status) {
+      case 'approved':
+        statusText = 'Reschedule Approved';
+        statusColor = const Color(0xFF4CAF50);
+        bgColor = const Color(0xFF4CAF50).withOpacity(0.1);
+        statusIcon = Icons.check_circle;
+        statusMessage = request.newScheduleDate != null
+            ? 'New date: ${DateFormat('MMM d, yyyy').format(request.newScheduleDate!)}${request.newStartTime != null ? ' at ${request.newStartTime}' : ''}'
+            : request.adminNotes ?? 'Your visit has been rescheduled.';
+        break;
+      case 'rejected':
+        statusText = 'Reschedule Declined';
+        statusColor = const Color(0xFFE53935);
+        bgColor = const Color(0xFFE53935).withOpacity(0.1);
+        statusIcon = Icons.cancel;
+        statusMessage = request.adminNotes ?? 'Your reschedule request was declined.';
+        break;
+      default: // pending
+        statusText = 'Reschedule Pending';
+        statusColor = const Color(0xFFFF9A00);
+        bgColor = const Color(0xFFFF9A00).withOpacity(0.1);
+        statusIcon = Icons.hourglass_top;
+        statusMessage = 'Submitted ${_getTimeAgo(request.submittedAt)}. We\'ll contact you soon.';
+    }
+  } else {
+    // Fallback for hasPendingRescheduleRequest without request details
+    statusText = 'Reschedule Pending';
+    statusColor = const Color(0xFFFF9A00);
+    bgColor = const Color(0xFFFF9A00).withOpacity(0.1);
+    statusIcon = Icons.hourglass_top;
+    statusMessage = 'Your request is being reviewed.';
+  }
+  
+  return Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(
+        color: statusColor.withOpacity(0.3),
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: statusColor.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                statusIcon,
+                size: 16,
+                color: statusColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    statusText,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: statusColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    statusMessage,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Show arrow for more details on tap
+            Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: Colors.grey.shade400,
+            ),
+          ],
+        ),
+        
+        // Show new schedule info if approved
+        if (request?.status == 'approved' && request?.newScheduleDate != null) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.event_available,
+                  size: 18,
+                  color: Color(0xFF4CAF50),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.info_outline,
-                        size: 16,
-                        color: Color(0xFF1A1A1A),
+                      const Text(
+                        'New Schedule',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF636E72),
+                        ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          schedule.notes,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF636E72),
-                            fontStyle: FontStyle.italic,
-                          ),
+                      Text(
+                        '${DateFormat('EEEE, MMM d').format(request!.newScheduleDate!)}${request.newStartTime != null ? ' • ${request.newStartTime}' : ''}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
                         ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ],
             ),
           ),
-        ),
-      ),
-    );
+        ],
+        
+        // Show preferred date if pending
+        if (request?.status == 'pending' && request?.preferredDate != null) ...[
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_month,
+                size: 14,
+                color: Colors.grey.shade600,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Preferred: ${DateFormat('MMM d, yyyy').format(request!.preferredDate!)}${request.preferredTime != null ? ' (${request.preferredTime})' : ''}',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+String _getTimeAgo(DateTime dateTime) {
+  final difference = DateTime.now().difference(dateTime);
+  
+  if (difference.inMinutes < 1) {
+    return 'just now';
+  } else if (difference.inMinutes < 60) {
+    return '${difference.inMinutes}m ago';
+  } else if (difference.inHours < 24) {
+    return '${difference.inHours}h ago';
+  } else if (difference.inDays < 7) {
+    return '${difference.inDays}d ago';
+  } else {
+    return DateFormat('MMM d').format(dateTime);
   }
+}
+
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Row(
@@ -1964,34 +2336,52 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
     );
   }
 
-  void _showScheduleDetails(ScheduleItem schedule) {
+void _showScheduleDetails(ScheduleItem schedule) {
+    final isCompleted = schedule.isCompleted;
+    final isCancelled = schedule.status == 'cancelled';
+    final isInProgress = schedule.status == 'in_progress';
+    final canReschedule = !isCompleted && !isCancelled && !isInProgress;
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
       builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
+        height: MediaQuery.of(context).size.height * 0.8,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
           ),
         ),
         child: Column(
           children: [
+            // Header
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: const Color(0xFF1A1A1A).withOpacity(0.05),
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Handle bar
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -2006,23 +2396,39 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                       IconButton(
                         icon: const Icon(Icons.close),
                         onPressed: () => Navigator.pop(context),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
+                  
+                  // Nurse name
                   Row(
                     children: [
-                      const Icon(
-                        Icons.person,
-                        size: 24,
-                        color: AppColors.primaryGreen,
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.person,
+                          color: AppColors.primaryGreen,
+                          size: 28,
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           schedule.patientName,
                           style: const TextStyle(
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF1A1A1A),
                           ),
@@ -2030,22 +2436,25 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Row(
+                  const SizedBox(height: 12),
+                  
+                  // Status badges row
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
+                      // Status badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: schedule.status == 'in_progress'
-                              ? const Color(0xFF03DAC6)
-                              : const Color(0xFFFF9A00),
+                          color: _getStatusColor(schedule.status),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          schedule.status == 'in_progress' ? 'In Progress' : 'Scheduled',
+                          _getStatusText(schedule.status),
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -2053,7 +2462,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      // Shift type badge
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -2072,27 +2481,70 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                           ),
                         ),
                       ),
+                      // Pending reschedule badge
+                      if (schedule.hasPendingRescheduleRequest)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9A00).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFFF9A00).withOpacity(0.5),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.schedule_send,
+                                size: 14,
+                                color: Color(0xFFFF9A00),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Reschedule Pending',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFFF9A00),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ],
               ),
             ),
+            
+            // Scrollable Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Nurse Information Section
                     _buildDetailSection(
                       'Nurse Information',
                       [
                         _buildDetailItem('Nurse Name', schedule.patientName),
-                        if (schedule.nursePhone != null && schedule.nursePhone!.isNotEmpty)
-                          _buildPhoneDetailItem('Phone', schedule.nursePhone!),
-                        _buildDetailItem('Care Type', _formatCareType(schedule.careType)),
+                        // if (schedule.nursePhone != null &&
+                        //     schedule.nursePhone!.isNotEmpty)
+                        //   _buildPhoneDetailItem('Phone', schedule.nursePhone!),
+                        _buildDetailItem(
+                          'Care Type',
+                          _formatCareType(schedule.careType),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
+                    
+                    // Schedule Information Section
                     _buildDetailSection(
                       'Schedule Information',
                       [
@@ -2105,15 +2557,41 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                           '${schedule.startTime} - ${schedule.endTime}',
                         ),
                         _buildDetailItem('Shift Type', schedule.shiftType),
+                        if (schedule.actualStartTime != null)
+                          _buildDetailItem(
+                            'Actual Start',
+                            DateFormat('h:mm a').format(schedule.actualStartTime!),
+                          ),
+                        if (schedule.actualEndTime != null)
+                          _buildDetailItem(
+                            'Actual End',
+                            DateFormat('h:mm a').format(schedule.actualEndTime!),
+                          ),
                       ],
                     ),
                     const SizedBox(height: 24),
+                    
+                    // Location Section
                     _buildDetailSection(
                       'Location',
                       [
                         _buildDetailItem('Address', schedule.location),
                       ],
                     ),
+                    
+                    // Care Plan Section (if available)
+                    if (schedule.carePlanTitle != null &&
+                        schedule.carePlanTitle!.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      _buildDetailSection(
+                        'Care Plan',
+                        [
+                          _buildDetailItem('Plan Name', schedule.carePlanTitle!),
+                        ],
+                      ),
+                    ],
+                    
+                    // Notes Section (if available)
                     if (schedule.notes.isNotEmpty) ...[
                       const SizedBox(height: 24),
                       _buildDetailSection(
@@ -2152,6 +2630,87 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                         ],
                       ),
                     ],
+                    
+                    // Reschedule Request Button
+                    if (canReschedule && !schedule.hasPendingRescheduleRequest) ...[
+                      const SizedBox(height: 32),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context); // Close detail modal first
+                            _showRescheduleRequestSheet(schedule);
+                          },
+                          icon: const Icon(Icons.schedule_send, size: 20),
+                          label: const Text('Request Reschedule'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF9A00),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                        ),
+                      ),
+                    ],
+                    
+                    // Show info if reschedule is pending
+                    if (schedule.hasPendingRescheduleRequest) ...[
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF9A00).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFFFF9A00).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF9A00).withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(
+                                Icons.hourglass_top,
+                                color: Color(0xFFFF9A00),
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Reschedule Request Pending',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Our team is reviewing your request. We\'ll contact you soon with a new schedule.',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -2275,4 +2834,779 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
       ),
     );
   }
+
+  // Add these methods to your PatientSchedulesScreenState class
+
+  // ==================== RESCHEDULE REQUEST ====================
+
+  /// Show reschedule request bottom sheet
+  void _showRescheduleRequestSheet(ScheduleItem schedule) {
+    // Don't allow reschedule for completed or cancelled schedules
+    if (schedule.isCompleted || schedule.status == 'cancelled') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white, size: 20),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Cannot reschedule completed or cancelled visits'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Don't allow reschedule for in_progress schedules
+    if (schedule.status == 'in_progress') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white, size: 20),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text('Cannot reschedule a visit that is currently in progress'),
+              ),
+            ],
+          ),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    final reasonController = TextEditingController();
+    final notesController = TextEditingController();
+    DateTime? preferredDate;
+    String? preferredTime;
+    bool isSubmitting = false;
+
+    final List<String> timePreferences = [
+      'Morning (8AM - 12PM)',
+      'Afternoon (12PM - 4PM)',
+      'Evening (4PM - 8PM)',
+      'Same time as original',
+      'Any time',
+    ];
+
+    final List<String> commonReasons = [
+      'Schedule conflict',
+      'Medical appointment',
+      'Travel/Out of town',
+      'Family emergency',
+      'Work commitment',
+      'Other',
+    ];
+
+    String? selectedReason;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFB),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9A00).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.schedule_send,
+                            color: Color(0xFFFF9A00),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Request Reschedule',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Visit on ${DateFormat('MMM d, yyyy').format(schedule.date)}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Form Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Current Schedule Info
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.primaryGreen.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.event,
+                                  size: 16,
+                                  color: AppColors.primaryGreen,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Current Schedule',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primaryGreen,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormat('EEEE, MMMM d').format(schedule.date),
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${schedule.startTime} - ${schedule.endTime}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    schedule.shiftType,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Reason Selection
+                      const Text(
+                        'Reason for Reschedule *',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: commonReasons.map((reason) {
+                          final isSelected = selectedReason == reason;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                selectedReason = reason;
+                                if (reason != 'Other') {
+                                  reasonController.text = reason;
+                                } else {
+                                  reasonController.clear();
+                                }
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primaryGreen
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primaryGreen
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Text(
+                                reason,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF636E72),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      if (selectedReason == 'Other') ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: reasonController,
+                          maxLines: 2,
+                          decoration: InputDecoration(
+                            hintText: 'Please specify your reason...',
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: AppColors.primaryGreen,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Preferred Date
+                      const Text(
+                        'Preferred New Date (Optional)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: schedule.date.add(const Duration(days: 1)),
+                            firstDate: DateTime.now().add(const Duration(days: 1)),
+                            lastDate: DateTime.now().add(const Duration(days: 90)),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: AppColors.primaryGreen,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (date != null) {
+                            setModalState(() {
+                              preferredDate = date;
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 20,
+                                color: preferredDate != null
+                                    ? AppColors.primaryGreen
+                                    : Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  preferredDate != null
+                                      ? DateFormat('EEEE, MMMM d, yyyy').format(preferredDate!)
+                                      : 'Select preferred date',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: preferredDate != null
+                                        ? const Color(0xFF1A1A1A)
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                              if (preferredDate != null)
+                                GestureDetector(
+                                  onTap: () {
+                                    setModalState(() {
+                                      preferredDate = null;
+                                    });
+                                  },
+                                  child: Icon(
+                                    Icons.clear,
+                                    size: 18,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Preferred Time
+                      const Text(
+                        'Preferred Time (Optional)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: timePreferences.map((time) {
+                          final isSelected = preferredTime == time;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                preferredTime = isSelected ? null : time;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? AppColors.primaryGreen.withOpacity(0.1)
+                                    : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? AppColors.primaryGreen
+                                      : Colors.grey.shade300,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Text(
+                                time,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected
+                                      ? AppColors.primaryGreen
+                                      : const Color(0xFF636E72),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Additional Notes
+                      const Text(
+                        'Additional Notes (Optional)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: notesController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Any additional information...',
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Info notice
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF9E6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFFFE082),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              size: 18,
+                              color: Color(0xFFF57C00),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Your request will be reviewed by our care team. We\'ll contact you to confirm the new schedule.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Submit Button
+              Container(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 16,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting || selectedReason == null
+                        ? null
+                        : () async {
+                            // Validate
+                            final reason = selectedReason == 'Other'
+                                ? reasonController.text.trim()
+                                : selectedReason!;
+
+                            if (reason.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Please provide a reason for reschedule'),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            setModalState(() {
+                              isSubmitting = true;
+                            });
+
+                            try {
+                              final response = await _scheduleService.requestReschedule(
+                                scheduleId: int.parse(schedule.id),
+                                reason: reason,
+                                preferredDate: preferredDate != null
+                                    ? DateFormat('yyyy-MM-dd').format(preferredDate!)
+                                    : null,
+                                preferredTime: preferredTime,
+                                additionalNotes: notesController.text.trim(),
+                              );
+
+                              if (mounted) {
+                                Navigator.pop(context);
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            response.message.isNotEmpty
+                                                ? response.message
+                                                : 'Reschedule request submitted successfully!',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: AppColors.primaryGreen,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
+
+                                // Refresh schedules
+                                _loadSchedules(forceRefresh: true);
+                              }
+                            } on ScheduleException catch (e) {
+                              setModalState(() {
+                                isSubmitting = false;
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(child: Text(e.message)),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              );
+                            } catch (e) {
+                              setModalState(() {
+                                isSubmitting = false;
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text('Failed to submit request. Please try again.'),
+                                      ),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      disabledBackgroundColor: AppColors.primaryGreen.withOpacity(0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Submit Reschedule Request',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+    Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return Colors.green;
+      case 'in_progress':
+        return const Color(0xFF03DAC6);
+      case 'cancelled':
+        return Colors.red;
+      case 'confirmed':
+        return const Color(0xFF3B82F6);
+      case 'scheduled':
+      default:
+        return const Color(0xFFFF9A00);
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'completed':
+        return 'Completed';
+      case 'in_progress':
+        return 'In Progress';
+      case 'cancelled':
+        return 'Cancelled';
+      case 'confirmed':
+        return 'Confirmed';
+      case 'scheduled':
+      default:
+        return 'Scheduled';
+    }
+  }
+
 }

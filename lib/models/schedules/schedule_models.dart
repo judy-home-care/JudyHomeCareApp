@@ -1,13 +1,15 @@
+import 'package:flutter/material.dart';
+
 class NurseScheduleResponse {
   final bool success;
   final List<ScheduleItem> data;
-  final Map<String, int> counts;
+  final Map<String, int>? counts;
   final String? message;
 
   NurseScheduleResponse({
     required this.success,
     required this.data,
-    required this.counts,
+    this.counts,
     this.message,
   });
 
@@ -18,7 +20,9 @@ class NurseScheduleResponse {
               ?.map((e) => ScheduleItem.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      counts: Map<String, int>.from(json['counts'] as Map? ?? {}),
+      counts: json['counts'] != null 
+          ? Map<String, int>.from(json['counts'] as Map) 
+          : null,
       message: json['message'] as String?,
     );
   }
@@ -30,6 +34,117 @@ class NurseScheduleResponse {
         'message': message,
       };
 }
+
+
+class RescheduleRequestInfo {
+  final int id;
+  final String status; // pending, approved, rejected
+  final String reason;
+  final DateTime? preferredDate;
+  final String? preferredTime;
+  final DateTime submittedAt;
+  final DateTime? respondedAt;
+  final String? adminNotes;
+  final DateTime? newScheduleDate;
+  final String? newStartTime;
+  final String? newEndTime;
+
+  RescheduleRequestInfo({
+    required this.id,
+    required this.status,
+    required this.reason,
+    this.preferredDate,
+    this.preferredTime,
+    required this.submittedAt,
+    this.respondedAt,
+    this.adminNotes,
+    this.newScheduleDate,
+    this.newStartTime,
+    this.newEndTime,
+  });
+
+  factory RescheduleRequestInfo.fromJson(Map<String, dynamic> json) {
+    return RescheduleRequestInfo(
+      id: json['id'] as int,
+      status: json['status']?.toString() ?? 'pending',
+      reason: json['reason']?.toString() ?? '',
+      preferredDate: json['preferredDate'] != null
+          ? DateTime.tryParse(json['preferredDate'].toString())
+          : null,
+      preferredTime: json['preferredTime']?.toString(),
+      submittedAt: json['submittedAt'] != null
+          ? DateTime.parse(json['submittedAt'].toString())
+          : DateTime.now(),
+      respondedAt: json['respondedAt'] != null
+          ? DateTime.tryParse(json['respondedAt'].toString())
+          : null,
+      adminNotes: json['adminNotes']?.toString(),
+      newScheduleDate: json['newScheduleDate'] != null
+          ? DateTime.tryParse(json['newScheduleDate'].toString())
+          : null,
+      newStartTime: json['newStartTime']?.toString(),
+      newEndTime: json['newEndTime']?.toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'status': status,
+    'reason': reason,
+    'preferredDate': preferredDate?.toIso8601String(),
+    'preferredTime': preferredTime,
+    'submittedAt': submittedAt.toIso8601String(),
+    'respondedAt': respondedAt?.toIso8601String(),
+    'adminNotes': adminNotes,
+    'newScheduleDate': newScheduleDate?.toIso8601String(),
+    'newStartTime': newStartTime,
+    'newEndTime': newEndTime,
+  };
+
+  bool get isPending => status == 'pending';
+  bool get isApproved => status == 'approved';
+  bool get isRejected => status == 'rejected';
+
+  String get statusDisplayText {
+    switch (status) {
+      case 'pending':
+        return 'Pending Review';
+      case 'approved':
+        return 'Approved';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  Color get statusColor {
+    switch (status) {
+      case 'pending':
+        return const Color(0xFFFF9A00);
+      case 'approved':
+        return const Color(0xFF4CAF50);
+      case 'rejected':
+        return const Color(0xFFE53935);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  IconData get statusIcon {
+    switch (status) {
+      case 'pending':
+        return Icons.hourglass_top;
+      case 'approved':
+        return Icons.check_circle;
+      case 'rejected':
+        return Icons.cancel;
+      default:
+        return Icons.help_outline;
+    }
+  }
+}
+
 
 class ScheduleItem {
   final String id;
@@ -51,6 +166,8 @@ class ScheduleItem {
   final DateTime? actualEndTime;
   final DateTime? confirmedAt;
   final String? nursePhone;  // Only for patients viewing schedules
+  final bool hasPendingRescheduleRequest;
+  final RescheduleRequestInfo? rescheduleRequest;
 
   ScheduleItem({
     required this.id,
@@ -72,6 +189,8 @@ class ScheduleItem {
     this.actualEndTime,
     this.confirmedAt,
     this.nursePhone,
+    this.hasPendingRescheduleRequest = false,
+    this.rescheduleRequest,
   });
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json) {
@@ -118,6 +237,15 @@ class ScheduleItem {
           ? DateTime.tryParse(json['confirmedAt'].toString())
           : null,
       nursePhone: json['nursePhone']?.toString(),
+      // Parse the reschedule flag - handle both boolean and integer
+      hasPendingRescheduleRequest: json['hasPendingRescheduleRequest'] == true ||
+          json['hasPendingRescheduleRequest'] == 1 ||
+          json['has_pending_reschedule'] == true ||
+          json['has_pending_reschedule'] == 1,
+      // Parse reschedule request details if available
+      rescheduleRequest: json['rescheduleRequest'] != null
+          ? RescheduleRequestInfo.fromJson(json['rescheduleRequest'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -148,9 +276,6 @@ class ScheduleItem {
       }
 
       // Determine shift based on 24-hour time
-      // Morning: 6 AM - 2 PM (6:00 - 13:59)
-      // Afternoon: 2 PM - 10 PM (14:00 - 21:59)
-      // Night: 10 PM - 6 AM (22:00 - 5:59)
       if (hour24 >= 6 && hour24 < 14) {
         return 'Morning Shifts';
       } else if (hour24 >= 14 && hour24 < 22) {
@@ -183,6 +308,8 @@ class ScheduleItem {
         'actualEndTime': actualEndTime?.toIso8601String(),
         'confirmedAt': confirmedAt?.toIso8601String(),
         'nursePhone': nursePhone,
+        'hasPendingRescheduleRequest': hasPendingRescheduleRequest,
+        'rescheduleRequest': rescheduleRequest?.toJson(),
       };
 
   /// Create a copy with updated fields
@@ -206,6 +333,8 @@ class ScheduleItem {
     DateTime? actualEndTime,
     DateTime? confirmedAt,
     String? nursePhone,
+    bool? hasPendingRescheduleRequest,
+    RescheduleRequestInfo? rescheduleRequest,
   }) {
     return ScheduleItem(
       id: id ?? this.id,
@@ -227,6 +356,8 @@ class ScheduleItem {
       actualEndTime: actualEndTime ?? this.actualEndTime,
       confirmedAt: confirmedAt ?? this.confirmedAt,
       nursePhone: nursePhone ?? this.nursePhone,
+      hasPendingRescheduleRequest: hasPendingRescheduleRequest ?? this.hasPendingRescheduleRequest,
+      rescheduleRequest: rescheduleRequest ?? this.rescheduleRequest,
     );
   }
 
@@ -253,7 +384,9 @@ class ScheduleItem {
         other.actualStartTime == actualStartTime &&
         other.actualEndTime == actualEndTime &&
         other.confirmedAt == confirmedAt &&
-        other.nursePhone == nursePhone;
+        other.nursePhone == nursePhone &&
+        other.hasPendingRescheduleRequest == hasPendingRescheduleRequest &&
+        other.rescheduleRequest == rescheduleRequest;
   }
 
   @override
@@ -276,11 +409,13 @@ class ScheduleItem {
         actualStartTime.hashCode ^
         actualEndTime.hashCode ^
         confirmedAt.hashCode ^
-        nursePhone.hashCode;
+        nursePhone.hashCode ^
+        hasPendingRescheduleRequest.hashCode ^
+        rescheduleRequest.hashCode;
   }
 
   @override
   String toString() {
-    return 'ScheduleItem(id: $id, patientName: $patientName, date: $date, startTime: $startTime, endTime: $endTime, status: $status)';
+    return 'ScheduleItem(id: $id, patientName: $patientName, date: $date, startTime: $startTime, endTime: $endTime, status: $status, hasPendingReschedule: $hasPendingRescheduleRequest, rescheduleRequest: $rescheduleRequest)';
   }
 }

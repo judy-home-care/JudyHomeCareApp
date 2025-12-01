@@ -1,12 +1,92 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import '../../models/patients_assessments/medical_assessment_models.dart';
 import '../../models/patients/nurse_patient_models.dart';
 import '../../services/patients_assessments/progress_note_service.dart';
+import '../../services/location_service.dart';
 import '../../utils/app_colors.dart';
 import '../../models/care_request/care_request_models.dart';
+
+// ==================== VITAL SIGNS VALIDATION ====================
+enum VitalStatus { normal, low, high, critical }
+
+class VitalRange {
+  final double? lowCritical;
+  final double? low;
+  final double? high;
+  final double? highCritical;
+  final String unit;
+  final String normalRange;
+
+  const VitalRange({
+    this.lowCritical,
+    this.low,
+    this.high,
+    this.highCritical,
+    required this.unit,
+    required this.normalRange,
+  });
+}
+
+class VitalValidationResult {
+  final VitalStatus status;
+  final String message;
+  final Color color;
+  final IconData icon;
+
+  const VitalValidationResult({
+    required this.status,
+    required this.message,
+    required this.color,
+    required this.icon,
+  });
+}
+
+// Vital sign ranges (adult values)
+const Map<String, VitalRange> vitalRanges = {
+  'temperature': VitalRange(
+    lowCritical: 35.0,
+    low: 36.1,
+    high: 37.2,
+    highCritical: 39.0,
+    unit: '°C',
+    normalRange: '36.1 - 37.2°C',
+  ),
+  'pulse': VitalRange(
+    lowCritical: 40,
+    low: 60,
+    high: 100,
+    highCritical: 120,
+    unit: 'bpm',
+    normalRange: '60 - 100 bpm',
+  ),
+  'respiration': VitalRange(
+    lowCritical: 8,
+    low: 12,
+    high: 20,
+    highCritical: 30,
+    unit: '/min',
+    normalRange: '12 - 20/min',
+  ),
+  'spo2': VitalRange(
+    lowCritical: 90,
+    low: 95,
+    high: null,
+    highCritical: null,
+    unit: '%',
+    normalRange: '95 - 100%',
+  ),
+  'weight': VitalRange(
+    lowCritical: null,
+    low: null,
+    high: null,
+    highCritical: null,
+    unit: 'kg',
+    normalRange: 'Varies by individual',
+  ),
+};
 
 class NurseMedicalAssessmentScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -25,6 +105,7 @@ class NurseMedicalAssessmentScreen extends StatefulWidget {
 class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _ProgressNoteService = ProgressNoteService();
+  final _locationService = LocationService();
   
   final PageController _pageController = PageController();
   int _currentStep = 0;
@@ -34,6 +115,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
   bool _isLoadingPatients = false;
   bool _isLoadingLocation = false;
   List<PatientOption> _patients = [];
+  Timer? _validationDebounce;
   
   String? _locationName;
   String? _locationDetails;
@@ -102,7 +184,266 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           _locationDetails = null;
         });
       }
+      setState(() {}); // Trigger rebuild for button state
     });
+
+    // Add listeners for required Client & Emergency Info fields
+    _emergencyContact1NameController.addListener(() => setState(() {}));
+    _emergencyContact1RelationshipController.addListener(() => setState(() {}));
+    _emergencyContact1PhoneController.addListener(() => setState(() {}));
+    _emergencyContact2NameController.addListener(() => setState(() {}));
+    _emergencyContact2RelationshipController.addListener(() => setState(() {}));
+    _emergencyContact2PhoneController.addListener(() => setState(() {}));
+
+    // Add listeners for required Medical History fields
+    _presentingConditionController.addListener(() => setState(() {}));
+    _pastMedicalHistoryController.addListener(() => setState(() {}));
+    _allergiesController.addListener(() => setState(() {}));
+    _currentMedicationsController.addListener(() => setState(() {}));
+    _specialNeedsController.addListener(() => setState(() {}));
+  }
+
+  /// Check if Client & Emergency Info step has all required fields filled
+  bool _isClientEmergencyInfoComplete() {
+    return _physicalAddressController.text.trim().isNotEmpty &&
+        _emergencyContact1NameController.text.trim().isNotEmpty &&
+        _emergencyContact1RelationshipController.text.trim().isNotEmpty &&
+        _emergencyContact1PhoneController.text.trim().isNotEmpty &&
+        _emergencyContact2NameController.text.trim().isNotEmpty &&
+        _emergencyContact2RelationshipController.text.trim().isNotEmpty &&
+        _emergencyContact2PhoneController.text.trim().isNotEmpty;
+  }
+
+  /// Check if the current step is the Client & Emergency Info step
+  bool _isOnClientEmergencyInfoStep() {
+    if (widget.careRequest != null) {
+      return _currentStep == 0; // First step when care request exists
+    } else {
+      return _currentStep == 1; // Second step when no care request
+    }
+  }
+
+  /// Check if Medical History step has all required fields filled
+  bool _isMedicalHistoryComplete() {
+    return _presentingConditionController.text.trim().isNotEmpty &&
+        _pastMedicalHistoryController.text.trim().isNotEmpty &&
+        _allergiesController.text.trim().isNotEmpty &&
+        _currentMedicationsController.text.trim().isNotEmpty &&
+        _specialNeedsController.text.trim().isNotEmpty;
+  }
+
+  /// Check if the current step is the Medical History step
+  bool _isOnMedicalHistoryStep() {
+    if (widget.careRequest != null) {
+      return _currentStep == 1; // Second step when care request exists
+    } else {
+      return _currentStep == 2; // Third step when no care request
+    }
+  }
+
+  /// Check if Next button should be enabled
+  bool _isNextButtonEnabled() {
+    if (_isLoading) return false;
+    if (_isOnClientEmergencyInfoStep()) {
+      return _isClientEmergencyInfoComplete();
+    }
+    if (_isOnMedicalHistoryStep()) {
+      return _isMedicalHistoryComplete();
+    }
+    return true;
+  }
+
+  // ==================== VITAL SIGNS VALIDATION METHODS ====================
+
+  /// Debounced setState for vital sign validation
+  void _onVitalChanged(String value) {
+    _validationDebounce?.cancel();
+    _validationDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  /// Blood pressure validation with clinical categories
+  VitalValidationResult? _validateBloodPressure(String value) {
+    if (value.isEmpty) return null;
+
+    final parts = value.split('/');
+    if (parts.length != 2) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid format. Use systolic/diastolic (e.g., 120/80)',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+
+    final systolic = int.tryParse(parts[0].trim());
+    final diastolic = int.tryParse(parts[1].trim());
+
+    if (systolic == null || diastolic == null) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid numbers',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+
+    // Impossible values - too low
+    if (systolic < 60 || diastolic < 40) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid reading. Values too low.',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+
+    // Impossible values - too high
+    if (systolic > 300 || diastolic > 200) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid reading. Values too high.',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+
+    // Systolic must be greater than diastolic
+    if (systolic <= diastolic) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Systolic must be higher than diastolic.',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+
+    // Hypertensive Crisis: Systolic ≥180 OR Diastolic ≥120
+    if (systolic >= 180 || diastolic >= 120) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Hypertensive Crisis (≥180/≥120)',
+        color: Color(0xFFDC143C),
+        icon: Icons.emergency,
+      );
+    }
+
+    // Stage 2 Hypertension: Systolic ≥140 OR Diastolic ≥90
+    if (systolic >= 140 || diastolic >= 90) {
+      return const VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Stage 2 Hypertension (≥140/≥90)',
+        color: Color(0xFFFF4757),
+        icon: Icons.arrow_upward,
+      );
+    }
+
+    // Stage 1 Hypertension: Systolic 130-139
+    if (systolic >= 130) {
+      return const VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Stage 1 Hypertension (130-139)',
+        color: Color(0xFFFF9A00),
+        icon: Icons.trending_up,
+      );
+    }
+
+    // Elevated: Systolic 120-129
+    if (systolic >= 120) {
+      return const VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Elevated (120-129)',
+        color: Color(0xFFFFB347),
+        icon: Icons.trending_up,
+      );
+    }
+
+    // Low Blood Pressure: Systolic <90 OR Diastolic <60
+    if (systolic < 90 || diastolic < 60) {
+      return const VitalValidationResult(
+        status: VitalStatus.low,
+        message: 'Low Blood Pressure (Hypotension)',
+        color: Color(0xFF2196F3),
+        icon: Icons.arrow_downward,
+      );
+    }
+
+    // Normal: Systolic <120
+    return const VitalValidationResult(
+      status: VitalStatus.normal,
+      message: 'Normal (<120)',
+      color: Color(0xFF199A8E),
+      icon: Icons.check_circle,
+    );
+  }
+
+  /// General vital sign validation
+  VitalValidationResult? _validateVital(String vitalType, String value) {
+    if (value.isEmpty) return null;
+
+    final numValue = double.tryParse(value);
+    if (numValue == null) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid number',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+
+    final range = vitalRanges[vitalType];
+    if (range == null) return null;
+
+    // Check critical low
+    if (range.lowCritical != null && numValue < range.lowCritical!) {
+      return VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Critically Low! Below ${range.lowCritical}${range.unit}',
+        color: const Color(0xFFDC143C),
+        icon: Icons.warning_amber_rounded,
+      );
+    }
+
+    // Check critical high
+    if (range.highCritical != null && numValue > range.highCritical!) {
+      return VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Critically High! Above ${range.highCritical}${range.unit}',
+        color: const Color(0xFFDC143C),
+        icon: Icons.warning_amber_rounded,
+      );
+    }
+
+    // Check low
+    if (range.low != null && numValue < range.low!) {
+      return VitalValidationResult(
+        status: VitalStatus.low,
+        message: 'Below normal (${range.normalRange})',
+        color: const Color(0xFF2196F3),
+        icon: Icons.arrow_downward,
+      );
+    }
+
+    // Check high
+    if (range.high != null && numValue > range.high!) {
+      return VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Above normal (${range.normalRange})',
+        color: const Color(0xFFFF9A00),
+        icon: Icons.arrow_upward,
+      );
+    }
+
+    // Normal
+    return VitalValidationResult(
+      status: VitalStatus.normal,
+      message: 'Normal (${range.normalRange})',
+      color: const Color(0xFF199A8E),
+      icon: Icons.check_circle,
+    );
   }
 
   void _prePopulateFromCareRequest() {
@@ -118,6 +459,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
   @override
   void dispose() {
+    _validationDebounce?.cancel();
     _pageController.dispose();
     _patientFirstNameController.dispose();
     _patientLastNameController.dispose();
@@ -151,7 +493,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
   Future<void> _getCurrentLocation() async {
     if (_isLoadingLocation) return;
-    
+
     setState(() {
       _isLoadingLocation = true;
     });
@@ -188,42 +530,41 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         timeLimit: const Duration(seconds: 15),
       );
 
-      List<Placemark> placemarks = await placemarkFromCoordinates(
+      // Set initial state while fetching address
+      if (mounted) {
+        setState(() {
+          _locationName = 'Current Location';
+          _locationDetails = 'Fetching address...';
+        });
+      }
+
+      // Use Google Maps Geocoding API via LocationService (same as transport screen)
+      final address = await _locationService.getAddressFromCoordinates(
         position.latitude,
         position.longitude,
-      ).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () => [],
       );
 
-      if (placemarks.isNotEmpty && mounted) {
-        Placemark place = placemarks[0];
-        
-        List<String> addressParts = [];
-        
-        if (place.street != null && place.street!.isNotEmpty) {
-          addressParts.add(place.street!);
-        }
-        if (place.subLocality != null && place.subLocality!.isNotEmpty) {
-          addressParts.add(place.subLocality!);
-        }
-        if (place.locality != null && place.locality!.isNotEmpty) {
-          addressParts.add(place.locality!);
-        }
-        if (place.administrativeArea != null && place.administrativeArea!.isNotEmpty) {
-          addressParts.add(place.administrativeArea!);
-        }
+      if (!mounted) return;
 
-        String fullAddress = addressParts.join(', ');
-        
+      if (address != null && address.isNotEmpty) {
+        // Parse the formatted address from Google Maps API
+        final addressParts = address.split(',');
+
         setState(() {
-          _locationName = place.locality ?? place.subLocality ?? place.administrativeArea ?? 'Current Location';
-          _locationDetails = place.street ?? place.subLocality ?? place.administrativeArea;
-          _physicalAddressController.text = fullAddress.isNotEmpty 
-              ? fullAddress 
-              : '${position.latitude}, ${position.longitude}';
+          // Use the first part as the street/location name (usually most specific)
+          _locationName = addressParts.isNotEmpty
+              ? addressParts[0].trim()
+              : 'Current Location';
+
+          // Use the second part as location details
+          _locationDetails = addressParts.length > 1
+              ? addressParts[1].trim()
+              : null;
+
+          // Use the full address for the text field
+          _physicalAddressController.text = address;
         });
-        
+
         debugPrint('Location Name: $_locationName');
         debugPrint('Location Details: $_locationDetails');
         debugPrint('Full Address: ${_physicalAddressController.text}');
@@ -283,6 +624,16 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
   }
 
   void _nextStep() {
+    // Validate current step before proceeding
+    if (_isOnClientEmergencyInfoStep() && !_isClientEmergencyInfoComplete()) {
+      _showErrorSnackbar('Please fill all required fields');
+      return;
+    }
+    if (_isOnMedicalHistoryStep() && !_isMedicalHistoryComplete()) {
+      _showErrorSnackbar('Please fill all required fields');
+      return;
+    }
+
     if (_currentStep < _totalSteps - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -912,6 +1263,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             controller: _emergencyContact1NameController,
             label: 'Contact Name',
             icon: Icons.person_outline,
+            onChanged: (_) => setState(() {}),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Emergency contact name is required';
@@ -928,6 +1280,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                   controller: _emergencyContact1RelationshipController,
                   label: 'Relationship',
                   icon: Icons.family_restroom_outlined,
+                  onChanged: (_) => setState(() {}),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Required';
@@ -943,6 +1296,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                   label: 'Phone',
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                  onChanged: (_) => setState(() {}),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Required';
@@ -957,7 +1311,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           const SizedBox(height: 32),
           
           Text(
-            'Emergency Contact 2 (Optional)',
+            'Contact Person',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -965,30 +1319,51 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             ),
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _emergencyContact2NameController,
-            label: 'Contact Name',
+            label: 'Contact Name *',
             icon: Icons.person_outline,
+            onChanged: (_) => setState(() {}),
+            validator: (value) {
+              if (value == null || value.trim().isEmpty) {
+                return 'Contact name is required';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
                 child: _buildTextField(
                   controller: _emergencyContact2RelationshipController,
-                  label: 'Relationship',
+                  label: 'Relationship *',
                   icon: Icons.family_restroom_outlined,
+                  onChanged: (_) => setState(() {}),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Relationship is required';
+                    }
+                    return null;
+                  },
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildTextField(
                   controller: _emergencyContact2PhoneController,
-                  label: 'Phone',
+                  label: 'Phone *',
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
+                  onChanged: (_) => setState(() {}),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Phone is required';
+                    }
+                    return null;
+                  },
                 ),
               ),
             ],
@@ -1145,6 +1520,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                 controller: _physicalAddressController,
                 maxLines: 2,
                 textInputAction: TextInputAction.done,
+                onChanged: (_) => setState(() {}),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Physical address is required';
@@ -1208,6 +1584,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             label: 'Presenting Condition/Diagnosis',
             icon: Icons.medical_services_outlined,
             maxLines: 3,
+            onChanged: (_) => setState(() {}),
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Presenting condition is required';
@@ -1216,36 +1593,64 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             },
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _pastMedicalHistoryController,
-            label: 'Past Medical History (Optional)',
+            label: 'Past Medical History',
             icon: Icons.history_outlined,
             maxLines: 3,
+            onChanged: (_) => setState(() {}),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Past medical history is required';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _allergiesController,
-            label: 'Allergies (Optional)',
+            label: 'Allergies',
             icon: Icons.warning_amber_outlined,
             maxLines: 2,
+            onChanged: (_) => setState(() {}),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Allergies is required (enter "None" if no allergies)';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _currentMedicationsController,
-            label: 'Current Medications (Optional)',
+            label: 'Current Medications',
             icon: Icons.medication_outlined,
             maxLines: 3,
+            onChanged: (_) => setState(() {}),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Current medications is required (enter "None" if no medications)';
+              }
+              return null;
+            },
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _specialNeedsController,
-            label: 'Special Needs (Optional)',
+            label: 'Special Needs',
             icon: Icons.accessible_outlined,
             maxLines: 2,
+            onChanged: (_) => setState(() {}),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Special needs is required (enter "None" if no special needs)';
+              }
+              return null;
+            },
           ),
         ],
       ),
@@ -1358,129 +1763,78 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             ),
           ),
           const SizedBox(height: 16),
-          
+
+          // Row 1: Temperature & Pulse
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _buildTextField(
-                  controller: _temperatureController,
+                child: _buildVitalFieldWithValidation(
                   label: 'Temperature (°C)',
-                  icon: Icons.thermostat_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Required';
-                    }
-                    final temp = double.tryParse(value);
-                    if (temp == null || temp < 30 || temp > 45) {
-                      return 'Invalid';
-                    }
-                    return null;
-                  },
+                  controller: _temperatureController,
+                  hint: 'e.g., 36.5',
+                  vitalType: 'temperature',
+                  normalRange: '36.1 - 37.2°C',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildTextField(
-                  controller: _pulseController,
+                child: _buildVitalFieldWithValidation(
                   label: 'Pulse (bpm)',
-                  icon: Icons.favorite_outline,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Required';
-                    }
-                    final pulse = int.tryParse(value);
-                    if (pulse == null || pulse < 30 || pulse > 200) {
-                      return 'Invalid';
-                    }
-                    return null;
-                  },
+                  controller: _pulseController,
+                  hint: 'e.g., 72',
+                  vitalType: 'pulse',
+                  normalRange: '60 - 100 bpm',
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          
+
+          // Row 2: Respiratory Rate & Blood Pressure
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _buildTextField(
-                  controller: _respiratoryRateController,
+                child: _buildVitalFieldWithValidation(
                   label: 'Resp Rate (/min)',
-                  icon: Icons.air_outlined,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Required';
-                    }
-                    final rate = int.tryParse(value);
-                    if (rate == null || rate < 8 || rate > 40) {
-                      return 'Invalid';
-                    }
-                    return null;
-                  },
+                  controller: _respiratoryRateController,
+                  hint: 'e.g., 16',
+                  vitalType: 'respiration',
+                  normalRange: '12 - 20/min',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildTextField(
-                  controller: _bloodPressureController,
+                child: _buildBloodPressureFieldWithValidation(
                   label: 'BP (mmHg)',
-                  icon: Icons.monitor_heart_outlined,
-                  hint: '120/80',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Required';
-                    }
-                    if (!RegExp(r'^\d{2,3}/\d{2,3}$').hasMatch(value)) {
-                      return 'Format: 120/80';
-                    }
-                    return null;
-                  },
+                  controller: _bloodPressureController,
+                  hint: 'e.g., 120/80',
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          
+
+          // Row 3: SpO2 & Weight
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: _buildTextField(
-                  controller: _spo2Controller,
+                child: _buildVitalFieldWithValidation(
                   label: 'SpO₂ (%)',
-                  icon: Icons.opacity_outlined,
-                  keyboardType: TextInputType.number,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Required';
-                    }
-                    final spo2 = int.tryParse(value);
-                    if (spo2 == null || spo2 < 70 || spo2 > 100) {
-                      return 'Invalid';
-                    }
-                    return null;
-                  },
+                  controller: _spo2Controller,
+                  hint: 'e.g., 98',
+                  vitalType: 'spo2',
+                  normalRange: '95 - 100%',
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildTextField(
-                  controller: _weightController,
+                child: _buildWeightFieldWithValidation(
                   label: 'Weight (kg)',
-                  icon: Icons.scale_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Required';
-                    }
-                    final weight = double.tryParse(value);
-                    if (weight == null || weight < 1 || weight > 500) {
-                      return 'Invalid';
-                    }
-                    return null;
-                  },
+                  controller: _weightController,
+                  hint: 'e.g., 70',
                 ),
               ),
             ],
@@ -1725,21 +2079,23 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             flex: _currentStep == 0 ? 1 : 2,
             child: Container(
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF199A8E), Color(0xFF25B5A8)],
+                gradient: LinearGradient(
+                  colors: _isNextButtonEnabled()
+                      ? [const Color(0xFF199A8E), const Color(0xFF25B5A8)]
+                      : [Colors.grey.shade400, Colors.grey.shade500],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: ElevatedButton(
-                onPressed: _isLoading
-                    ? null
-                    : () {
+                onPressed: _isNextButtonEnabled()
+                    ? () {
                         if (_currentStep < _totalSteps - 1) {
                           _nextStep();
                         } else {
                           _submitAssessment();
                         }
-                      },
+                      }
+                    : null,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -1819,6 +2175,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    void Function(String)? onChanged,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1832,7 +2189,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           ),
         ),
         const SizedBox(height: 8),
-        
+
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
@@ -1851,6 +2208,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             keyboardType: keyboardType,
             textInputAction: maxLines == 1 ? TextInputAction.done : TextInputAction.newline,
             validator: validator,
+            onChanged: onChanged,
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(
@@ -1873,6 +2231,428 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               filled: true,
               fillColor: Colors.white,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==================== VITAL SIGNS FIELD WIDGETS ====================
+
+  Widget _buildVitalFieldWithValidation({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+    required String vitalType,
+    required String normalRange,
+  }) {
+    final String currentValue = controller.text.trim();
+    final bool hasValue = currentValue.isNotEmpty;
+
+    VitalValidationResult? validation;
+    if (hasValue) {
+      validation = _validateVital(vitalType, currentValue);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Label Row
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
+            if (hasValue && validation != null)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: validation.color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  validation.icon,
+                  size: 14,
+                  color: validation.color,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+
+        // Normal range hint
+        Text(
+          'Normal: $normalRange',
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[500],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Text Field
+        TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+          ],
+          onChanged: _onVitalChanged,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Required';
+            }
+            final numValue = double.tryParse(value.trim());
+            if (numValue == null) {
+              return 'Enter a valid number';
+            }
+            return null;
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 13,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasValue && validation != null
+                    ? validation.color
+                    : Colors.grey[300]!,
+                width: hasValue && validation != null &&
+                       validation.status != VitalStatus.normal ? 2 : 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasValue && validation != null
+                    ? validation.color
+                    : const Color(0xFF199A8E),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            contentPadding: const EdgeInsets.all(14),
+          ),
+        ),
+
+        // Validation Message Box
+        if (hasValue && validation != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: validation.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: validation.color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    validation.icon,
+                    size: 16,
+                    color: validation.color,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      validation.message,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: validation.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildBloodPressureFieldWithValidation({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+  }) {
+    final validation = _validateBloodPressure(controller.text);
+    final hasValue = controller.text.isNotEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
+            if (hasValue && validation != null)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: validation.color.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  validation.icon,
+                  size: 14,
+                  color: validation.color,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Normal: <120/<80 mmHg',
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[500],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: TextInputType.text,
+          onChanged: _onVitalChanged,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Required';
+            }
+            if (!value.contains('/')) {
+              return 'Use format: systolic/diastolic';
+            }
+            return null;
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 13,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasValue && validation != null
+                    ? validation.color
+                    : Colors.grey[300]!,
+                width: hasValue && validation != null &&
+                       validation.status != VitalStatus.normal ? 2 : 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasValue && validation != null
+                    ? validation.color
+                    : const Color(0xFF199A8E),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            contentPadding: const EdgeInsets.all(14),
+          ),
+        ),
+
+        // Validation Message Box
+        if (hasValue && validation != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: validation.color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: validation.color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    validation.icon,
+                    size: 16,
+                    color: validation.color,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      validation.message,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: validation.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildWeightFieldWithValidation({
+    required String label,
+    required TextEditingController controller,
+    required String hint,
+  }) {
+    final String currentValue = controller.text.trim();
+    final bool hasValue = currentValue.isNotEmpty;
+    final numValue = double.tryParse(currentValue);
+
+    // Weight validation (no clinical ranges, just valid number check)
+    bool isValid = hasValue && numValue != null && numValue > 0 && numValue < 500;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+            ),
+            if (hasValue && isValid)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF199A8E).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.check_circle,
+                  size: 14,
+                  color: Color(0xFF199A8E),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Enter weight in kg',
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[500],
+            fontStyle: FontStyle.italic,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+          ],
+          onChanged: _onVitalChanged,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Required';
+            }
+            final weight = double.tryParse(value.trim());
+            if (weight == null || weight < 1 || weight > 500) {
+              return 'Enter valid weight (1-500 kg)';
+            }
+            return null;
+          },
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: Colors.grey[400],
+              fontSize: 13,
+            ),
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: hasValue && isValid
+                    ? const Color(0xFF199A8E)
+                    : Colors.grey[300]!,
+                width: 1,
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(
+                color: Color(0xFF199A8E),
+                width: 2,
+              ),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Colors.red, width: 2),
+            ),
+            contentPadding: const EdgeInsets.all(14),
           ),
         ),
       ],

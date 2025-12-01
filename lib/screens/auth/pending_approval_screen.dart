@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PendingApprovalScreen extends StatelessWidget {
   final String userName;
@@ -277,16 +278,45 @@ class PendingApprovalScreen extends StatelessWidget {
                 
                 // Help Text
                 TextButton(
-                  onPressed: () {
-                    // TODO: Navigate to support/help
+                  onPressed: () async {
+                    final Uri phoneUri = Uri(
+                      scheme: 'tel',
+                      path: '+233543413415',
+                    );
+                    
+                    if (await canLaunchUrl(phoneUri)) {
+                      await launchUrl(phoneUri);
+                    } else {
+                      // Show error if phone dialer not available
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Could not open phone dialer'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   },
-                  child: Text(
-                    'Need help? Contact Support',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 16,
+                        color: Colors.grey.shade600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Need help? Contact Support',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 

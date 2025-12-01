@@ -1,3 +1,105 @@
+// Care Plan Entry Model
+class CarePlanEntry {
+  final int? id;
+  final int? carePlanId;
+  final String? carePlanTitle;
+  final String? type; // 'intervention' or 'evaluation'
+  final String? typeLabel;
+  final String? entryDate;
+  final String? entryDateFormatted;
+  final String? entryTime;
+  final String? entryTimeFormatted;
+  final String? notes;
+  final CarePlanEntryNurse? nurse;
+  final String? createdAt;
+
+  CarePlanEntry({
+    this.id,
+    this.carePlanId,
+    this.carePlanTitle,
+    this.type,
+    this.typeLabel,
+    this.entryDate,
+    this.entryDateFormatted,
+    this.entryTime,
+    this.entryTimeFormatted,
+    this.notes,
+    this.nurse,
+    this.createdAt,
+  });
+
+  factory CarePlanEntry.fromJson(Map<String, dynamic> json) {
+    return CarePlanEntry(
+      id: json['id'] as int?,
+      carePlanId: json['care_plan_id'] as int?,
+      carePlanTitle: json['care_plan_title'] as String?,
+      type: json['type'] as String?,
+      typeLabel: json['type_label'] as String?,
+      entryDate: json['entry_date'] as String?,
+      entryDateFormatted: json['entry_date_formatted'] as String?,
+      entryTime: json['entry_time'] as String?,
+      entryTimeFormatted: json['entry_time_formatted'] as String?,
+      notes: json['notes'] as String?,
+      nurse: json['nurse'] != null
+          ? CarePlanEntryNurse.fromJson(json['nurse'] as Map<String, dynamic>)
+          : null,
+      createdAt: json['created_at'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'type': type,
+      'notes': notes,
+    };
+    if (id != null) map['id'] = id;
+    if (carePlanId != null) map['care_plan_id'] = carePlanId;
+    return map;
+  }
+
+  /// Check if this is an intervention entry
+  bool get isIntervention => type == 'intervention';
+
+  /// Check if this is an evaluation entry
+  bool get isEvaluation => type == 'evaluation';
+}
+
+// Nurse info for care plan entry
+class CarePlanEntryNurse {
+  final int id;
+  final String name;
+
+  CarePlanEntryNurse({
+    required this.id,
+    required this.name,
+  });
+
+  factory CarePlanEntryNurse.fromJson(Map<String, dynamic> json) {
+    return CarePlanEntryNurse(
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? 'Unknown Nurse',
+    );
+  }
+}
+
+// Create Care Plan Entry Request Model
+class CreateCarePlanEntryRequest {
+  final String? nurseInterventions;
+  final String? evaluation;
+
+  CreateCarePlanEntryRequest({
+    this.nurseInterventions,
+    this.evaluation,
+  });
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{};
+    if (nurseInterventions != null) map['nurse_interventions'] = nurseInterventions;
+    if (evaluation != null) map['evaluation'] = evaluation;
+    return map;
+  }
+}
+
 // Care Plan Exception
 class CarePlanException implements Exception {
   final String message;
@@ -38,7 +140,8 @@ class CarePlan {
   final List<dynamic> medications;
   final List<dynamic> specialInstructions;
   final List<String> careTasks;
-  List<int> completedTasks; 
+  List<int> completedTasks;
+  final List<CarePlanEntry> carePlanEntries;
 
   CarePlan({
     required this.id,
@@ -64,7 +167,9 @@ class CarePlan {
     required this.specialInstructions,
     required this.careTasks,
     List<int>? completedTasks,
-  }) : completedTasks = completedTasks ?? [];
+    List<CarePlanEntry>? carePlanEntries,
+  }) : completedTasks = completedTasks ?? [],
+       carePlanEntries = carePlanEntries ?? [];
 
   factory CarePlan.fromJson(Map<String, dynamic> json) {
     try {
@@ -97,6 +202,10 @@ class CarePlan {
             [],
         completedTasks: (json['completed_tasks'] as List<dynamic>?)
                 ?.map((e) => e as int)
+                .toList() ??
+            [],
+        carePlanEntries: (json['care_plan_entries'] as List<dynamic>?)
+                ?.map((e) => CarePlanEntry.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
       );
@@ -132,6 +241,7 @@ class CarePlan {
         'special_instructions': specialInstructions,
         'care_tasks': careTasks,
         'completed_tasks': completedTasks,
+        'care_plan_entries': carePlanEntries.map((e) => e.toJson()).toList(),
       };
 
   String get patientInitials {

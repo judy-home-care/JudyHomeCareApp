@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter analyze:*)",
+      "Bash(~/flutter/bin/flutter:*)",
+      "Bash(~/development/flutter/bin/flutter --version)",
+      "Bash(/opt/homebrew/bin/flutter:*)",
+      "Bash(dart analyze:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

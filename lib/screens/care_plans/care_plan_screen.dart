@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/care_plans/care_plan_service.dart';
 import '../../models/care_plans/care_plan_models.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 import 'edit_care_plan_modal.dart';
 import '../../widgets/searchable_dropdown.dart';
 
@@ -21,7 +23,7 @@ class CarePlansScreen extends StatefulWidget {
 }
 
 class _CarePlansScreenState extends State<CarePlansScreen>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, WidgetsBindingObserver {
   
   @override
   bool get wantKeepAlive => true;
@@ -67,25 +69,140 @@ class _CarePlansScreenState extends State<CarePlansScreen>
   // Visibility Tracking
   bool _isTabVisible = false;
   DateTime? _lastVisibleTime;
-  
+
+  // Notification management
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+  bool _isScreenVisible = true;
+
+  // Track if notification was received while app was paused (local flag)
+  bool _pendingNotificationRefresh = false;
+
+  // Multi-listener cleanup callbacks
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
     _scrollController.addListener(_onScroll);
     _loadCarePlans(forceRefresh: false);
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollDebounce?.cancel();
     _scrollController.dispose();
     _animationController.dispose();
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
   }
+
+  // ==================== APP LIFECYCLE ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _isScreenVisible = true;
+      debugPrint('🔄 [CarePlans] App resumed - checking for pending notifications');
+
+      // Check if notification was received while in background (from tapping notification)
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+
+      // Check if notification was received while app was paused (local tracking)
+      final hasPendingRefresh = _pendingNotificationRefresh;
+
+      // Force refresh if any notification was received while away
+      if (hasBackgroundNotification || hasPendingRefresh) {
+        debugPrint('📱 [CarePlans] Notification received while away - forcing refresh');
+        debugPrint('   - Background notification (tapped): $hasBackgroundNotification');
+        debugPrint('   - Pending refresh (received while paused): $hasPendingRefresh');
+
+        // Clear both flags
+        _notificationService.clearBackgroundNotificationFlag();
+        _pendingNotificationRefresh = false;
+
+        // Force data reload
+        _loadCarePlans(forceRefresh: true, silent: true);
+      }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [CarePlans] App paused');
+    }
+  }
+
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  /// Set up FCM callback for real-time notification count updates
+  /// Uses multi-listener pattern so all screens get updates!
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [CarePlans] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+        debugPrint('🔔 [CarePlans] Notification count updated: $newCount');
+      }
+    });
+
+    // Refresh data when notification received (foreground or background)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted) {
+        if (_isScreenVisible) {
+          // App is in foreground - refresh data immediately
+          debugPrint('🔄 [CarePlans] Notification received (foreground) - triggering silent refresh');
+          _loadCarePlans(forceRefresh: true, silent: true);
+          // NOTE: Don't call _loadUnreadNotificationCount() here!
+          // The badge count is already updated via the count listener
+        } else {
+          // App is in background/paused - set flag to refresh on resume
+          debugPrint('🔄 [CarePlans] Notification received (background) - setting pending refresh flag');
+          _pendingNotificationRefresh = true;
+        }
+      }
+    });
+  }
+
+  /// Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [CarePlans] Badge refreshed');
+    } catch (e) {
+      debugPrint('❌ [CarePlans] Error refreshing badge: $e');
+    }
+  }
+
+  /// Open notifications sheet
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [CarePlans] Badge refreshed after closing notifications');
+  }
+
+  // ==================== END NOTIFICATION UPDATES ====================
 
   // ==================== SCROLL HANDLING ====================
   
@@ -615,6 +732,44 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           ],
         ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: _isLoading && !_isCacheExpired
                 ? SizedBox(
@@ -664,7 +819,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+      // floatingActionButton: _buildFloatingActionButton(), // Commented out - New Care Plan disabled
     );
   }
 
@@ -1478,20 +1633,21 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        IconButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showEditCarePlanModal(plan);
-                          },
-                          icon: const Icon(Icons.edit_outlined, color: AppColors.primaryGreen),
-                          style: IconButton.styleFrom(
-                            backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
+                        // Edit button commented out
+                        // const SizedBox(width: 8),
+                        // IconButton(
+                        //   onPressed: () {
+                        //     Navigator.pop(context);
+                        //     _showEditCarePlanModal(plan);
+                        //   },
+                        //   icon: const Icon(Icons.edit_outlined, color: AppColors.primaryGreen),
+                        //   style: IconButton.styleFrom(
+                        //     backgroundColor: AppColors.primaryGreen.withOpacity(0.1),
+                        //     shape: RoundedRectangleBorder(
+                        //       borderRadius: BorderRadius.circular(12),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ],
@@ -1635,144 +1791,115 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                         const SizedBox(height: 24),
                       ],
                       
-                      // ==================== TASK LIST WITH TOGGLE ====================
-                      if (plan.careTasks.isNotEmpty) ...[
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildSectionTitle('Care Tasks'),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryGreen.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${plan.completedTaskCount}/${plan.totalTaskCount} completed',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primaryGreen,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      // ==================== CARE PLAN ENTRIES (2x2 GRID) ====================
+                      if (plan.carePlanEntries.isNotEmpty) ...[
+                        _buildSectionTitle('Care Plan Entries'),
                         const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0F9FF),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: const Color(0xFF2196F3).withOpacity(0.3),
+                        ...plan.carePlanEntries.asMap().entries.map((mapEntry) {
+                          final index = mapEntry.key;
+                          final entry = mapEntry.value;
+                          return Container(
+                            margin: EdgeInsets.only(
+                              bottom: index < plan.carePlanEntries.length - 1 ? 12 : 0,
                             ),
-                          ),
-                          child: Column(
-                            children: plan.careTasks.asMap().entries.map((entry) {
-                              final index = entry.key;
-                              final task = entry.value;
-                              final isLast = index == plan.careTasks.length - 1;
-                              final isCompleted = plan.isTaskCompleted(index);
-                              
-                              return Column(
-                                children: [
-                                  Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      onTap: () {
-                                        // Toggle task and update both states
-                                        _toggleTaskCompletion(plan, index, isCompleted);
-                                        setModalState(() {}); // Update modal
-                                      },
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
-                                        child: Row(
-                                          children: [
-                                            // Custom Checkbox
-                                            Container(
-                                              width: 24,
-                                              height: 24,
-                                              decoration: BoxDecoration(
-                                                color: isCompleted 
-                                                    ? AppColors.primaryGreen 
-                                                    : Colors.white,
-                                                border: Border.all(
-                                                  color: isCompleted 
-                                                      ? AppColors.primaryGreen 
-                                                      : Colors.grey.shade400,
-                                                  width: 2,
-                                                ),
-                                                borderRadius: BorderRadius.circular(6),
-                                              ),
-                                              child: isCompleted
-                                                  ? const Icon(
-                                                      Icons.check,
-                                                      size: 16,
-                                                      color: Colors.white,
-                                                    )
-                                                  : null,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            // Task number
-                                            Container(
-                                              width: 28,
-                                              height: 28,
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: isCompleted
-                                                      ? [Colors.grey.shade400, Colors.grey.shade500]
-                                                      : [const Color(0xFF2196F3), const Color(0xFF42A5F5)],
-                                                ),
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  '${index + 1}',
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            // Task text
-                                            Expanded(
-                                              child: Text(
-                                                task,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: isCompleted 
-                                                      ? Colors.grey.shade500 
-                                                      : const Color(0xFF1A1A1A),
-                                                  fontWeight: FontWeight.w500,
-                                                  decoration: isCompleted 
-                                                      ? TextDecoration.lineThrough 
-                                                      : null,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.04),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Entry header with type badge
+                                Row(
+                                  children: [
+                                    if (plan.carePlanEntries.length > 1)
+                                      Text(
+                                        'Entry ${index + 1}',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    if (plan.carePlanEntries.length > 1)
+                                      const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: entry.type == 'intervention'
+                                            ? AppColors.primaryGreen.withOpacity(0.15)
+                                            : const Color(0xFFFF9A00).withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        entry.typeLabel ?? (entry.type == 'intervention' ? 'Intervention' : 'Evaluation'),
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: entry.type == 'intervention'
+                                              ? AppColors.primaryGreen
+                                              : const Color(0xFFFF9A00),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  if (!isLast) ...[
-                                    const SizedBox(height: 12),
-                                    Divider(color: Colors.grey.shade200, height: 1),
-                                    const SizedBox(height: 12),
+                                    const Spacer(),
+                                    if (entry.entryDateFormatted != null)
+                                      Row(
+                                        children: [
+                                          Icon(Icons.calendar_today, size: 12, color: Colors.grey[500]),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            entry.entryDateFormatted!,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                   ],
+                                ),
+                                const SizedBox(height: 12),
+                                // Notes content
+                                if (entry.notes != null && entry.notes!.isNotEmpty)
+                                  _buildEntryCell(
+                                    entry.type == 'intervention' ? 'Nurse Intervention' : 'Evaluation',
+                                    entry.notes,
+                                  ),
+                                // Nurse info
+                                if (entry.nurse != null) ...[
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'By ${entry.nurse!.name}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Colors.grey[600],
+                                          fontStyle: FontStyle.italic,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
-                              );
-                            }).toList(),
-                          ),
-                        ),
+                              ],
+                            ),
+                          );
+                        }),
                         const SizedBox(height: 24),
                       ],
-                      
+
                       Row(
                         children: [
                           Expanded(
@@ -1857,6 +1984,41 @@ class _CarePlansScreenState extends State<CarePlansScreen>
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildEntryCell(String label, String? value) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade500,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value?.isNotEmpty == true ? value! : '-',
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1A1A1A),
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }

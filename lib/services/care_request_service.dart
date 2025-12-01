@@ -11,32 +11,36 @@ class CareRequestService {
   /// Get care request process information and assessment fee
   /// 
   /// Parameters:
+  /// - [id]: Care request ID (optional, for existing requests)
   /// - [careType]: Type of care needed (optional)
   /// - [region]: Patient's region for regional pricing (optional)
   Future<CareRequestInfoResponse> getRequestInfo({
+    int? id,
     String? careType,
     String? region,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-
+      
+      if (id != null) {
+        queryParams['id'] = id.toString();
+      }
       if (careType != null && careType.isNotEmpty) {
         queryParams['care_type'] = careType;
       }
-
       if (region != null && region.isNotEmpty) {
         queryParams['region'] = region;
       }
-
+      
       final uri = Uri.parse(ApiConfig.careRequestInfoEndpoint).replace(
-        queryParameters: queryParams,
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
       );
-
+      
       print('📡 [CareRequestService] Fetching request info...');
       print('🔗 [CareRequestService] URL: ${uri.toString()}');
       
       final response = await _apiClient.get(uri.toString());
-
+      
       if (response['success'] == true) {
         print('✅ [CareRequestService] Request info received');
         return CareRequestInfoResponse.fromJson(response);

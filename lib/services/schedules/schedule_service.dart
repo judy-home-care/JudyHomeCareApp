@@ -78,4 +78,69 @@ class ScheduleService {
       );
     }
   }
+
+    /// Request a reschedule for a schedule (Patient only)
+  Future<RescheduleRequestResponse> requestReschedule({
+    required int scheduleId,
+    required String reason,
+    String? preferredDate,
+    String? preferredTime,
+    String? additionalNotes,
+  }) async {
+    try {
+      final body = <String, dynamic>{
+        'reason': reason,
+      };
+
+      if (preferredDate != null) {
+        body['preferred_date'] = preferredDate;
+      }
+      if (preferredTime != null) {
+        body['preferred_time'] = preferredTime;
+      }
+      if (additionalNotes != null && additionalNotes.isNotEmpty) {
+        body['additional_notes'] = additionalNotes;
+      }
+
+      final response = await _apiClient.post(
+        ApiConfig.scheduleRescheduleRequestEndpoint(scheduleId),
+        body: body,
+        requiresAuth: true,
+      );
+
+      return RescheduleRequestResponse.fromJson(response);
+    } on ApiError catch (e) {
+      throw ScheduleException(
+        message: e.displayMessage,
+        errors: e.errors,
+        statusCode: e.statusCode,
+      );
+    } catch (e) {
+      throw ScheduleException(
+        message: 'Failed to submit reschedule request. Please try again.',
+        statusCode: 0,
+      );
+    }
+  }
+}
+
+/// Response model for reschedule request
+class RescheduleRequestResponse {
+  final bool success;
+  final String message;
+  final Map<String, dynamic>? data;
+
+  RescheduleRequestResponse({
+    required this.success,
+    required this.message,
+    this.data,
+  });
+
+  factory RescheduleRequestResponse.fromJson(Map<String, dynamic> json) {
+    return RescheduleRequestResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'],
+    );
+  }
 }

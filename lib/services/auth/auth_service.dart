@@ -1,12 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
 import '../../models/auth/auth_models.dart';
 import '../../utils/api_client.dart';
 import '../../utils/api_config.dart';
 import '../../utils/secure_storage.dart';
-import '../notification_service.dart'; // ✅ ADD THIS IMPORT
+import '../notification_service.dart'; 
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -558,6 +559,158 @@ class AuthService {
       if (kDebugMode) {
         print('⚠️ Background validation failed (ignored): $e');
       }
+    }
+  }
+
+
+  /// Request a callback - simplified registration for Get Started flow
+  /// Supports file uploads for nurse document verification
+  Future<CallbackResponse> requestCallback(CallbackRequest request) async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}${ApiConfig.requestCallbackEndpoint}');
+      
+      if (kDebugMode) {
+        print('🔵 Callback Request URL: $url');
+        print('🔵 Role: ${request.role}');
+      }
+
+      // Use multipart request for file uploads
+      final multipartRequest = http.MultipartRequest('POST', url);
+      
+      // Add headers
+      multipartRequest.headers.addAll({
+        'Accept': 'application/json',
+        'X-Client-Type': 'mobile',
+      });
+
+      // Add text fields
+      multipartRequest.fields['name'] = request.name;
+      multipartRequest.fields['email'] = request.email;
+      multipartRequest.fields['phone'] = request.phone;
+      multipartRequest.fields['country_code'] = request.countryCode;
+      multipartRequest.fields['role'] = request.role;
+
+      // Add nurse-specific fields
+      if (request.role == 'nurse') {
+        if (request.nursePin != null) {
+          multipartRequest.fields['nurse_pin'] = request.nursePin!;
+        }
+        
+        if (request.ghanaCardNumber != null) {
+          multipartRequest.fields['ghana_card_number'] = request.ghanaCardNumber!;
+        }
+
+        // Add Ghana Card Front
+        if (request.ghanaCardFront != null) {
+          final ghanaFront = await http.MultipartFile.fromPath(
+            'ghana_card_front',
+            request.ghanaCardFront!.path,
+            contentType: MediaType('image', _getImageExtension(request.ghanaCardFront!.path)),
+          );
+          multipartRequest.files.add(ghanaFront);
+        }
+
+        // Add Ghana Card Back
+        if (request.ghanaCardBack != null) {
+          final ghanaBack = await http.MultipartFile.fromPath(
+            'ghana_card_back',
+            request.ghanaCardBack!.path,
+            contentType: MediaType('image', _getImageExtension(request.ghanaCardBack!.path)),
+          );
+          multipartRequest.files.add(ghanaBack);
+        }
+
+        // Add Nurse PIN Front
+        if (request.nursePinFront != null) {
+          final pinFront = await http.MultipartFile.fromPath(
+            'nurse_pin_front',
+            request.nursePinFront!.path,
+            contentType: MediaType('image', _getImageExtension(request.nursePinFront!.path)),
+          );
+          multipartRequest.files.add(pinFront);
+        }
+
+        // Add Nurse PIN Back
+        if (request.nursePinBack != null) {
+          final pinBack = await http.MultipartFile.fromPath(
+            'nurse_pin_back',
+            request.nursePinBack!.path,
+            contentType: MediaType('image', _getImageExtension(request.nursePinBack!.path)),
+          );
+          multipartRequest.files.add(pinBack);
+        }
+      }
+
+      if (kDebugMode) {
+        print('🔵 Fields: ${multipartRequest.fields}');
+        print('🔵 Files count: ${multipartRequest.files.length}');
+      }
+
+      // Send request with longer timeout for file uploads
+      final streamedResponse = await multipartRequest.send()
+          .timeout(const Duration(seconds: 60));
+      
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (kDebugMode) {
+        print('🟢 Callback Response Status: ${response.statusCode}');
+        print('🟢 Callback Response Body: ${response.body}');
+      }
+
+      final responseData = jsonDecode(response.body);
+      return CallbackResponse.fromJson(responseData);
+
+    } on SocketException catch (e) {
+      if (kDebugMode) {
+        print('❌ Socket Exception: $e');
+      }
+      return CallbackResponse(
+        success: false,
+        message: 'No internet connection. Please check your network.',
+      );
+    } on http.ClientException catch (e) {
+      if (kDebugMode) {
+        print('❌ Client Exception: $e');
+      }
+      return CallbackResponse(
+        success: false,
+        message: 'Unable to connect to server.',
+      );
+    } on FormatException catch (e) {
+      if (kDebugMode) {
+        print('❌ Format Exception: $e');
+      }
+      return CallbackResponse(
+        success: false,
+        message: 'Invalid response from server.',
+      );
+    } catch (e, stackTrace) {
+      if (kDebugMode) {
+        print('❌ Unexpected Error: $e');
+        print('❌ Stack Trace: $stackTrace');
+      }
+      return CallbackResponse(
+        success: false,
+        message: 'An unexpected error occurred. Please try again.',
+      );
+    }
+  }
+
+  /// Helper to get image extension for content type
+  String _getImageExtension(String path) {
+    final extension = path.split('.').last.toLowerCase();
+    switch (extension) {
+      case 'jpg':
+      case 'jpeg':
+        return 'jpeg';
+      case 'png':
+        return 'png';
+      case 'gif':
+        return 'gif';
+      case 'webp':
+        return 'webp';
+      default:
+        return 'jpeg';
     }
   }
 }

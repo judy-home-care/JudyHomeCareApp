@@ -9,7 +9,11 @@ import '../../services/patients/nurse_patient_service.dart';
 import '../../models/patients/nurse_patient_models.dart';
 import '../../services/patients_assessments/progress_note_service.dart';
 import '../../models/patients_assessments/progress_note_models.dart';
+import '../../services/care_plans/care_plan_service.dart';
+import '../../models/care_plans/care_plan_models.dart' show CarePlanEntry;
 import 'widgets/edit_progress_note_form.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 
 /// Optimized Smart Refresh Nurse Patients Screen with:
 /// - Performance optimizations for low-end devices
@@ -37,7 +41,7 @@ class NursePatientsScreen extends StatefulWidget {
 }
 
 class _NursePatientsScreenState extends State<NursePatientsScreen>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, WidgetsBindingObserver {
   
   @override
   bool get wantKeepAlive => true;
@@ -90,25 +94,140 @@ class _NursePatientsScreenState extends State<NursePatientsScreen>
     'medium': 0,
     'low': 0,
   };
+
+  // Notification management
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+  bool _isScreenVisible = true;
+
+  // Track if notification was received while app was paused (local flag)
+  bool _pendingNotificationRefresh = false;
+
+  // Multi-listener cleanup callbacks
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
   
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(_onTabChanged);
     _scrollController.addListener(_onScroll);
     _loadPatients(forceRefresh: false);
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _searchDebounce?.cancel();
     _scrollDebounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     _tabController.dispose();
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
   }
+
+  // ==================== APP LIFECYCLE ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _isScreenVisible = true;
+      debugPrint('🔄 [Patients] App resumed - checking for pending notifications');
+
+      // Check if notification was received while in background (from tapping notification)
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+
+      // Check if notification was received while app was paused (local tracking)
+      final hasPendingRefresh = _pendingNotificationRefresh;
+
+      // Force refresh if any notification was received while away
+      if (hasBackgroundNotification || hasPendingRefresh) {
+        debugPrint('📱 [Patients] Notification received while away - forcing refresh');
+        debugPrint('   - Background notification (tapped): $hasBackgroundNotification');
+        debugPrint('   - Pending refresh (received while paused): $hasPendingRefresh');
+
+        // Clear both flags
+        _notificationService.clearBackgroundNotificationFlag();
+        _pendingNotificationRefresh = false;
+
+        // Force data reload
+        _loadPatients(forceRefresh: true, silent: true);
+      }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [Patients] App paused');
+    }
+  }
+
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  /// Set up FCM callback for real-time notification count updates
+  /// Uses multi-listener pattern so all screens get updates!
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [Patients] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+        debugPrint('🔔 [Patients] Notification count updated: $newCount');
+      }
+    });
+
+    // Refresh data when notification received (foreground or background)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted) {
+        if (_isScreenVisible) {
+          // App is in foreground - refresh data immediately
+          debugPrint('🔄 [Patients] Notification received (foreground) - triggering silent refresh');
+          _loadPatients(forceRefresh: true, silent: true);
+          // NOTE: Don't call _loadUnreadNotificationCount() here!
+          // The badge count is already updated via the count listener
+        } else {
+          // App is in background/paused - set flag to refresh on resume
+          debugPrint('🔄 [Patients] Notification received (background) - setting pending refresh flag');
+          _pendingNotificationRefresh = true;
+        }
+      }
+    });
+  }
+
+  /// Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [Patients] Badge refreshed');
+    } catch (e) {
+      debugPrint('❌ [Patients] Error refreshing badge: $e');
+    }
+  }
+
+  /// Open notifications sheet
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Patients] Badge refreshed after closing notifications');
+  }
+
+  // ==================== END NOTIFICATION UPDATES ====================
 
   void _onTabChanged() {
     if (_tabController.indexIsChanging) {
@@ -830,6 +949,44 @@ String _formatTimeAgo(DateTime? dateTime) {
           ],
         ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           // Manual refresh button with loading indicator
           IconButton(
             icon: _isLoading && !_isCacheExpired
@@ -2694,78 +2851,11 @@ Future<void> _toggleTaskCompletion(
   }
 
 Widget _buildHistoryTab(PatientDetail patientDetail) {
-  return StatefulBuilder(
-    builder: (BuildContext context, StateSetter setModalState) {
-      // Local state for expanded notes within this modal
-      final Set<int> localExpandedNotes = _expandedNotes;
-      
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Care History & Progress Notes',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            if (patientDetail.recentNotes.isNotEmpty)
-              ...patientDetail.recentNotes.asMap().entries.map((entry) {
-                final index = entry.key;
-                final note = entry.value;
-                return _buildComprehensiveHistoryNote(
-                  note, 
-                  index,
-                  localExpandedNotes,
-                  setModalState, 
-                  patientDetail,
-                );
-              }).toList()
-            else
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.note_outlined,
-                        size: 48,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No progress notes yet',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Daily progress notes will appear here',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      );
-    },
+  return _HistoryTabContent(
+    patientDetail: patientDetail,
+    expandedNotes: _expandedNotes,
+    onEditProgressNote: _editProgressNote,
+    buildComprehensiveNote: _buildComprehensiveHistoryNote,
   );
 }
 
@@ -3863,7 +3953,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
 }
 
 // ==================== CARE PLAN CARD WIDGET ====================
-class CarePlanCard extends StatelessWidget {
+class CarePlanCard extends StatefulWidget {
   final CarePlan carePlan;
   final PatientDetail patientDetail;
   final StateSetter modalSetState;
@@ -3880,6 +3970,30 @@ class CarePlanCard extends StatelessWidget {
     this.showNumber = false,
     this.planNumber = 1,
   }) : super(key: key);
+
+  @override
+  State<CarePlanCard> createState() => _CarePlanCardState();
+}
+
+class _CarePlanCardState extends State<CarePlanCard> {
+  final _carePlanService = CarePlanService();
+  final _nurseInterventionsController = TextEditingController();
+  final _evaluationController = TextEditingController();
+  bool _isSavingEntry = false;
+
+  @override
+  void dispose() {
+    _nurseInterventionsController.dispose();
+    _evaluationController.dispose();
+    super.dispose();
+  }
+
+  // Convenience getters
+  CarePlan get carePlan => widget.carePlan;
+  PatientDetail get patientDetail => widget.patientDetail;
+  StateSetter get modalSetState => widget.modalSetState;
+  bool get showNumber => widget.showNumber;
+  int get planNumber => widget.planNumber;
 
   Color _getPriorityColor(String priority) {
     switch (priority) {
@@ -3932,23 +4046,25 @@ class CarePlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey[200]!,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: Colors.grey[200]!,
+            width: 2,
           ),
-        ],
-      ),
-      child: Column(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Care Plan Header
@@ -4157,150 +4273,390 @@ class CarePlanCard extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 
-                // Progress bar
-                if (carePlan.careTasks.isNotEmpty) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryGreen.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: AppColors.primaryGreen.withOpacity(0.1),
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'Task Progress',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                            Text(
-                              '${carePlan.completedTasks.length}/${carePlan.careTasks.length} completed',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryGreen,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: LinearProgressIndicator(
-                            value: carePlan.completionPercentage / 100,
-                            backgroundColor: Colors.grey[200],
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _getCompletionColor(carePlan.completionPercentage),
-                            ),
-                            minHeight: 8,
-                          ),
-                        ),
-                      ],
+                // ==================== NURSE ENTRY SECTION ====================
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withOpacity(0.03),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: AppColors.primaryGreen.withOpacity(0.2),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                ],
-                
-                // Care Tasks Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Care Tasks',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
-                      ),
-                    ),
-                    if (carePlan.careTasks.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[100],
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          '${carePlan.careTasks.length} tasks',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                
-                if (carePlan.careTasks.isNotEmpty)
-                  ...carePlan.careTasks.asMap().entries.map((entry) {
-                    final index = entry.key;
-                    final task = entry.value;
-                    final isCompleted = carePlan.completedTasks.contains(index);
-                    
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _CheckableCareTask(
-                        index: index,
-                        task: task,
-                        isCompleted: isCompleted,
-                        icon: _getTaskIcon(index),
-                        color: _getTaskColor(index),
-                        patientDetail: patientDetail,
-                        modalSetState: modalSetState,
-                        carePlanId: carePlan.id,
-                        onToggleTask: onToggleTask,
-                      ),
-                    );
-                  }).toList()
-                else
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey[200]!),
-                    ),
-                    child: Center(
-                      child: Column(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
                         children: [
-                          Icon(
-                            Icons.task_outlined,
-                            size: 40,
-                            color: Colors.grey[400],
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.edit_note_rounded,
+                              color: AppColors.primaryGreen,
+                              size: 20,
+                            ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'No care tasks specified',
+                          const SizedBox(width: 10),
+                          const Text(
+                            'Add Nurse Entry',
                             style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[600],
-                              fontWeight: FontWeight.w500,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFF1A1A1A),
                             ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+
+                      // Nurse Interventions TextField
+                      Row(
+                        children: [
+                          Text(
+                            'Nurse Interventions',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const Text(
+                            ' *',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFFF4757),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _nurseInterventionsController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Enter nurse interventions...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 13,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[200]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 1.5,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.all(14),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Evaluation TextField
+                      Row(
+                        children: [
+                          Text(
+                            'Evaluation',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const Text(
+                            ' *',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFFF4757),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _evaluationController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Enter evaluation...',
+                          hintStyle: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 13,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[200]!),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: AppColors.primaryGreen,
+                              width: 1.5,
+                            ),
+                          ),
+                          contentPadding: const EdgeInsets.all(14),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Save Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isSavingEntry ? null : _saveEntry,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _isSavingEntry
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.save_rounded, size: 18),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Save Entry',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
         ],
+        ),
       ),
     );
+  }
+
+  Future<void> _saveEntry() async {
+    final interventions = _nurseInterventionsController.text.trim();
+    final evaluation = _evaluationController.text.trim();
+
+    // Both fields are required
+    if (interventions.isEmpty || evaluation.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Both Nurse Interventions and Evaluation are required')),
+            ],
+          ),
+          backgroundColor: const Color(0xFFFF9A00),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isSavingEntry = true);
+
+    try {
+      // Submit intervention entry
+      await _carePlanService.createCarePlanEntry(
+        carePlanId: carePlan.id,
+        type: 'intervention',
+        notes: interventions,
+      );
+
+      // Submit evaluation entry
+      await _carePlanService.createCarePlanEntry(
+        carePlanId: carePlan.id,
+        type: 'evaluation',
+        notes: evaluation,
+      );
+
+      _nurseInterventionsController.clear();
+      _evaluationController.clear();
+
+      if (mounted) {
+        // Show success dialog
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryGreen.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle,
+                    color: AppColors.primaryGreen,
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Success!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Nurse Interventions and Evaluation saved successfully!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryGreen,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        // Show error dialog
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFF4757).withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.error_outline,
+                    color: Color(0xFFFF4757),
+                    size: 48,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Error',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Failed to save: $e',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF4757),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingEntry = false);
+      }
+    }
   }
 }
 
@@ -4431,6 +4787,76 @@ class _CheckableCareTask extends StatelessWidget {
 
 
 
+enum VitalStatus { normal, low, high, critical }
+
+class VitalRange {
+  final double? lowCritical;
+  final double? low;
+  final double? high;
+  final double? highCritical;
+  final String unit;
+  final String normalRange;
+
+  const VitalRange({
+    this.lowCritical,
+    this.low,
+    this.high,
+    this.highCritical,
+    required this.unit,
+    required this.normalRange,
+  });
+}
+
+class VitalValidationResult {
+  final VitalStatus status;
+  final String message;
+  final Color color;
+  final IconData icon;
+
+  const VitalValidationResult({
+    required this.status,
+    required this.message,
+    required this.color,
+    required this.icon,
+  });
+}
+
+// Vital sign ranges (adult values) - also top-level
+const Map<String, VitalRange> vitalRanges = {
+  'temperature': VitalRange(
+    lowCritical: 35.0,
+    low: 36.1,
+    high: 37.2,
+    highCritical: 39.0,
+    unit: '°C',
+    normalRange: '36.1 - 37.2°C',
+  ),
+  'pulse': VitalRange(
+    lowCritical: 40,
+    low: 60,
+    high: 100,
+    highCritical: 120,
+    unit: 'bpm',
+    normalRange: '60 - 100 bpm',
+  ),
+  'respiration': VitalRange(
+    lowCritical: 8,
+    low: 12,
+    high: 20,
+    highCritical: 30,
+    unit: '/min',
+    normalRange: '12 - 20/min',
+  ),
+  'spo2': VitalRange(
+    lowCritical: 90,
+    low: 95,
+    high: null,
+    highCritical: null,
+    unit: '%',
+    normalRange: '95 - 100%',
+  ),
+};
+
 // ==================== DAILY PROGRESS NOTE FORM ====================
 class DailyProgressNoteForm extends StatefulWidget {
   final PatientDetail patientDetail;
@@ -4448,6 +4874,7 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
   final _formKey = GlobalKey<FormState>();
   final _progressNoteService = ProgressNoteService();
   bool _isSaving = false;
+  Timer? _validationDebounce;
   
   DateTime _visitDate = DateTime.now();
   TimeOfDay _visitTime = TimeOfDay.now();
@@ -4458,6 +4885,187 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
   final _respirationController = TextEditingController();
   final _bloodPressureController = TextEditingController();
   final _spo2Controller = TextEditingController();
+
+
+  /// Blood pressure validation - EXACT categories as specified
+  VitalValidationResult? _validateBloodPressure(String value) {
+    if (value.isEmpty) return null;
+    
+    final parts = value.split('/');
+    if (parts.length != 2) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid format. Use systolic/diastolic (e.g., 120/80)',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+    
+    final systolic = int.tryParse(parts[0].trim());
+    final diastolic = int.tryParse(parts[1].trim());
+    
+    if (systolic == null || diastolic == null) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid numbers',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+    
+    // Impossible values - too low to sustain life
+    if (systolic < 60 || diastolic < 40) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid reading. Values too low to be possible.',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+    
+    // Impossible values - too high
+    if (systolic > 300 || diastolic > 200) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid reading. Values too high to be possible.',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+    
+    // Systolic must be greater than diastolic
+    if (systolic <= diastolic) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid reading. Systolic must be higher than diastolic.',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+    
+    // Hypertensive Crisis: Systolic ≥180 OR Diastolic ≥120
+    if (systolic >= 180 || diastolic >= 120) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Hypertensive Crisis (≥180/≥120)',
+        color: Color(0xFFDC143C),
+        icon: Icons.emergency,
+      );
+    }
+    
+    // Stage 2 Hypertension: Systolic ≥140 OR Diastolic ≥90
+    if (systolic >= 140 || diastolic >= 90) {
+      return const VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Stage 2 Hypertension (≥140/≥90)',
+        color: Color(0xFFFF4757),
+        icon: Icons.arrow_upward,
+      );
+    }
+    
+    // Stage 1 Hypertension: Systolic 130-139
+    if (systolic >= 130) {
+      return const VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Stage 1 Hypertension (130-139)',
+        color: Color(0xFFFF9A00),
+        icon: Icons.trending_up,
+      );
+    }
+    
+    // Elevated: Systolic 120-129
+    if (systolic >= 120) {
+      return const VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Elevated (120-129)',
+        color: Color(0xFFFFB347),
+        icon: Icons.trending_up,
+      );
+    }
+    
+    // Low Blood Pressure: Systolic <90 OR Diastolic <60
+    if (systolic < 90 || diastolic < 60) {
+      return const VitalValidationResult(
+        status: VitalStatus.low,
+        message: 'Low Blood Pressure (Hypotension)',
+        color: Color(0xFF2196F3),
+        icon: Icons.arrow_downward,
+      );
+    }
+    
+    // Normal: Systolic <120
+    return const VitalValidationResult(
+      status: VitalStatus.normal,
+      message: 'Normal (<120)',
+      color: Color(0xFF199A8E),
+      icon: Icons.check_circle,
+    );
+  }
+
+  VitalValidationResult? _validateVital(String vitalType, String value) {
+    if (value.isEmpty) return null;
+    
+    final numValue = double.tryParse(value);
+    if (numValue == null) {
+      return const VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Invalid number',
+        color: Colors.red,
+        icon: Icons.error_outline,
+      );
+    }
+    
+    final range = vitalRanges[vitalType]; // Use top-level constant
+    if (range == null) return null;
+    
+    // Check critical low
+    if (range.lowCritical != null && numValue < range.lowCritical!) {
+      return VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Critically Low! Below ${range.lowCritical}${range.unit}',
+        color: const Color(0xFFDC143C),
+        icon: Icons.warning_amber_rounded,
+      );
+    }
+    
+    // Check critical high
+    if (range.highCritical != null && numValue > range.highCritical!) {
+      return VitalValidationResult(
+        status: VitalStatus.critical,
+        message: 'Critically High! Above ${range.highCritical}${range.unit}',
+        color: const Color(0xFFDC143C),
+        icon: Icons.warning_amber_rounded,
+      );
+    }
+    
+    // Check low
+    if (range.low != null && numValue < range.low!) {
+      return VitalValidationResult(
+        status: VitalStatus.low,
+        message: 'Below normal (${range.normalRange})',
+        color: const Color(0xFF2196F3),
+        icon: Icons.arrow_downward,
+      );
+    }
+    
+    // Check high
+    if (range.high != null && numValue > range.high!) {
+      return VitalValidationResult(
+        status: VitalStatus.high,
+        message: 'Above normal (${range.normalRange})',
+        color: const Color(0xFFFF9A00),
+        icon: Icons.arrow_upward,
+      );
+    }
+    
+    // Normal
+    return VitalValidationResult(
+      status: VitalStatus.normal,
+      message: 'Normal (${range.normalRange})',
+      color: AppColors.primaryGreen,
+      icon: Icons.check_circle,
+    );
+  }
   
   bool _medicationAdministered = false;
   final _medicationDetailsController = TextEditingController();
@@ -4489,6 +5097,7 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
 
   @override
   void dispose() {
+    _validationDebounce?.cancel();
     _temperatureController.dispose();
     _pulseController.dispose();
     _respirationController.dispose();
@@ -4507,6 +5116,16 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
     _familyConcernsController.dispose();
     _nextVisitPlanController.dispose();
     super.dispose();
+  }
+
+    // Debounced setState for validation
+  void _onVitalChanged(String value) {
+    _validationDebounce?.cancel();
+    _validationDebounce = Timer(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
   void _toggleInterventionExpansion(String intervention, bool isChecked) {
@@ -4798,9 +5417,9 @@ Widget build(BuildContext context) {
           left: 20,
           right: 20,
           top: 20,
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20, // Changed this line
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
         ),
-        physics: const ClampingScrollPhysics(), // Added this line
+        physics: const ClampingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -4883,7 +5502,7 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 24),
             
-            // Vital Signs
+            // ==================== VITAL SIGNS WITH VALIDATION ====================
             Row(
               children: [
                 const Icon(Icons.favorite, color: AppColors.primaryGreen, size: 20),
@@ -4898,41 +5517,77 @@ Widget build(BuildContext context) {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            // Normal ranges info box
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F9FF),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 18, color: Color(0xFF2196F3)),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Values will be validated against normal adult ranges',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const Divider(height: 24),
             
+            // Temperature and Pulse Row
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _buildRequiredNumberField(
+                  child: _buildVitalFieldWithValidation(
                     label: 'Temperature (°C) *',
                     controller: _temperatureController,
                     hint: '36.5',
+                    vitalType: 'temperature',
+                    normalRange: '36.1 - 37.2°C',
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildRequiredNumberField(
+                  child: _buildVitalFieldWithValidation(
                     label: 'Pulse (bpm) *',
                     controller: _pulseController,
                     hint: '72',
+                    vitalType: 'pulse',
+                    normalRange: '60 - 100 bpm',
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             
+            // Respiration and Blood Pressure Row
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: _buildRequiredNumberField(
+                  child: _buildVitalFieldWithValidation(
                     label: 'Respiration (/min) *',
                     controller: _respirationController,
                     hint: '16',
+                    vitalType: 'respiration',
+                    normalRange: '12 - 20/min',
                   ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildRequiredTextField(
+                  child: _buildBloodPressureFieldWithValidation(
                     label: 'Blood Pressure *',
                     controller: _bloodPressureController,
                     hint: '120/80',
@@ -4942,13 +5597,21 @@ Widget build(BuildContext context) {
             ),
             const SizedBox(height: 16),
             
-            _buildRequiredNumberField(
+            // SpO2 Field
+            _buildVitalFieldWithValidation(
               label: 'SpO₂ (%) *',
               controller: _spo2Controller,
               hint: '98',
+              vitalType: 'spo2',
+              normalRange: '95 - 100%',
             ),
+            
+            // Vital Signs Summary (shows when all vitals are entered)
+            _buildVitalsSummary(),
+            
             const SizedBox(height: 24),
             
+            // ==================== REST OF THE FORM (unchanged) ====================
             // Interventions
             Row(
               children: [
@@ -5301,6 +5964,486 @@ Widget build(BuildContext context) {
   );
 }
 
+// ==================== NEW HELPER WIDGETS FOR VITALS ====================
+
+Widget _buildVitalFieldWithValidation({
+  required String label,
+  required TextEditingController controller,
+  required String hint,
+  required String vitalType,
+  required String normalRange,
+}) {
+  // Get current values directly from controller
+  final String currentValue = controller.text.trim();
+  final bool hasValue = currentValue.isNotEmpty;
+  
+  // Calculate validation result
+  VitalValidationResult? validation;
+  if (hasValue) {
+    validation = _validateVital(vitalType, currentValue);
+    debugPrint('🔍 $vitalType validation: ${validation?.message}'); // Debug
+  }
+  
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      // Label Row
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+          ),
+          if (hasValue && validation != null)
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: validation.color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                validation.icon,
+                size: 14,
+                color: validation.color,
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      
+      // Normal range hint
+      Text(
+        'Normal: $normalRange',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey[500],
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+      const SizedBox(height: 8),
+      
+      // Text Field
+      TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+        ],
+        onChanged: _onVitalChanged,
+        validator: (value) {
+          if (value == null || value.trim().isEmpty) {
+            return 'Required';
+          }
+          final numValue = double.tryParse(value.trim());
+          if (numValue == null) {
+            return 'Enter a valid number';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 13,
+          ),
+          filled: true,
+          fillColor: hasValue && validation != null
+              ? validation.color.withOpacity(0.05)
+              : const Color(0xFFF8FAFB),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: hasValue && validation != null
+                  ? validation.color
+                  : Colors.grey[300]!,
+              width: hasValue && validation != null && 
+                     validation.status != VitalStatus.normal ? 2 : 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: hasValue && validation != null
+                  ? validation.color
+                  : AppColors.primaryGreen,
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red, width: 1.5),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red, width: 2),
+          ),
+          contentPadding: const EdgeInsets.all(14),
+        ),
+      ),
+      
+      // Validation Message Box - SIMPLIFIED VERSION
+      if (hasValue && validation != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: validation.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: validation.color.withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  validation.icon,
+                  size: 16,
+                  color: validation.color,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    validation.message,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: validation.color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+    ],
+  );
+}
+
+Widget _buildBloodPressureFieldWithValidation({
+  required String label,
+  required TextEditingController controller,
+  required String hint,
+}) {
+  final validation = _validateBloodPressure(controller.text);
+  final hasValue = controller.text.isNotEmpty;
+  
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+          ),
+          if (hasValue && validation != null)
+            Icon(
+              validation.icon,
+              size: 16,
+              color: validation.color,
+            ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(
+        'Normal: <120/<80 mmHg',
+        style: TextStyle(
+          fontSize: 11,
+          color: Colors.grey[500],
+          fontStyle: FontStyle.italic,
+        ),
+      ),
+      const SizedBox(height: 8),
+      TextFormField(
+        controller: controller,
+        keyboardType: TextInputType.text,
+        onChanged: _onVitalChanged,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Required';
+          }
+          if (!value.contains('/')) {
+            return 'Use format: systolic/diastolic';
+          }
+          return null;
+        },
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.grey[400],
+            fontSize: 13,
+          ),
+          filled: true,
+          fillColor: hasValue && validation != null
+              ? validation.color.withOpacity(0.05)
+              : const Color(0xFFF8FAFB),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: hasValue && validation != null
+                  ? validation.color.withOpacity(0.5)
+                  : Colors.grey[200]!,
+            ),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: hasValue && validation != null
+                  ? validation.color.withOpacity(0.5)
+                  : Colors.grey[200]!,
+              width: hasValue && validation != null && validation.status != VitalStatus.normal ? 2 : 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: hasValue && validation != null
+                  ? validation.color
+                  : AppColors.primaryGreen,
+              width: 2,
+            ),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Colors.red, width: 2),
+          ),
+          contentPadding: const EdgeInsets.all(14),
+          suffixIcon: hasValue && validation != null
+              ? Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Icon(
+                    validation.icon,
+                    color: validation.color,
+                    size: 20,
+                  ),
+                )
+              : null,
+        ),
+      ),
+      // Validation message
+      if (hasValue && validation != null)
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: validation.color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: validation.color.withOpacity(0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                validation.icon,
+                size: 14,
+                color: validation.color,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  validation.message,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: validation.color,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+    ],
+  );
+}
+
+/// Builds a summary card showing all vitals status
+Widget _buildVitalsSummary() {
+  final tempValidation = _validateVital('temperature', _temperatureController.text);
+  final pulseValidation = _validateVital('pulse', _pulseController.text);
+  final respValidation = _validateVital('respiration', _respirationController.text);
+  final bpValidation = _validateBloodPressure(_bloodPressureController.text);
+  final spo2Validation = _validateVital('spo2', _spo2Controller.text);
+  
+  // Check if all vitals are entered
+  final allEntered = _temperatureController.text.isNotEmpty &&
+      _pulseController.text.isNotEmpty &&
+      _respirationController.text.isNotEmpty &&
+      _bloodPressureController.text.isNotEmpty &&
+      _spo2Controller.text.isNotEmpty;
+  
+  if (!allEntered) return const SizedBox.shrink();
+  
+  // Count abnormal vitals
+  int abnormalCount = 0;
+  int criticalCount = 0;
+  
+  for (final v in [tempValidation, pulseValidation, respValidation, bpValidation, spo2Validation]) {
+    if (v != null) {
+      if (v.status == VitalStatus.critical) {
+        criticalCount++;
+        abnormalCount++;
+      } else if (v.status != VitalStatus.normal) {
+        abnormalCount++;
+      }
+    }
+  }
+  
+  Color summaryColor;
+  IconData summaryIcon;
+  String summaryText;
+  
+  if (criticalCount > 0) {
+    summaryColor = const Color(0xFFDC143C);
+    summaryIcon = Icons.emergency;
+    summaryText = '$criticalCount critical vital(s) detected! Immediate attention may be required.';
+  } else if (abnormalCount > 0) {
+    summaryColor = const Color(0xFFFF9A00);
+    summaryIcon = Icons.warning_amber_rounded;
+    summaryText = '$abnormalCount vital(s) outside normal range. Monitor closely.';
+  } else {
+    summaryColor = AppColors.primaryGreen;
+    summaryIcon = Icons.check_circle;
+    summaryText = 'All vitals within normal range.';
+  }
+  
+  return AnimatedContainer(
+    duration: const Duration(milliseconds: 300),
+    margin: const EdgeInsets.only(top: 16),
+    padding: const EdgeInsets.all(14),
+    decoration: BoxDecoration(
+      color: summaryColor.withOpacity(0.08),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(
+        color: summaryColor.withOpacity(0.4),
+        width: 2,
+      ),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: summaryColor.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                summaryIcon,
+                color: summaryColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Vitals Assessment',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: summaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    summaryText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (abnormalCount > 0) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (tempValidation != null && tempValidation.status != VitalStatus.normal)
+                _buildMiniVitalBadge('Temp', _temperatureController.text, '°C', tempValidation),
+              if (pulseValidation != null && pulseValidation.status != VitalStatus.normal)
+                _buildMiniVitalBadge('Pulse', _pulseController.text, 'bpm', pulseValidation),
+              if (respValidation != null && respValidation.status != VitalStatus.normal)
+                _buildMiniVitalBadge('Resp', _respirationController.text, '/min', respValidation),
+              if (bpValidation != null && bpValidation.status != VitalStatus.normal)
+                _buildMiniVitalBadge('BP', _bloodPressureController.text, '', bpValidation),
+              if (spo2Validation != null && spo2Validation.status != VitalStatus.normal)
+                _buildMiniVitalBadge('SpO₂', _spo2Controller.text, '%', spo2Validation),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValidationResult validation) {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(
+        color: validation.color.withOpacity(0.5),
+      ),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          validation.icon,
+          size: 14,
+          color: validation.color,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$label: $value$unit',
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: validation.color,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
   // Helper Widgets
   Widget _buildExpandableCheckbox({
     required String label,
@@ -5607,6 +6750,646 @@ Widget build(BuildContext context) {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ==================== HISTORY TAB WITH SUB-TABS ====================
+class _HistoryTabContent extends StatefulWidget {
+  final PatientDetail patientDetail;
+  final Set<int> expandedNotes;
+  final void Function(ProgressNote note, PatientDetail patientDetail) onEditProgressNote;
+  final Widget Function(ProgressNote note, int index, Set<int> expandedNotes, StateSetter setModalState, PatientDetail patientDetail) buildComprehensiveNote;
+
+  const _HistoryTabContent({
+    Key? key,
+    required this.patientDetail,
+    required this.expandedNotes,
+    required this.onEditProgressNote,
+    required this.buildComprehensiveNote,
+  }) : super(key: key);
+
+  @override
+  State<_HistoryTabContent> createState() => _HistoryTabContentState();
+}
+
+class _HistoryTabContentState extends State<_HistoryTabContent>
+    with SingleTickerProviderStateMixin {
+  late TabController _subTabController;
+  final CarePlanService _carePlanService = CarePlanService();
+
+  List<CarePlanEntry> _carePlanEntries = [];
+  bool _isLoadingEntries = false;
+  String? _entriesError;
+
+  @override
+  void initState() {
+    super.initState();
+    _subTabController = TabController(length: 2, vsync: this);
+    _loadCarePlanEntries();
+  }
+
+  Future<void> _loadCarePlanEntries() async {
+    if (_isLoadingEntries) return;
+
+    setState(() {
+      _isLoadingEntries = true;
+      _entriesError = null;
+    });
+
+    try {
+      final entries = await _carePlanService.getPatientCarePlanEntries(
+        widget.patientDetail.id,
+      );
+
+      // Sort by created date (newest first)
+      entries.sort((a, b) {
+        final aDate = a.createdAt != null
+            ? DateTime.tryParse(a.createdAt!) ?? DateTime(2000)
+            : DateTime(2000);
+        final bDate = b.createdAt != null
+            ? DateTime.tryParse(b.createdAt!) ?? DateTime(2000)
+            : DateTime(2000);
+        return bDate.compareTo(aDate);
+      });
+
+      setState(() {
+        _carePlanEntries = entries;
+        _isLoadingEntries = false;
+      });
+    } catch (e) {
+      setState(() {
+        _entriesError = 'Failed to load care plan entries';
+        _isLoadingEntries = false;
+      });
+      print('❌ Error loading care plan entries: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _subTabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // Sub-tab bar
+        Container(
+          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: TabBar(
+            controller: _subTabController,
+            indicator: BoxDecoration(
+              color: AppColors.primaryGreen,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            indicatorSize: TabBarIndicatorSize.tab,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.grey[600],
+            labelStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            padding: const EdgeInsets.all(4),
+            tabs: const [
+              Tab(text: 'Progress Notes'),
+              Tab(text: 'Care Plan Entries'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Sub-tab content
+        Expanded(
+          child: TabBarView(
+            controller: _subTabController,
+            children: [
+              _buildProgressNotesContent(),
+              _buildCarePlanEntriesContent(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressNotesContent() {
+    return StatefulBuilder(
+      builder: (context, setModalState) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Care History & Progress Notes',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              const SizedBox(height: 16),
+              if (widget.patientDetail.recentNotes.isNotEmpty)
+                ...widget.patientDetail.recentNotes.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final note = entry.value;
+                  return widget.buildComprehensiveNote(
+                    note,
+                    index,
+                    widget.expandedNotes,
+                    setModalState,
+                    widget.patientDetail,
+                  );
+                }).toList()
+              else
+                _buildEmptyState(
+                  icon: Icons.note_outlined,
+                  title: 'No progress notes yet',
+                  subtitle: 'Daily progress notes will appear here',
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCarePlanEntriesContent() {
+    // Show loading state
+    if (_isLoadingEntries) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32),
+          child: CircularProgressIndicator(
+            color: AppColors.primaryGreen,
+          ),
+        ),
+      );
+    }
+
+    // Show error state with retry
+    if (_entriesError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
+              const SizedBox(height: 16),
+              Text(
+                _entriesError!,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _loadCarePlanEntries,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Retry'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Care Plan Entries',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1A1A1A),
+                ),
+              ),
+              Row(
+                children: [
+                  if (_carePlanEntries.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${_carePlanEntries.length} ${_carePlanEntries.length == 1 ? 'entry' : 'entries'}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primaryGreen,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: _loadCarePlanEntries,
+                    child: Icon(Icons.refresh, size: 20, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_carePlanEntries.isNotEmpty)
+            ..._carePlanEntries.map((entry) => _CollapsibleCarePlanEntryCard(
+              entry: entry,
+              formatDate: _formatDate,
+            )).toList()
+          else
+            _buildEmptyState(
+              icon: Icons.assignment_outlined,
+              title: 'No care plan entries yet',
+              subtitle: 'Nurse interventions and evaluations will appear here',
+            ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(icon, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays == 0) {
+        return 'Today at ${_formatTime(date)}';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday at ${_formatTime(date)}';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return dateString;
+    }
+  }
+
+  String _formatTime(DateTime date) {
+    final hour = date.hour > 12 ? date.hour - 12 : date.hour;
+    final amPm = date.hour >= 12 ? 'PM' : 'AM';
+    return '${hour == 0 ? 12 : hour}:${date.minute.toString().padLeft(2, '0')} $amPm';
+  }
+}
+
+// Collapsible Care Plan Entry Card Widget
+class _CollapsibleCarePlanEntryCard extends StatefulWidget {
+  final CarePlanEntry entry;
+  final String Function(String) formatDate;
+
+  const _CollapsibleCarePlanEntryCard({
+    required this.entry,
+    required this.formatDate,
+  });
+
+  @override
+  State<_CollapsibleCarePlanEntryCard> createState() => _CollapsibleCarePlanEntryCardState();
+}
+
+class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntryCard>
+    with SingleTickerProviderStateMixin {
+  bool _isExpanded = false;
+  late AnimationController _animationController;
+  late Animation<double> _expandAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+    _expandAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _toggleExpand() {
+    setState(() {
+      _isExpanded = !_isExpanded;
+      if (_isExpanded) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final entry = widget.entry;
+
+    // Use formatted date from API or fallback to parsing created_at
+    final formattedDate = entry.entryDateFormatted ??
+        (entry.createdAt != null ? widget.formatDate(entry.createdAt!) : 'Unknown date');
+
+    // Determine color based on entry type
+    final isIntervention = entry.type == 'intervention';
+    final typeColor = isIntervention ? AppColors.primaryGreen : const Color(0xFFFF9A00);
+    final typeIcon = isIntervention ? Icons.medical_services_outlined : Icons.assessment_outlined;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header - Always visible, tappable to expand/collapse
+          InkWell(
+            onTap: _toggleExpand,
+            borderRadius: BorderRadius.only(
+              topLeft: const Radius.circular(16),
+              topRight: const Radius.circular(16),
+              bottomLeft: Radius.circular(_isExpanded ? 0 : 16),
+              bottomRight: Radius.circular(_isExpanded ? 0 : 16),
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    typeColor.withOpacity(0.08),
+                    typeColor.withOpacity(0.03),
+                  ],
+                ),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(16),
+                  topRight: const Radius.circular(16),
+                  bottomLeft: Radius.circular(_isExpanded ? 0 : 16),
+                  bottomRight: Radius.circular(_isExpanded ? 0 : 16),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: typeColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(
+                      typeIcon,
+                      color: typeColor,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                entry.carePlanTitle ?? 'Care Plan Entry',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            // Type badge
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: typeColor.withOpacity(0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                entry.typeLabel ?? (isIntervention ? 'Intervention' : 'Evaluation'),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: typeColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today, size: 12, color: Colors.grey[500]),
+                            const SizedBox(width: 4),
+                            Text(
+                              formattedDate,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            if (entry.entryTimeFormatted != null) ...[
+                              const SizedBox(width: 8),
+                              Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
+                              const SizedBox(width: 4),
+                              Text(
+                                entry.entryTimeFormatted!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                            const Spacer(),
+                            // Expand/Collapse indicator
+                            AnimatedRotation(
+                              turns: _isExpanded ? 0.5 : 0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 20,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Content - Notes (Collapsible)
+          SizeTransition(
+            sizeFactor: _expandAnimation,
+            child: Column(
+              children: [
+                if (entry.notes != null && entry.notes!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildEntryField(
+                          isIntervention ? 'Nurse Intervention' : 'Evaluation',
+                          entry.notes!,
+                          color: typeColor,
+                        ),
+                        // Show nurse info if available
+                        if (entry.nurse != null) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
+                              const SizedBox(width: 6),
+                              Text(
+                                'By ${entry.nurse!.name}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEntryField(String label, String value, {Color? color}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (color != null)
+                Container(
+                  width: 4,
+                  height: 14,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: color ?? Colors.grey[500],
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: (color ?? Colors.grey[500])!.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: (color ?? Colors.grey[300])!.withOpacity(0.2),
+              ),
+            ),
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[700],
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

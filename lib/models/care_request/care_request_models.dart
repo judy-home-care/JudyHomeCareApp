@@ -18,6 +18,7 @@ class CreateCareRequestRequest {
   final String? region;
   final String? preferredStartDate;
   final String? preferredTime;
+  final bool shareWithEmergencyContact;
 
   CreateCareRequestRequest({
     required this.careType,
@@ -29,6 +30,7 @@ class CreateCareRequestRequest {
     this.region,
     this.preferredStartDate,
     this.preferredTime,
+    this.shareWithEmergencyContact = false,
   });
 
   Map<String, dynamic> toJson() {
@@ -42,6 +44,7 @@ class CreateCareRequestRequest {
       'region': region,
       'preferred_start_date': preferredStartDate,
       'preferred_time': preferredTime,
+      'share_with_emergency_contact': shareWithEmergencyContact,
     };
   }
 }

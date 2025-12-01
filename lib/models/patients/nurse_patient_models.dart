@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:Judy_Home_HealthCare/models/care_plans/care_plan_models.dart' show CarePlanEntry;
 
 // Response model for nurse patients list with pagination
 class NursePatientsResponse {
@@ -502,6 +503,7 @@ class CarePlan {
   int completionPercentage;
   final String? status; // NEW: Care plan status
   final Doctor? doctor; // NEW: Doctor assigned to this care plan
+  final List<CarePlanEntry> carePlanEntries; // NEW: Care plan entries
 
   CarePlan({
     required this.id,
@@ -523,7 +525,8 @@ class CarePlan {
     required this.completionPercentage,
     this.status,
     this.doctor,
-  });
+    List<CarePlanEntry>? carePlanEntries,
+  }) : carePlanEntries = carePlanEntries ?? [];
 
   factory CarePlan.fromJson(Map<String, dynamic> json) {
     try {
@@ -574,6 +577,10 @@ class CarePlan {
         doctor: json['doctor'] != null
             ? Doctor.fromJson(json['doctor'] as Map<String, dynamic>)
             : null,
+        carePlanEntries: (json['care_plan_entries'] as List<dynamic>?)
+                ?.map((e) => CarePlanEntry.fromJson(e as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
     } catch (e, stackTrace) {
       debugPrint('❌ Error parsing CarePlan: $e');

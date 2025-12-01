@@ -31,6 +31,7 @@ class ApiConfig {
   static const String verifyResetOtpEndpoint = '$authPrefix/verify-reset-otp';
   static const String resendResetOtpEndpoint = '$authPrefix/resend-reset-otp';
   static const String resetPasswordEndpoint = '$authPrefix/reset-password';
+  static const String requestCallbackEndpoint = '$authPrefix/request-callback';
 
   static const String verifyLoginTwoFactorEndpoint = '$authPrefix/verify-login-2fa';
   static const String resendLoginTwoFactorEndpoint = '$authPrefix/resend-login-2fa';
@@ -69,6 +70,10 @@ class ApiConfig {
   // Get nurse schedules
   static const String nurseSchedulesEndpoint = '/api/mobile/schedules';
 
+  // Request reschedule (for patients)
+  static String scheduleRescheduleRequestEndpoint(int scheduleId) =>
+      '$mobilePrefix/schedules/$scheduleId/request-reschedule';
+
   // ==================== CARE PLAN ENDPOINTS ====================
   
   // Get all care plans (supports pagination)
@@ -100,6 +105,26 @@ class ApiConfig {
   // Toggle care task completion
   static String toggleCareTaskEndpoint(int carePlanId) =>
       '$nursePrefix/care-plans/$carePlanId/tasks/toggle';
+
+  // Care Plan Entries
+  static String carePlanEntriesEndpoint(int carePlanId) =>
+      '$mobilePrefix/care-plans/$carePlanId/entries';
+
+  static String createCarePlanEntryEndpoint(int carePlanId) =>
+      '$nursePrefix/care-plans/$carePlanId/entries';
+
+  static String carePlanEntryDetailEndpoint(int carePlanId, int entryId) =>
+      '$mobilePrefix/care-plans/$carePlanId/entries/$entryId';
+
+  static String updateCarePlanEntryEndpoint(int carePlanId, int entryId) =>
+      '$nursePrefix/care-plans/$carePlanId/entries/$entryId';
+
+  static String deleteCarePlanEntryEndpoint(int carePlanId, int entryId) =>
+      '$nursePrefix/care-plans/$carePlanId/entries/$entryId';
+
+  // Get all care plan entries for a patient
+  static String patientCarePlanEntriesEndpoint(int patientId) =>
+      '$mobilePrefix/care-plans/patient/$patientId/entries';
 
   // ==================== END CARE PLAN ENDPOINTS ====================
 
@@ -249,6 +274,45 @@ static String refundPaymentEndpoint(int paymentId) =>
       '$mobilePrefix/notifications/unread-count';
 
   // ====================END NOTIFICATION ENDPOINTS ====================
+
+  // ==================== MESSAGE ENDPOINTS ====================
+
+  /// Messages prefix
+  static const String messagesPrefix = '$mobilePrefix/messages';
+
+  /// Get all messages
+  static String get messagesEndpoint => messagesPrefix;
+
+  /// Get unread message count
+  static String get messagesUnreadCountEndpoint => '$messagesPrefix/unread-count';
+
+  /// Get conversation list
+  static String get conversationsEndpoint => '$messagesPrefix/conversations';
+
+  /// Get available contacts for messaging
+  static String get messageContactsEndpoint => '$messagesPrefix/contacts';
+
+  /// Get conversation with specific user
+  static String conversationWithUserEndpoint(int userId) =>
+      '$messagesPrefix/conversation/$userId';
+
+  /// Get specific message
+  static String messageDetailEndpoint(int messageId) =>
+      '$messagesPrefix/$messageId';
+
+  /// Mark message as read
+  static String markMessageReadEndpoint(int messageId) =>
+      '$messagesPrefix/$messageId/read';
+
+  /// Mark conversation as read
+  static String markConversationReadEndpoint(int userId) =>
+      '$messagesPrefix/conversation/$userId/read';
+
+  /// Delete message
+  static String deleteMessageEndpoint(int messageId) =>
+      '$messagesPrefix/$messageId';
+
+  // ==================== END MESSAGE ENDPOINTS ====================
 
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 10);

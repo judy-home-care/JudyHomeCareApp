@@ -10,13 +10,12 @@ import 'sign_up_screen.dart';
 import '../nurse/nurse_main_screen.dart';
 import '../patient/patient_main_screen.dart';
 import 'two_factor_login_screen.dart';
+import '../onboarding/login_signup_screen.dart';
+import '../onboarding/get_started_screen.dart';
 
 // CRITICAL: Cache regex patterns as static constants
-// Creating RegExp on every validation is EXPENSIVE (compiles the pattern)
 class _ValidationPatterns {
   static final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-  
-  // Prevent instantiation
   _ValidationPatterns._();
 }
 
@@ -28,16 +27,14 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  // Pre-calculated colors
   static const Color _primaryColor = Color(0xFF199A8E);
-  static const Color _primaryLight = Color(0x14199A8E); // ~8% opacity
-  static const Color _primaryLighter = Color(0x0A199A8E); // ~4% opacity
+  static const Color _primaryLight = Color(0x14199A8E);
+  static const Color _primaryLighter = Color(0x0A199A8E);
   static const Color _textDark = Color(0xFF1A1A1A);
   static const Color _textGrey = Color(0xFF666666);
   static const Color _borderGrey = Color(0xFFE5E5E5);
   static const Color _backgroundGrey = Color(0xFFF8FAFB);
   
-  // Static border radius objects (reused, not recreated)
   static final _inputBorderRadius = BorderRadius.circular(16);
   static final _buttonBorderRadius = BorderRadius.circular(16);
   
@@ -57,94 +54,90 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-@override
-Widget build(BuildContext context) {
-  // AGGRESSIVE FIX: Cache MediaQuery to prevent lookups on every rebuild
-  final mediaQuery = MediaQuery.of(context);
-  final screenHeight = mediaQuery.size.height;
-  
-  // Calculate responsive spacing based on screen height
-  final topSpacing = screenHeight > 700 ? 40.0 : 20.0;
-  final headerSpacing = screenHeight > 700 ? 50.0 : 30.0;
-  final formSpacing = screenHeight > 700 ? 40.0 : 24.0;
-  final signUpSpacing = screenHeight > 700 ? 30.0 : 20.0;
-  final bottomSpacing = screenHeight > 700 ? 30.0 : 16.0;
-  
-  return Scaffold(
-    backgroundColor: _backgroundGrey,
-    resizeToAvoidBottomInset: true, // Changed to true for better keyboard handling
-    extendBody: false,
-    body: SafeArea(
-      maintainBottomViewPadding: false,
-      child: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        behavior: HitTestBehavior.translucent,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final bottomInset = mediaQuery.viewInsets.bottom;
-            
-            // More content in scrollable container for better reliability
-            return SingleChildScrollView(
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              physics: const ClampingScrollPhysics(),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
-                child: IntrinsicHeight(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: 24.0,
-                      right: 24.0,
-                      top: 0,
-                      bottom: bottomInset > 0 ? 16 : 0,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: topSpacing),
-                        const _Header(),
-                        SizedBox(height: headerSpacing),
-                        const _WelcomeSection(),
-                        SizedBox(height: formSpacing),
-                        RepaintBoundary(
-                          child: _LoginForm(
-                            formKey: _formKey,
-                            emailController: _emailController,
-                            passwordController: _passwordController,
-                            isPasswordVisible: _isPasswordVisible,
-                            rememberMe: _rememberMe,
-                            isLoading: _isLoading,
-                            onPasswordVisibilityToggle: () {
-                              setState(() {
-                                _isPasswordVisible = !_isPasswordVisible;
-                              });
-                            },
-                            onRememberMeToggle: () {
-                              setState(() {
-                                _rememberMe = !_rememberMe;
-                              });
-                            },
-                            onLogin: _handleLogin,
+  @override
+  Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    
+    final topSpacing = screenHeight > 700 ? 40.0 : 20.0;
+    final headerSpacing = screenHeight > 700 ? 50.0 : 30.0;
+    final formSpacing = screenHeight > 700 ? 40.0 : 24.0;
+    final signUpSpacing = screenHeight > 700 ? 30.0 : 20.0;
+    final bottomSpacing = screenHeight > 700 ? 30.0 : 16.0;
+    
+    return Scaffold(
+      backgroundColor: _backgroundGrey,
+      resizeToAvoidBottomInset: true,
+      extendBody: false,
+      body: SafeArea(
+        maintainBottomViewPadding: false,
+        child: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.translucent,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final bottomInset = mediaQuery.viewInsets.bottom;
+              
+              return SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                physics: const ClampingScrollPhysics(),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: 24.0,
+                        right: 24.0,
+                        top: 0,
+                        bottom: bottomInset > 0 ? 16 : 0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(height: topSpacing),
+                          const _Header(),
+                          SizedBox(height: headerSpacing),
+                          const _WelcomeSection(),
+                          SizedBox(height: formSpacing),
+                          RepaintBoundary(
+                            child: _LoginForm(
+                              formKey: _formKey,
+                              emailController: _emailController,
+                              passwordController: _passwordController,
+                              isPasswordVisible: _isPasswordVisible,
+                              rememberMe: _rememberMe,
+                              isLoading: _isLoading,
+                              onPasswordVisibilityToggle: () {
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
+                              },
+                              onRememberMeToggle: () {
+                                setState(() {
+                                  _rememberMe = !_rememberMe;
+                                });
+                              },
+                              onLogin: _handleLogin,
+                            ),
                           ),
-                        ),
-                        SizedBox(height: signUpSpacing),
-                        const _SignUpLink(),
-                        SizedBox(height: bottomSpacing),
-                      ],
+                          SizedBox(height: signUpSpacing),
+                          const _SignUpLink(),
+                          SizedBox(height: bottomSpacing),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-  // Handle login with API
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -177,32 +170,27 @@ Widget build(BuildContext context) {
         }
 
         if (response.success) {
-          // Check if 2FA is required
           if (response.requires2FA == true && response.twoFactorData != null) {
             if (kDebugMode) {
               print('✅ 2FA required - navigating to verification screen');
               print('   Method: ${response.twoFactorData!['two_factor_method']}');
             }
-            
             _handle2FARequired(response);
           } else if (response.data != null) {
             if (kDebugMode) {
               print('✅ Normal login - navigating to dashboard');
             }
-            
             _handleSuccessfulLogin(response.data!);
           } else {
             if (kDebugMode) {
               print('❌ Success but no data or 2FA info');
             }
-            
             _showErrorMessage('Login failed. Please try again.');
           }
         } else {
           if (kDebugMode) {
             print('❌ Login failed: ${response.message}');
           }
-          
           _showErrorMessage(response.message);
         }
       } catch (e, stackTrace) {
@@ -210,7 +198,6 @@ Widget build(BuildContext context) {
           print('❌ Login exception: $e');
           print('Stack trace: $stackTrace');
         }
-        
         if (mounted) {
           _showErrorMessage('An error occurred: ${e.toString()}');
         }
@@ -229,7 +216,6 @@ Widget build(BuildContext context) {
       print('🔵 Navigating to 2FA screen with data: ${response.twoFactorData}');
     }
     
-    // Stop loading before navigation
     setState(() {
       _isLoading = false;
     });
@@ -261,7 +247,6 @@ Widget build(BuildContext context) {
       ),
     );
 
-    // Navigate based on user role
     switch (user.role) {
       case 'nurse':
         Navigator.pushReplacement(
@@ -306,6 +291,7 @@ Widget build(BuildContext context) {
                 'avatar': user.avatarUrl,
                 'id': user.id.toString(),
                 'role': user.role,
+                'emergency_contact_notify': user.emergencyContactNotify,
                 'email': user.email
               },
               initialIndex: 0,
@@ -356,7 +342,6 @@ Widget build(BuildContext context) {
   }
 }
 
-// Optimized Header widget - iOS optimized
 class _Header extends StatelessWidget {
   const _Header();
 
@@ -370,7 +355,14 @@ class _Header extends StatelessWidget {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             child: InkWell(
-              onTap: () => Navigator.pop(context),
+              onTap: () => Navigator.pushReplacement(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) => 
+                      const LoginSignupScreen(),
+                  transitionDuration: const Duration(milliseconds: 300),
+                ),
+              ),
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 padding: const EdgeInsets.all(10),
@@ -420,7 +412,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-// Const Welcome Section
 class _WelcomeSection extends StatelessWidget {
   const _WelcomeSection();
 
@@ -454,7 +445,6 @@ class _WelcomeSection extends StatelessWidget {
   }
 }
 
-// Optimized Login Form
 class _LoginForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
   final TextEditingController emailController;
@@ -540,7 +530,6 @@ class _LoginForm extends StatelessWidget {
   }
 }
 
-// ULTRA-OPTIMIZED TextField - CPU spike fixed for iOS
 class _OptimizedTextField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
@@ -712,46 +701,32 @@ class _OptimizedTextFieldState extends State<_OptimizedTextField> {
               keyboardType: widget.keyboardType,
               textInputAction: widget.textInputAction,
               validator: widget.validator,
-              
-              // iOS optimizations
               keyboardAppearance: Brightness.light,
               textCapitalization: TextCapitalization.none,
               spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
-              
-              // Cursor optimizations
               showCursor: true,
               cursorWidth: 1.5,
               cursorHeight: 20.0,
               cursorRadius: const Radius.circular(1),
               cursorColor: _LoginScreenState._primaryColor,
               cursorOpacityAnimates: false,
-              
-              // iOS: Keep magnifier disabled but enable selection
               magnifierConfiguration: TextMagnifierConfiguration.disabled,
-              enableInteractiveSelection: true,  // ✅ Changed to true
-              
-              // Disable text processing (keep these for performance)
+              enableInteractiveSelection: true,
               enableSuggestions: false,
               autocorrect: false,
               enableIMEPersonalizedLearning: false,
               smartDashesType: SmartDashesType.disabled,
               smartQuotesType: SmartQuotesType.disabled,
-              
-              // Performance
               scrollPhysics: const NeverScrollableScrollPhysics(),
               maxLines: 1,
               expands: false,
-              
-              // ✅ Enable paste functionality
               toolbarOptions: const ToolbarOptions(
                 copy: true,
                 cut: true,
                 paste: true,
                 selectAll: true,
               ),
-              
               decoration: _currentDecoration,
-              
               style: const TextStyle(
                 fontSize: 15,
                 color: _LoginScreenState._textDark,
@@ -765,7 +740,6 @@ class _OptimizedTextFieldState extends State<_OptimizedTextField> {
   }
 }
 
-// Options Row
 class _OptionsRow extends StatelessWidget {
   final bool rememberMe;
   final VoidCallback onRememberMeToggle;
@@ -846,7 +820,6 @@ class _OptionsRow extends StatelessWidget {
   }
 }
 
-// Optimized Login Button
 class _OptimizedLoginButton extends StatelessWidget {
   final bool isLoading;
   final Future<void> Function() onLogin;
@@ -904,7 +877,6 @@ class _OptimizedLoginButton extends StatelessWidget {
   }
 }
 
-// Sign Up Link
 class _SignUpLink extends StatelessWidget {
   const _SignUpLink();
 
@@ -926,13 +898,13 @@ class _SignUpLink extends StatelessWidget {
               context,
               PageRouteBuilder(
                 pageBuilder: (context, animation, secondaryAnimation) => 
-                    const SignUpScreen(),
+                    const GetStartedScreen(),
                 transitionDuration: const Duration(milliseconds: 300),
               ),
             );
           },
           child: const Text(
-            'Sign Up',
+            'Get Started',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,

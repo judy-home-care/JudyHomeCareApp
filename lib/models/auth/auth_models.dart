@@ -1,3 +1,6 @@
+// Add this import at the very top of your auth_models.dart file
+import 'dart:io';
+
 // Login Request Model
 class LoginRequest {
   final String email;
@@ -39,6 +42,7 @@ class User {
   final String? licenseNumber;
   final String? specialization;
   final int? yearsOfExperience;
+  final bool emergencyContactNotify;
 
   User({
     required this.id,
@@ -60,6 +64,7 @@ class User {
     this.licenseNumber,
     this.specialization,
     this.yearsOfExperience,
+    this.emergencyContactNotify = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -78,8 +83,6 @@ class User {
           .map((e) => e as String)
           .toList(),
       dashboardRoute: json['dashboard_route'] as String,
-
-      // ✅ New fields
       phone: json['phone'] as String?,
       gender: json['gender'] as String?,
       dateOfBirth: json['date_of_birth'] as String?,
@@ -89,6 +92,8 @@ class User {
       yearsOfExperience: json['years_of_experience'] != null
           ? (json['years_of_experience'] as num).toInt()
           : null,
+      emergencyContactNotify: json['emergency_contact_notify'] == true || 
+          json['emergency_contact_notify'] == 1,
     );
   }
 
@@ -105,8 +110,6 @@ class User {
         'last_login_at': lastLoginAt,
         'permissions': permissions,
         'dashboard_route': dashboardRoute,
-
-        // ✅ New fields
         'phone': phone,
         'gender': gender,
         'date_of_birth': dateOfBirth,
@@ -114,6 +117,7 @@ class User {
         'license_number': licenseNumber,
         'specialization': specialization,
         'years_of_experience': yearsOfExperience,
+        'emergency_contact_notify': emergencyContactNotify,
       };
 }
 
@@ -150,7 +154,6 @@ class LoginResponse {
   final String message;
   final LoginData? data;
   final Map<String, dynamic>? errors;
-
   final bool? requires2FA;
   final Map<String, dynamic>? twoFactorData;
 
@@ -186,9 +189,7 @@ class ForgotPasswordRequest {
 
   ForgotPasswordRequest({required this.email});
 
-  Map<String, dynamic> toJson() => {
-        'email': email,
-      };
+  Map<String, dynamic> toJson() => {'email': email};
 }
 
 // Reset Password Request Model
@@ -213,13 +214,12 @@ class ResetPasswordRequest {
       };
 }
 
-
 // Registration Request Model
 class RegisterRequest {
   final String name;
   final String email;
   final String phone;
-  final String? countryCode; 
+  final String? countryCode;
   final String password;
   final String passwordConfirmation;
   final String role;
@@ -230,7 +230,7 @@ class RegisterRequest {
     required this.name,
     required this.email,
     required this.phone,
-    this.countryCode, 
+    this.countryCode,
     required this.password,
     required this.passwordConfirmation,
     required this.role,
@@ -251,8 +251,6 @@ class RegisterRequest {
     if (countryCode != null) {
       data['country_code'] = countryCode;
     }
-
-    // Only add license_number and specialization if they're not null
     if (licenseNumber != null && licenseNumber!.isNotEmpty) {
       data['license_number'] = licenseNumber;
     }
@@ -261,6 +259,117 @@ class RegisterRequest {
     }
 
     return data;
+  }
+}
+
+// Callback Request Model (for Get Started flow)
+class CallbackRequest {
+  final String name;
+  final String email;
+  final String phone;
+  final String countryCode;
+  final String role;
+  final String? nursePin;
+  final String? ghanaCardNumber;
+  final File? ghanaCardFront;
+  final File? ghanaCardBack;
+  final File? nursePinFront;
+  final File? nursePinBack;
+
+  CallbackRequest({
+    required this.name,
+    required this.email,
+    required this.phone,
+    this.countryCode = '+233',
+    required this.role,
+    this.nursePin,
+    this.ghanaCardNumber,
+    this.ghanaCardFront,
+    this.ghanaCardBack,
+    this.nursePinFront,
+    this.nursePinBack,
+  });
+
+  bool get isValid {
+    if (name.trim().isEmpty || email.trim().isEmpty || phone.trim().isEmpty) {
+      return false;
+    }
+    if (role == 'nurse') {
+      if (nursePin == null || nursePin!.trim().isEmpty) return false;
+      if (ghanaCardNumber == null || ghanaCardNumber!.trim().isEmpty) return false;
+      if (ghanaCardFront == null || ghanaCardBack == null) return false;
+      if (nursePinFront == null || nursePinBack == null) return false;
+    }
+    return true;
+  }
+
+  String? get validationError {
+    if (name.trim().isEmpty) return 'Name is required';
+    if (email.trim().isEmpty) return 'Email is required';
+    if (phone.trim().isEmpty) return 'Phone number is required';
+    if (role == 'nurse') {
+      if (nursePin == null || nursePin!.trim().isEmpty) return 'Nurse PIN is required';
+      if (ghanaCardNumber == null || ghanaCardNumber!.trim().isEmpty) return 'Ghana Card number is required';
+      if (ghanaCardFront == null || ghanaCardBack == null) return 'Both sides of Ghana Card are required';
+      if (nursePinFront == null || nursePinBack == null) return 'Both sides of Nurse PIN Card are required';
+    }
+    return null;
+  }
+}
+
+// Callback Response Model
+class CallbackResponse {
+  final bool success;
+  final String message;
+  final Map<String, dynamic>? data;
+  final Map<String, dynamic>? errors;
+
+  CallbackResponse({
+    required this.success,
+    required this.message,
+    this.data,
+    this.errors,
+  });
+
+  factory CallbackResponse.fromJson(Map<String, dynamic> json) {
+    return CallbackResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'] as Map<String, dynamic>?,
+      errors: json['errors'] as Map<String, dynamic>?,
+    );
+  }
+
+  Map<String, dynamic>? get userData => data?['user'] as Map<String, dynamic>?;
+
+  List<String> get nextSteps {
+    if (data?['next_steps'] != null) {
+      return List<String>.from(data!['next_steps']);
+    }
+    return [];
+  }
+
+  String? get firstError {
+    if (errors == null || errors!.isEmpty) return null;
+    final firstKey = errors!.keys.first;
+    final firstValue = errors![firstKey];
+    if (firstValue is List && firstValue.isNotEmpty) {
+      return firstValue.first.toString();
+    }
+    return firstValue?.toString();
+  }
+
+  List<String> get allErrors {
+    if (errors == null || errors!.isEmpty) return [];
+    final errorList = <String>[];
+    errors!.forEach((key, value) {
+      if (value is List) {
+        errorList.addAll(value.map((e) => e.toString()));
+      } else {
+        errorList.add(value.toString());
+      }
+    });
+    return errorList;
   }
 }
 

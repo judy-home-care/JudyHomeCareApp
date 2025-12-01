@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart'; 
+import 'package:url_launcher/url_launcher.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../utils/app_colors.dart';
 import '../../services/dashboard/dashboard_service.dart';
 import '../../services/time_tracking_service.dart';
+import '../../services/location_service.dart';
 import '../../models/dashboard/nurse_dashboard_models.dart';
 import '../schedules/schedule_patients_screen.dart';
 import 'nurse_patients_screen.dart';
@@ -33,9 +34,10 @@ class NurseDashboardScreen extends StatefulWidget {
 
 class _NurseDashboardScreenState extends State<NurseDashboardScreen>
     with WidgetsBindingObserver {
-  
+
   final _dashboardService = DashboardService();
   final _timeTrackingService = TimeTrackingService();
+  final _locationService = LocationService();
   
   bool _isLoading = true;
   String? _errorMessage;
@@ -57,10 +59,17 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   
   // Screen visibility tracking for battery optimization
   bool _isScreenVisible = true;
-  
+
+  // Track if notification was received while app was paused (local flag)
+  bool _pendingNotificationRefresh = false;
+
   // Notification management
   final NotificationService _notificationService = NotificationService();
   int _unreadNotificationCount = 0;
+
+  // Multi-listener cleanup callbacks
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
   
   // Timer management
   Timer? _activeTimer;
@@ -82,11 +91,12 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
     _timerSyncTimer?.cancel();
     _visibilityDebounce?.cancel();
     _elapsedSeconds.dispose();
-    
-    // Clean up FCM callback
-    _notificationService.onNotificationCountChanged = null;
-    
-    debugPrint('🧹 Dashboard disposed - all timers cancelled');
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
+    debugPrint('🧹 Dashboard disposed - all timers and listeners cleaned up');
     super.dispose();
   }
 
@@ -108,45 +118,63 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    
+
     if (state == AppLifecycleState.resumed) {
       _isScreenVisible = true;
-      debugPrint('🔄 App resumed - checking cache before refresh');
-      
+      debugPrint('🔄 [Nurse Dashboard] App resumed - checking for pending notifications');
+
       // Check how long we've been away
       final now = DateTime.now();
-      final timeSinceLastVisible = _lastVisibleTime != null 
-          ? now.difference(_lastVisibleTime!) 
+      final timeSinceLastVisible = _lastVisibleTime != null
+          ? now.difference(_lastVisibleTime!)
           : null;
-      
+
       _lastVisibleTime = now;
-      
-      // Only refresh if cache is expired or we've been away for a while
-      if (_shouldRefreshOnResume(timeSinceLastVisible)) {
-        debugPrint('📱 App resumed - cache expired or long absence, refreshing');
+
+      // Check if notification was received while in background (from tapping notification)
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+
+      // Check if notification was received while app was paused (local tracking)
+      final hasPendingRefresh = _pendingNotificationRefresh;
+
+      // Force refresh if any notification was received while away
+      if (hasBackgroundNotification || hasPendingRefresh) {
+        debugPrint('📱 [Nurse Dashboard] Notification received while away - forcing refresh');
+        debugPrint('   - Background notification (tapped): $hasBackgroundNotification');
+        debugPrint('   - Pending refresh (received while paused): $hasPendingRefresh');
+
+        // Clear both flags
+        _notificationService.clearBackgroundNotificationFlag();
+        _pendingNotificationRefresh = false;
+
+        // Force dashboard reload
+        _loadDashboardData(forceRefresh: true, silent: true);
+      } else if (_shouldRefreshOnResume(timeSinceLastVisible)) {
+        // Only refresh if cache is expired or we've been away for a while
+        debugPrint('📱 [Nurse Dashboard] Cache expired or long absence, refreshing');
         _loadDashboardData(forceRefresh: true, silent: true);
       } else {
-        debugPrint('📱 App resumed - using cached data (valid for ${_getRemainingCacheTime()})');
+        debugPrint('📱 [Nurse Dashboard] Using cached data (valid for ${_getRemainingCacheTime()})');
       }
-      
+
       // Always sync timer if running (lightweight operation)
       if (_isTimerRunning) {
         debugPrint('⏱️ Syncing active timer with backend');
         _syncTimerWithBackend();
         _startLocalTimer();
-        
+
         if (_isTabVisible) {
           _startPeriodicSync();
         }
       }
-      
+
       // Refresh notification count on app resume
       _notificationService.refreshBadge();
     } else if (state == AppLifecycleState.paused) {
       _isScreenVisible = false;
       _lastVisibleTime = DateTime.now();
-      debugPrint('⏸️ App paused - stopping local timer to save battery');
-      
+      debugPrint('⏸️ [Nurse Dashboard] App paused - stopping local timer to save battery');
+
       _activeTimer?.cancel();
       _stopPeriodicSync();
     }
@@ -156,17 +184,37 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   // ==================== FCM REAL-TIME NOTIFICATION UPDATES ====================
 
   /// ⚡ Set up FCM callback for real-time notification count updates
+  /// Uses multi-listener pattern so all screens get updates!
   void _setupFcmNotificationUpdates() {
-    debugPrint('⚡ [Nurse Dashboard] Setting up FCM real-time notification updates');
-    
-    _notificationService.onNotificationCountChanged = (newCount) {
+    debugPrint('⚡ [Nurse Dashboard] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
       if (mounted) {
         setState(() {
           _unreadNotificationCount = newCount;
         });
-        debugPrint('🔔 [Nurse Dashboard] Notification count updated in real-time: $newCount');
+        debugPrint('🔔 [Nurse Dashboard] Notification count updated: $newCount');
       }
-    };
+    });
+
+    // Refresh dashboard when notification received (foreground or background)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted) {
+        if (_isScreenVisible) {
+          // App is in foreground - refresh dashboard data immediately
+          debugPrint('🔄 [Nurse Dashboard] Notification received (foreground) - triggering silent refresh');
+          _loadDashboardData(forceRefresh: true, silent: true);
+          // NOTE: Don't call _loadUnreadNotificationCount() here!
+          // The badge count is already updated via the count listener (addNotificationCountListener)
+          // Calling the API here would overwrite the correct count with stale data
+        } else {
+          // App is in background/paused - set flag to refresh on resume
+          debugPrint('🔄 [Nurse Dashboard] Notification received (background) - setting pending refresh flag');
+          _pendingNotificationRefresh = true;
+        }
+      }
+    });
   }
 
   /// Load unread notification count (only called once on init and resume)
@@ -578,14 +626,20 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
         ),
       );
       
+      // Get the resolved address first
+      final resolvedLocation = await _getAddressFromCoordinates(position);
+      debugPrint('📍 Resolved location to send: $resolvedLocation');
+
       // Call API to clock in with location
       final response = await _timeTrackingService.clockIn(
         scheduleId: scheduleId,
         latitude: position.latitude,
         longitude: position.longitude,
-        location: await _getAddressFromCoordinates(position),
+        location: resolvedLocation,
         deviceInfo: 'Flutter Mobile App',
       );
+
+      debugPrint('📦 Clock-in payload: scheduleId=$scheduleId, lat=${position.latitude}, lng=${position.longitude}, location=$resolvedLocation');
       
       if (!mounted) return;
       
@@ -630,10 +684,24 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
     }
   }
 
-  /// Get address from coordinates (simplified - you can enhance this with geocoding)
+  /// Get address from coordinates using Google Maps Geocoding API
   Future<String> _getAddressFromCoordinates(Position position) async {
-    // For now, return coordinates as string
-    // You can implement reverse geocoding here using geocoding package
+    try {
+      // Use Google Maps Geocoding API via LocationService (same as transport screen)
+      final address = await _locationService.getAddressFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (address != null && address.isNotEmpty) {
+        debugPrint('📍 Address resolved: $address');
+        return address;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error getting address: $e');
+    }
+
+    // Fallback to coordinates if geocoding fails
     return 'Lat: ${position.latitude.toStringAsFixed(6)}, Long: ${position.longitude.toStringAsFixed(6)}';
   }
 
@@ -681,13 +749,22 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
       );
       
       final elapsedTime = _elapsedSeconds.value;
-      
+
+      // Get the resolved address first
+      String? resolvedLocation;
+      if (position != null) {
+        resolvedLocation = await _getAddressFromCoordinates(position);
+        debugPrint('📍 Resolved clock-out location: $resolvedLocation');
+      }
+
       // Call API to clock out
       final response = await _timeTrackingService.clockOut(
         latitude: position?.latitude,
         longitude: position?.longitude,
-        location: position != null ? await _getAddressFromCoordinates(position) : null,
+        location: resolvedLocation,
       );
+
+      debugPrint('📦 Clock-out payload: lat=${position?.latitude}, lng=${position?.longitude}, location=$resolvedLocation');
       
       if (!mounted) return;
       

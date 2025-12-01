@@ -1,6 +1,8 @@
 // lib/services/notification_service.dart
-// UPDATED VERSION - WITH iOS BADGE MANAGEMENT
-// FIXED: App badge icon now properly syncs with notification count
+// COMPLETE FIXED VERSION - WITH iOS BADGE MANAGEMENT & FOREGROUND UPDATES
+// ✅ FIXED: Foreground badge updates now work correctly
+// ✅ FIXED: Title/body extraction from data field
+// ✅ FIXED: Better error handling and logging
 
 import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -11,7 +13,7 @@ import '../utils/api_config.dart';
 import '../models/notification/notification_models.dart';
 
 /// Service for handling Push Notifications and Notification API calls
-/// ✅ NOW INCLUDES: iOS Badge Management
+/// ✅ INCLUDES: iOS Badge Management, Multi-Listener Support, Foreground Updates
 class NotificationService {
   // Singleton pattern
   static final NotificationService _instance = NotificationService._internal();
@@ -26,8 +28,115 @@ class NotificationService {
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
 
-  // Callback for real-time notification count updates
+  // ==================== MULTI-LISTENER SUPPORT ====================
+  // Lists of callbacks for multiple screen listeners
+  final List<Function(int)> _notificationCountListeners = [];
+  final List<Function()> _notificationReceivedListeners = [];
+
+  // Current unread count (cached for new listeners)
+  int _currentUnreadCount = 0;
+  int get currentUnreadCount => _currentUnreadCount;
+
+  // DEPRECATED: Single callbacks (kept for backwards compatibility but not used)
+  // Use addNotificationCountListener/removeNotificationCountListener instead
   Function(int)? onNotificationCountChanged;
+  Function()? onNotificationReceived;
+
+  /// Add a listener for notification count changes
+  /// Returns a function to remove the listener
+  VoidCallback addNotificationCountListener(Function(int) listener) {
+    _notificationCountListeners.add(listener);
+    // Immediately notify the new listener of current count
+    listener(_currentUnreadCount);
+    debugPrint('🔔 [NotificationService] Added count listener. Total: ${_notificationCountListeners.length}');
+    return () => removeNotificationCountListener(listener);
+  }
+
+  /// Remove a notification count listener
+  void removeNotificationCountListener(Function(int) listener) {
+    _notificationCountListeners.remove(listener);
+    debugPrint('🔔 [NotificationService] Removed count listener. Total: ${_notificationCountListeners.length}');
+  }
+
+  /// Add a listener for notification received events
+  /// Returns a function to remove the listener
+  VoidCallback addNotificationReceivedListener(Function() listener) {
+    _notificationReceivedListeners.add(listener);
+    debugPrint('📬 [NotificationService] Added received listener. Total: ${_notificationReceivedListeners.length}');
+    return () => removeNotificationReceivedListener(listener);
+  }
+
+  /// Remove a notification received listener
+  void removeNotificationReceivedListener(Function() listener) {
+    _notificationReceivedListeners.remove(listener);
+    debugPrint('📬 [NotificationService] Removed received listener. Total: ${_notificationReceivedListeners.length}');
+  }
+
+  /// Notify all count listeners
+  /// ✅ FIX: Added detailed logging to track listener notifications
+  void _notifyCountListeners(int count) {
+    _currentUnreadCount = count;
+
+    debugPrint('🔔 [NotificationService] Notifying count listeners:');
+    debugPrint('   New count: $count');
+    debugPrint('   Number of listeners: ${_notificationCountListeners.length}');
+
+    // Notify all registered listeners
+    int successCount = 0;
+    for (final listener in _notificationCountListeners) {
+      try {
+        listener(count);
+        successCount++;
+      } catch (e) {
+        debugPrint('❌ [NotificationService] Error notifying count listener: $e');
+      }
+    }
+
+    debugPrint('✅ [NotificationService] Successfully notified $successCount/${_notificationCountListeners.length} listeners');
+
+    // Also notify legacy single callback if set
+    if (onNotificationCountChanged != null) {
+      try {
+        onNotificationCountChanged!(count);
+      } catch (e) {
+        debugPrint('❌ [NotificationService] Error in legacy count callback: $e');
+      }
+    }
+  }
+
+  /// Notify all received listeners
+  /// ✅ FIX: Added logging to track listener notifications
+  void _notifyReceivedListeners() {
+    debugPrint('📬 [NotificationService] Notifying received listeners:');
+    debugPrint('   Number of listeners: ${_notificationReceivedListeners.length}');
+
+    // Notify all registered listeners
+    int successCount = 0;
+    for (final listener in _notificationReceivedListeners) {
+      try {
+        listener();
+        successCount++;
+      } catch (e) {
+        debugPrint('❌ [NotificationService] Error notifying received listener: $e');
+      }
+    }
+
+    debugPrint('✅ [NotificationService] Successfully notified $successCount/${_notificationReceivedListeners.length} listeners');
+
+    // Also notify legacy single callback if set
+    if (onNotificationReceived != null) {
+      try {
+        onNotificationReceived!();
+      } catch (e) {
+        debugPrint('❌ [NotificationService] Error in legacy received callback: $e');
+      }
+    }
+  }
+
+  // Track if notification was received while app was in background
+  bool _notificationReceivedWhileBackground = false;
+  bool get hasNotificationWhileBackground => _notificationReceivedWhileBackground;
+  void clearBackgroundNotificationFlag() => _notificationReceivedWhileBackground = false;
 
   // ==================== INITIALIZATION ====================
 
@@ -38,6 +147,15 @@ class NotificationService {
 
       // Request permission for iOS
       await _requestPermissions();
+
+      // ✅ CRITICAL: Set foreground notification presentation options for iOS
+      // This ensures onMessage callback fires when notification arrives in foreground
+      await _firebaseMessaging.setForegroundNotificationPresentationOptions(
+        alert: false, // Don't show system alert (we handle it with local notifications)
+        badge: true,  // Update badge
+        sound: false, // Don't play system sound (local notification handles it)
+      );
+      debugPrint('✅ [NotificationService] iOS foreground presentation options set');
 
       // Initialize local notifications
       await _initializeLocalNotifications();
@@ -178,24 +296,69 @@ class NotificationService {
   }
 
   /// Set up message handlers
+  /// ✅ FIXED: Foreground badge updates now work correctly
   void _setupMessageHandlers() {
     // ⚡ Handle foreground messages (app is open)
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       debugPrint('📨 [NotificationService] Foreground message received');
-      
-      // Show local notification (without badge management)
-      await _showLocalNotification(message);
-      
-      // ✅ CRITICAL FIX: Wait a tiny bit then update badge with correct count
-      await Future.delayed(const Duration(milliseconds: 100));
-      await _refreshNotificationCount();
+      debugPrint('📋 [NotificationService] Message data keys: ${message.data.keys.toList()}');
+      debugPrint('📋 [NotificationService] Message data: ${message.data}');
+      debugPrint('📋 [NotificationService] Current count before update: $_currentUnreadCount');
+
+      try {
+        // ✅ FIX 1: Extract badge count FIRST (before showing notification)
+        int newCount;
+        if (message.data['badge_count'] != null) {
+          newCount = int.tryParse(message.data['badge_count'].toString()) ?? (_currentUnreadCount + 1);
+          debugPrint('🔔 [NotificationService] Count from FCM payload (badge_count): $newCount');
+        } else if (message.data['unread_count'] != null) {
+          newCount = int.tryParse(message.data['unread_count'].toString()) ?? (_currentUnreadCount + 1);
+          debugPrint('🔔 [NotificationService] Count from FCM payload (unread_count): $newCount');
+        } else {
+          newCount = _currentUnreadCount + 1;
+          debugPrint('⚠️ [NotificationService] No badge_count in payload - using optimistic increment: $_currentUnreadCount -> $newCount');
+        }
+
+        debugPrint('🔔 [NotificationService] Will notify ${_notificationCountListeners.length} count listeners with: $newCount');
+
+        // ✅ FIX 2: Update badge and notify listeners IMMEDIATELY (before showing local notification)
+        await _updateBadge(newCount);
+        _notifyCountListeners(newCount);
+
+        debugPrint('✅ [NotificationService] Badge count updated to: $newCount');
+        debugPrint('✅ [NotificationService] Notified ${_notificationCountListeners.length} listeners');
+
+        // ✅ FIX 3: Show local notification AFTER badge update (with proper data extraction)
+        await _showLocalNotification(message);
+
+        // 🔄 Notify ALL listeners to refresh their data (multi-listener support)
+        debugPrint('🔄 [NotificationService] Triggering refresh for all listeners');
+        _notifyReceivedListeners();
+
+        // ✅ SYNC: After a delay, sync with backend to get accurate count
+        await Future.delayed(const Duration(seconds: 3));
+        await _refreshNotificationCount();
+      } catch (e, stackTrace) {
+        debugPrint('❌ [NotificationService] Error in foreground message handler: $e');
+        debugPrint('Stack trace: $stackTrace');
+        
+        // Even if there's an error, try to update with optimistic count
+        final fallbackCount = _currentUnreadCount + 1;
+        await _updateBadge(fallbackCount);
+        _notifyCountListeners(fallbackCount);
+      }
     });
 
     // Handle notification tap when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint('👆 [NotificationService] Background notification tapped');
+
+      // Set flag so dashboard knows to refresh when fully visible
+      _notificationReceivedWhileBackground = true;
+      debugPrint('🚩 [NotificationService] Background notification flag set');
+
       _handleNotificationTap(message);
-      
+
       // Refresh count after interaction
       _refreshNotificationCount();
     });
@@ -225,30 +388,35 @@ class NotificationService {
   }
 
   /// Refresh notification count and update badge
-  /// ✅ KEY FIX: Now also updates iOS badge
+  /// ✅ KEY FIX: Now also updates iOS badge and notifies ALL listeners
   Future<void> _refreshNotificationCount() async {
     try {
+      debugPrint('🔄 [NotificationService] Refreshing notification count from backend...');
+      
       final response = await getUnreadCount();
       final unreadCount = response.unreadCount;
-      
+
+      debugPrint('📊 [NotificationService] Backend count: $unreadCount');
+
       // Update iOS badge
       await _updateBadge(unreadCount);
-      
-      // Notify any listeners (like the dashboard)
-      if (onNotificationCountChanged != null) {
-        onNotificationCountChanged!(unreadCount);
-      }
-      
-      debugPrint('🔄 [NotificationService] Badge count updated: $unreadCount');
+
+      // Notify ALL listeners (multi-listener support)
+      _notifyCountListeners(unreadCount);
+
+      debugPrint('✅ [NotificationService] Badge count refreshed and listeners notified: $unreadCount');
     } catch (e) {
       debugPrint('❌ [NotificationService] Error refreshing count: $e');
     }
   }
 
   /// Update iOS app badge
+  /// ✅ UPDATED: Now includes detailed logging
   Future<void> _updateBadge(int count) async {
     try {
       if (!kIsWeb && Platform.isIOS) {
+        debugPrint('📱 [NotificationService] Updating iOS badge to: $count');
+        
         // Set the badge number SILENTLY
         final DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
           presentBadge: true,
@@ -266,10 +434,13 @@ class NotificationService {
           NotificationDetails(iOS: iosDetails),
         );
 
-        debugPrint('📱 [NotificationService] iOS badge set to: $count (silent)');
+        debugPrint('✅ [NotificationService] iOS badge set to: $count (silent)');
+      } else if (!kIsWeb && Platform.isAndroid) {
+        debugPrint('📱 [NotificationService] Android detected - badge not supported natively');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('❌ [NotificationService] Error updating badge: $e');
+      debugPrint('Stack trace: $stackTrace');
     }
   }
 
@@ -309,53 +480,57 @@ class NotificationService {
 
   // ==================== MESSAGE HANDLING ====================
 
-  /// Handle foreground message
-  Future<void> _handleForegroundMessage(RemoteMessage message) async {
-    debugPrint('📋 [NotificationService] Title: ${message.notification?.title}');
-    debugPrint('📋 [NotificationService] Body: ${message.notification?.body}');
-
-    // Show local notification
-    await _showLocalNotification(message);
-
-    // Update notification log as delivered
-    if (message.data['notification_id'] != null) {
-      await updateNotificationStatus(
-        int.parse(message.data['notification_id'].toString()),
-        'delivered',
-      );
-    }
-  }
-
   /// Show local notification
+  /// ✅ FIX 4: Extract title/body from data field (backend sends data-only messages)
   Future<void> _showLocalNotification(RemoteMessage message) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'care_notifications',
-      'Care Notifications',
-      channelDescription: 'Notifications for appointments and care updates',
-      importance: Importance.high,
-      priority: Priority.high,
-      playSound: true,
-      icon: '@mipmap/ic_launcher',
-    );
+    try {
+      // Backend sends title/body in data field, not notification field
+      final title = message.data['title'] ?? 
+                    message.notification?.title ?? 
+                    'Notification';
+      final body = message.data['body'] ?? 
+                   message.notification?.body ?? 
+                   '';
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: false, 
-      presentSound: true,
-    );
+      debugPrint('📱 [NotificationService] Showing local notification:');
+      debugPrint('   Title: $title');
+      debugPrint('   Body: $body');
 
-    const NotificationDetails details = NotificationDetails(
-      android: androidDetails,
-      iOS: iosDetails,
-    );
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'care_notifications',
+        'Care Notifications',
+        channelDescription: 'Notifications for appointments and care updates',
+        importance: Importance.high,
+        priority: Priority.high,
+        playSound: true,
+        icon: '@mipmap/ic_launcher',
+      );
 
-    await _localNotifications.show(
-      message.hashCode,
-      message.notification?.title ?? 'Notification',
-      message.notification?.body ?? '',
-      details,
-      payload: message.data.toString(),
-    );
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: false, // Badge is managed separately via _updateBadge
+        presentSound: true,
+      );
+
+      const NotificationDetails details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await _localNotifications.show(
+        message.hashCode,
+        title,
+        body,
+        details,
+        payload: message.data.toString(),
+      );
+
+      debugPrint('✅ [NotificationService] Local notification shown successfully');
+    } catch (e, stackTrace) {
+      debugPrint('❌ [NotificationService] Error showing local notification: $e');
+      debugPrint('Stack trace: $stackTrace');
+      // Don't rethrow - we don't want this to prevent badge updates
+    }
   }
 
   /// Handle notification tap
@@ -387,6 +562,11 @@ class NotificationService {
 
     if (initialMessage != null) {
       debugPrint('📨 [NotificationService] App opened from notification');
+
+      // Set flag so dashboard knows to refresh
+      _notificationReceivedWhileBackground = true;
+      debugPrint('🚩 [NotificationService] Background notification flag set (from terminated)');
+
       await _handleNotificationTap(initialMessage);
     }
   }
@@ -441,12 +621,16 @@ class NotificationService {
   /// ✅ NOW UPDATES BADGE
   Future<MarkReadResponse> markNotificationAsRead(int notificationId) async {
     try {
+      debugPrint('📡 [NotificationService] Marking notification #$notificationId as read...');
+      
       final response = await _apiClient.post(
         ApiConfig.notificationMarkReadEndpoint(notificationId),
         requiresAuth: true,
       );
 
       if (response['success'] == true) {
+        debugPrint('✅ [NotificationService] Notification marked as read');
+        
         // Refresh count and badge after marking as read
         await _refreshNotificationCount();
         return MarkReadResponse.fromJson(response);
@@ -465,23 +649,25 @@ class NotificationService {
   }
 
   /// Mark all notifications as read
-  /// ✅ NOW CLEARS BADGE
+  /// ✅ NOW CLEARS BADGE AND NOTIFIES ALL LISTENERS
   Future<MarkAllReadResponse> markAllNotificationsAsRead() async {
     try {
+      debugPrint('📡 [NotificationService] Marking all notifications as read...');
+      
       final response = await _apiClient.post(
         ApiConfig.notificationMarkAllReadEndpoint,
         requiresAuth: true,
       );
 
       if (response['success'] == true) {
+        debugPrint('✅ [NotificationService] All notifications marked as read');
+        
         // Clear badge when all notifications are read
         await _updateBadge(0);
-        
-        // Notify listeners
-        if (onNotificationCountChanged != null) {
-          onNotificationCountChanged!(0);
-        }
-        
+
+        // Notify ALL listeners (multi-listener support)
+        _notifyCountListeners(0);
+
         return MarkAllReadResponse.fromJson(response);
       } else {
         throw NotificationException(
@@ -501,12 +687,16 @@ class NotificationService {
   /// ✅ NOW UPDATES BADGE
   Future<DeleteNotificationResponse> deleteNotification(int notificationId) async {
     try {
+      debugPrint('📡 [NotificationService] Deleting notification #$notificationId...');
+      
       final response = await _apiClient.delete(
         ApiConfig.notificationDeleteEndpoint(notificationId),
         requiresAuth: true,
       );
 
       if (response['success'] == true) {
+        debugPrint('✅ [NotificationService] Notification deleted');
+        
         // Refresh count and badge after deletion
         await _refreshNotificationCount();
         return DeleteNotificationResponse.fromJson(response);
@@ -569,6 +759,7 @@ class NotificationService {
   /// Manually refresh badge (call this when notifications screen is viewed)
   /// ✅ USEFUL: Call this when user opens notifications screen
   Future<void> refreshBadge() async {
+    debugPrint('🔄 [NotificationService] Manual badge refresh requested');
     await _refreshNotificationCount();
   }
 
@@ -627,7 +818,12 @@ class NotificationService {
     try {
       await clearAllNotifications();
       await _updateBadge(0); // ✅ Clear badge
+      
+      // Clear listeners
+      _notificationCountListeners.clear();
+      _notificationReceivedListeners.clear();
       onNotificationCountChanged = null;
+      
       debugPrint('🗑️ [NotificationService] Notification state cleared');
     } catch (e) {
       debugPrint('💥 [NotificationService] Error clearing state: $e');

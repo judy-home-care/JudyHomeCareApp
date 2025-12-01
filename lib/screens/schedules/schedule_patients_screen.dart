@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../../utils/app_colors.dart';
 import '../../services/schedules/schedule_service.dart';
 import '../../models/schedules/schedule_models.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 import 'dart:async';
 
 class SchedulePatientsScreen extends StatefulWidget {
@@ -18,7 +20,7 @@ class SchedulePatientsScreen extends StatefulWidget {
 }
 
 class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, WidgetsBindingObserver {
 
   // Shimmer animation controller
   late AnimationController _shimmerController;
@@ -27,24 +29,127 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
     _isControllerInitialized = true;
     _loadSchedules();
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _shimmerController.dispose();
     _debounceTimer?.cancel();
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
   }
 
   @override
   bool get wantKeepAlive => true;
-  
+
+  // ==================== APP LIFECYCLE ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _isScreenVisible = true;
+      debugPrint('🔄 [Schedules] App resumed - checking for pending notifications');
+
+      // Check if notification was received while in background (from tapping notification)
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+
+      // Check if notification was received while app was paused (local tracking)
+      final hasPendingRefresh = _pendingNotificationRefresh;
+
+      // Force refresh if any notification was received while away
+      if (hasBackgroundNotification || hasPendingRefresh) {
+        debugPrint('📱 [Schedules] Notification received while away - forcing refresh');
+        debugPrint('   - Background notification (tapped): $hasBackgroundNotification');
+        debugPrint('   - Pending refresh (received while paused): $hasPendingRefresh');
+
+        // Clear both flags
+        _notificationService.clearBackgroundNotificationFlag();
+        _pendingNotificationRefresh = false;
+
+        // Force data reload
+        _loadSchedules(forceRefresh: true, silent: true);
+      }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [Schedules] App paused');
+    }
+  }
+
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  /// Set up FCM callback for real-time notification count updates
+  /// Uses multi-listener pattern so all screens get updates!
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [Schedules] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+        debugPrint('🔔 [Schedules] Notification count updated: $newCount');
+      }
+    });
+
+    // Refresh data when notification received (foreground or background)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted) {
+        if (_isScreenVisible) {
+          // App is in foreground - refresh data immediately
+          debugPrint('🔄 [Schedules] Notification received (foreground) - triggering silent refresh');
+          _loadSchedules(forceRefresh: true, silent: true);
+          // NOTE: Don't call _loadUnreadNotificationCount() here!
+          // The badge count is already updated via the count listener
+        } else {
+          // App is in background/paused - set flag to refresh on resume
+          debugPrint('🔄 [Schedules] Notification received (background) - setting pending refresh flag');
+          _pendingNotificationRefresh = true;
+        }
+      }
+    });
+  }
+
+  /// Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [Schedules] Badge refreshed');
+    } catch (e) {
+      debugPrint('❌ [Schedules] Error refreshing badge: $e');
+    }
+  }
+
+  /// Open notifications sheet
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Schedules] Badge refreshed after closing notifications');
+  }
+
+  // ==================== END NOTIFICATION UPDATES ====================
+
   final _ScheduleService = ScheduleService();
   
   // Smart cache management (like dashboard)
@@ -89,6 +194,18 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
     'In Progress Only',
     'Pending Only',
   ];
+
+  // Notification management
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+  bool _isScreenVisible = true;
+
+  // Track if notification was received while app was paused (local flag)
+  bool _pendingNotificationRefresh = false;
+
+  // Multi-listener cleanup callbacks
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
 
   // ==================== SMART CACHE METHODS ====================
 
@@ -909,6 +1026,44 @@ void _showFilterOptions() {
                 ),
               ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today, color: Color(0xFF1A1A1A)),
             onPressed: _showDatePicker,

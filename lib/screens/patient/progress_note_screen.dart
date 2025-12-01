@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../services/progress_notes/progress_notes_service.dart';
 import '../../models/progress_notes/progress_note_models.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 
 class ProgressNoteScreen extends StatefulWidget {
   const ProgressNoteScreen({Key? key}) : super(key: key);
@@ -46,6 +48,14 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
   DateTime? _lastVisibleTime;
   bool _isScreenVisible = true;
 
+  // Notification management
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+
+  // Listener cleanup functions (multi-listener pattern)
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
+
   // ✅ CHANGE 5: Keep state alive when switching tabs
   @override
   bool get wantKeepAlive => true;
@@ -59,6 +69,10 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
     _lastVisibleTime = DateTime.now();
     _loadProgressNotes();
     _scrollController.addListener(_onScroll);
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
@@ -66,20 +80,34 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
     WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
     _searchController.dispose();
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
   }
 
   //Detect app lifecycle changes for battery saving
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
     if (state == AppLifecycleState.resumed) {
       _isScreenVisible = true;
-      
-      if (_isTabVisible) {
-        // ✅ NEW: Only refresh if data is actually stale
-        final shouldRefresh = _lastFetchTime == null || 
+      debugPrint('🔄 [Progress Notes] App resumed - checking for background notifications');
+
+      // Check if notification was received while in background
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+      if (hasBackgroundNotification) {
+        debugPrint('📱 [Progress Notes] Notification received while away - forcing refresh');
+        _notificationService.clearBackgroundNotificationFlag();
+        _loadProgressNotes(forceRefresh: true, silent: true);
+      } else if (_isTabVisible) {
+        // Only refresh if data is actually stale
+        final shouldRefresh = _lastFetchTime == null ||
             DateTime.now().difference(_lastFetchTime!) >= Duration(minutes: 5);
-        
+
         if (shouldRefresh) {
           debugPrint('🔄 Data stale, refreshing progress notes...');
           _loadProgressNotes(forceRefresh: true, silent: true);
@@ -87,11 +115,62 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
           debugPrint('📦 Using cached progress notes');
         }
       }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [Progress Notes] App paused');
     }
   }
 
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  /// Set up FCM callback for real-time notification count updates
+  /// Uses multi-listener pattern so all screens get updates!
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [Progress Notes] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+        debugPrint('🔔 [Progress Notes] Notification count updated: $newCount');
+      }
+    });
+
+    // Refresh data when notification received (foreground)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted && _isScreenVisible) {
+        debugPrint('🔄 [Progress Notes] Notification received - triggering silent refresh');
+        _loadProgressNotes(forceRefresh: true, silent: true);
+      }
+    });
+  }
+
+  /// Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [Progress Notes] Badge refreshed');
+    } catch (e) {
+      debugPrint('❌ [Progress Notes] Error refreshing badge: $e');
+    }
+  }
+
+  /// Open notifications sheet
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Progress Notes] Badge refreshed after closing notifications');
+  }
+
+  // ==================== END NOTIFICATION UPDATES ====================
+
   // ✅ CHANGE 7: PUBLIC METHODS FOR PARENT NAVIGATION
-  
+
   /// Called by parent when tab becomes visible
   void onTabVisible() {
     _isTabVisible = true;
@@ -725,6 +804,44 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                 ),
               ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           // ✅ CHANGE 12: Updated refresh button with loading state
           IconButton(
             icon: _isLoading && !_isCacheExpired

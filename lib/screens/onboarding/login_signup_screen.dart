@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
-import '../auth/sign_up_screen.dart';
 import '../auth/login_screen.dart';
+import '../onboarding/get_started_screen.dart';
 
 class LoginSignupScreen extends StatelessWidget {
   const LoginSignupScreen({super.key});
   
-  // Pre-calculate colors to avoid repeated opacity calculations
   static const Color _primaryColor = Color(0xFF199A8E);
-  static const Color _primaryLight = Color(0x1A199A8E); // Pre-calculated 10% opacity
-  static const Color _primaryLighter = Color(0x0D199A8E); // Pre-calculated 5% opacity
+  static const Color _primaryLight = Color(0x1A199A8E);
+  static const Color _primaryLighter = Color(0x0D199A8E);
   static const Color _greyText = Color(0xFF666666);
   static const Color _greyLight = Color(0xFFE5E5E5);
 
@@ -22,26 +21,21 @@ class LoginSignupScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
-              // Scrollable content
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
                       const SizedBox(height: 40),
-                      // Simplified illustration
                       const _SimplifiedIllustration(),
                       const SizedBox(height: 40),
-                      // Welcome text
                       const _WelcomeSection(),
                       const SizedBox(height: 40),
-                      // Action buttons
                       const _ActionButtons(),
                       const SizedBox(height: 20),
                     ],
                   ),
                 ),
               ),
-              // Terms text - always at bottom
               const _TermsText(),
               const SizedBox(height: 20),
             ],
@@ -52,7 +46,6 @@ class LoginSignupScreen extends StatelessWidget {
   }
 }
 
-// Simplified illustration without heavy shadows and gradients
 class _SimplifiedIllustration extends StatelessWidget {
   const _SimplifiedIllustration();
 
@@ -72,7 +65,6 @@ class _SimplifiedIllustration extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Simplified icon composition
           RepaintBoundary(
             child: SizedBox(
               width: 120,
@@ -80,7 +72,6 @@ class _SimplifiedIllustration extends StatelessWidget {
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Simple background circle without gradient
                   Container(
                     width: 120,
                     height: 120,
@@ -89,7 +80,6 @@ class _SimplifiedIllustration extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                   ),
-                  // Medical cross
                   Container(
                     width: 60,
                     height: 60,
@@ -142,7 +132,6 @@ class _SimplifiedIllustration extends StatelessWidget {
   }
 }
 
-// Const welcome section
 class _WelcomeSection extends StatelessWidget {
   const _WelcomeSection();
 
@@ -175,7 +164,6 @@ class _WelcomeSection extends StatelessWidget {
   }
 }
 
-// Optimized action buttons without heavy shadows
 class _ActionButtons extends StatelessWidget {
   const _ActionButtons();
 
@@ -209,10 +197,7 @@ class _ActionButtons extends StatelessWidget {
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.login_rounded,
-                  size: 20,
-                ),
+                Icon(Icons.login_rounded, size: 20),
                 SizedBox(width: 12),
                 Text(
                   'Login to your account',
@@ -227,7 +212,7 @@ class _ActionButtons extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        // Sign Up Button
+        // Get Started Button (Replaced Sign Up)
         SizedBox(
           width: double.infinity,
           height: 56,
@@ -237,7 +222,7 @@ class _ActionButtons extends StatelessWidget {
                 context,
                 PageRouteBuilder(
                   pageBuilder: (context, animation, secondaryAnimation) => 
-                      SignUpScreen(),
+                      const GetStartedScreen(),
                   transitionDuration: const Duration(milliseconds: 300),
                 ),
               );
@@ -263,14 +248,14 @@ class _ActionButtons extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(
-                    Icons.person_add_outlined,
+                    Icons.rocket_launch_outlined,
                     color: LoginSignupScreen._primaryColor,
                     size: 16,
                   ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
-                  'Create new account',
+                  'Get Started',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -286,7 +271,6 @@ class _ActionButtons extends StatelessWidget {
   }
 }
 
-// Const terms text - now at the bottom
 class _TermsText extends StatelessWidget {
   const _TermsText();
 
@@ -308,9 +292,7 @@ class _TermsText extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          TextSpan(
-            text: ' and ',
-          ),
+          TextSpan(text: ' and '),
           TextSpan(
             text: 'Privacy Policy',
             style: TextStyle(

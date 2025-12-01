@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart';
 import 'dart:async';
 import '../../utils/app_colors.dart';
 import '../../services/location_service.dart';
-import 'care_request_process_screen.dart';
+import '../../services/care_request_service.dart';
+import '../../models/care_request/care_request_models.dart';
 
 class CareRequestScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -25,6 +25,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _locationService = LocationService();
+  final _careRequestService = CareRequestService();
 
   String? _selectedCareType;
   String? _selectedUrgency = 'routine';
@@ -33,6 +34,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   DateTime? _preferredStartDate;
   bool _isLoadingLocation = false;
   bool _isSearchingLocation = false;
+  bool _isSubmitting = false;
+  bool _shareWithEmergencyContact = false;
   Position? _currentPosition;
   
   List<PlaceSearchResult> _addressSearchResults = [];
@@ -57,6 +60,11 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   @override
   void initState() {
     super.initState();
+    
+    // Initialize checkbox from patient's existing emergency contact preference
+    _shareWithEmergencyContact = widget.patientData['emergency_contact_notify'] == true ||
+        widget.patientData['emergency_contact_notify'] == 1;
+    
     _getCurrentLocation();
   }
 
@@ -70,6 +78,31 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     _cityController.dispose();
     _addressSearchResults.clear();
     super.dispose();
+  }
+
+  // Get date constraints based on urgency level
+  DateTime get _minStartDate => DateTime.now().add(const Duration(days: 1));
+  
+  DateTime get _maxStartDate {
+    switch (_selectedUrgency) {
+      case 'emergency':
+        return DateTime.now().add(const Duration(days: 4));
+      case 'urgent':
+        return DateTime.now().add(const Duration(days: 7));
+      default: // routine
+        return DateTime.now().add(const Duration(days: 90));
+    }
+  }
+
+  String get _dateHintText {
+    switch (_selectedUrgency) {
+      case 'emergency':
+        return 'Select date (within 4 days)';
+      case 'urgent':
+        return 'Select date (within 7 days)';
+      default:
+        return 'Preferred start date';
+    }
   }
 
   void _dismissKeyboard() {
@@ -90,10 +123,9 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       return;
     }
 
-    // Show dropdown immediately when typing
     setState(() {
       _isSearchingLocation = true;
-      _showAddressDropdown = true; // Show dropdown immediately
+      _showAddressDropdown = true;
     });
 
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -105,10 +137,6 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
 
   Future<void> _performLocationSearch(String query) async {
     try {
-      debugPrint('=== Starting location search ===');
-      debugPrint('Query: $query');
-      debugPrint('Current position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
-      
       final results = await _locationService.searchPlaces(
         query,
         countryCode: 'GH',
@@ -118,13 +146,10 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       ).timeout(
         const Duration(seconds: 10),
         onTimeout: () {
-          debugPrint('Search timeout!');
           throw TimeoutException('Search took too long');
         },
       );
 
-      debugPrint('Search completed. Results count: ${results.length}');
-      
       if (mounted) {
         setState(() {
           _addressSearchResults = results.take(10).toList();
@@ -132,46 +157,33 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         });
         
         if (results.isEmpty) {
-          debugPrint('No results found for: $query');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text('No locations found. Try a different search term.'),
               backgroundColor: Colors.orange,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
       }
     } catch (e) {
-      debugPrint('=== Location search error ===');
-      debugPrint('Error: $e');
-      debugPrint('Error type: ${e.runtimeType}');
-      debugPrint('Stack trace: ${StackTrace.current}');
-      
       if (mounted) {
         setState(() {
           _isSearchingLocation = false;
           _addressSearchResults.clear();
         });
         
-        String errorMessage = 'Search error';
-        if (e is TimeoutException) {
-          errorMessage = 'Search timeout. Please try again.';
-        } else {
-          errorMessage = 'Error: ${e.toString()}';
-        }
+        String errorMessage = e is TimeoutException 
+            ? 'Search timeout. Please try again.' 
+            : 'Error: ${e.toString()}';
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -193,13 +205,11 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       setState(() {
         _addressController.text = placeDetails.name;
         
-        // Extract city from the address
         final addressParts = placeDetails.formattedAddress.split(',');
         if (addressParts.length > 1) {
           _cityController.text = addressParts[addressParts.length - 2].trim();
         }
         
-        // Try to match region from the address
         final matchedRegion = regions.firstWhere(
           (region) => placeDetails.formattedAddress.toLowerCase().contains(region.toLowerCase()),
           orElse: () => '',
@@ -214,18 +224,14 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
 
       _dismissKeyboard();
     } else {
-      setState(() {
-        _isSearchingLocation = false;
-      });
+      setState(() => _isSearchingLocation = false);
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Failed to load location details'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -265,63 +271,75 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
 
       _currentPosition = position;
 
-      List<Placemark> placemarks = await placemarkFromCoordinates(
+      // Set initial state while fetching address
+      if (mounted) {
+        setState(() {
+          _addressController.text = 'Current Location';
+        });
+      }
+
+      // Use Google Maps Geocoding API via LocationService (same as transport screen)
+      final address = await _locationService.getAddressFromCoordinates(
         position.latitude,
         position.longitude,
       );
 
-      if (placemarks.isNotEmpty) {
-        Placemark place = placemarks[0];
-        
+      if (!mounted) return;
+
+      if (address != null && address.isNotEmpty) {
+        // Parse the formatted address from Google Maps API
+        final addressParts = address.split(',');
+
         setState(() {
-          String address = '';
-          if (place.street != null && place.street!.isNotEmpty) {
-            address = place.street!;
+          // Use the first part as the street address (usually most specific)
+          _addressController.text = addressParts.isNotEmpty
+              ? addressParts[0].trim()
+              : address;
+
+          // Try to extract city from address parts
+          if (addressParts.length > 1) {
+            // Usually the city is the second-to-last part before the country
+            final cityIndex = addressParts.length >= 3
+                ? addressParts.length - 2
+                : 1;
+            _cityController.text = addressParts[cityIndex].trim();
           }
-          if (place.subLocality != null && place.subLocality!.isNotEmpty) {
-            address += address.isEmpty ? place.subLocality! : ', ${place.subLocality}';
+
+          // Try to match region from the full address
+          final matchedRegion = regions.firstWhere(
+            (region) => address.toLowerCase().contains(region.toLowerCase()),
+            orElse: () => '',
+          );
+          if (matchedRegion.isNotEmpty) {
+            _selectedRegion = matchedRegion;
           }
-          
-          _addressController.text = address.isNotEmpty ? address : 'Address not found';
-          _cityController.text = place.locality ?? '';
-          
-          if (place.administrativeArea != null) {
-            final matchedRegion = regions.firstWhere(
-              (region) => region.toLowerCase().contains(place.administrativeArea!.toLowerCase()),
-              orElse: () => '',
-            );
-            if (matchedRegion.isNotEmpty) {
-              _selectedRegion = matchedRegion;
-            }
-          }
-          
+
           _isLoadingLocation = false;
         });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text('Location detected successfully'),
-                  ),
-                ],
-              ),
-              backgroundColor: const Color(0xFF199A8E),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              duration: const Duration(seconds: 2),
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white, size: 20),
+                SizedBox(width: 12),
+                Expanded(child: Text('Location detected successfully')),
+              ],
             ),
-          );
-        }
+            backgroundColor: const Color(0xFF199A8E),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        setState(() {
+          _addressController.text = 'Address not found';
+          _isLoadingLocation = false;
+        });
+        _showLocationError('Could not determine your address. Please enter it manually.');
       }
     } catch (e) {
-      debugPrint('Error getting location: $e');
       _showLocationError('Could not get your location. You can enter it manually.');
       setState(() => _isLoadingLocation = false);
     }
@@ -340,57 +358,122 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           ),
           backgroundColor: const Color(0xFFFF9A00),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           duration: const Duration(seconds: 3),
         ),
       );
     }
   }
 
-  void _submitRequest() {
+  // Handle urgency change - reset date if out of new range
+  void _onUrgencyChanged(String? urgency) {
+    setState(() {
+      _selectedUrgency = urgency;
+      
+      // Reset date if current selection is outside new constraints
+      if (_preferredStartDate != null) {
+        final newMax = _maxStartDate;
+        if (_preferredStartDate!.isAfter(newMax)) {
+          _preferredStartDate = null;
+        }
+      }
+    });
+  }
+
+  Future<void> _submitRequest() async {
     _dismissKeyboard();
     
-    if (_formKey.currentState!.validate()) {
-      if (_selectedCareType == null) {
-        _showError('Please select a care type');
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedCareType == null) {
+      _showError('Please select a care type');
+      return;
+    }
+
+    // Validate date for urgent/emergency
+    if (_selectedUrgency == 'urgent' || _selectedUrgency == 'emergency') {
+      if (_preferredStartDate == null) {
+        _showError('Please select a preferred start date for ${_selectedUrgency} requests');
         return;
       }
+    }
 
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CareRequestProcessScreen(
-            patientData: widget.patientData,
-            requestData: {
-              'care_type': _selectedCareType,
-              'urgency_level': _selectedUrgency,
-              'description': _descriptionController.text,
-              'special_requirements': _specialRequirementsController.text,
-              'service_address': _addressController.text,
-              'city': _cityController.text,
-              'region': _selectedRegion,
-              'preferred_start_date': _preferredStartDate?.toIso8601String().split('T')[0],
-              'preferred_time': _selectedTime,
-            },
-          ),
+    setState(() => _isSubmitting = true);
+
+    try {
+      final response = await _careRequestService.createCareRequest(
+        CreateCareRequestRequest(
+          careType: _selectedCareType!,
+          urgencyLevel: _selectedUrgency ?? 'routine',
+          description: _descriptionController.text,
+          specialRequirements: _specialRequirementsController.text.isNotEmpty 
+              ? _specialRequirementsController.text 
+              : null,
+          serviceAddress: _addressController.text,
+          city: _cityController.text,
+          region: _selectedRegion,
+          preferredStartDate: _preferredStartDate?.toIso8601String().split('T')[0],
+          preferredTime: _selectedTime,
+          shareWithEmergencyContact: _shareWithEmergencyContact,
         ),
-      ).then((result) {
-        // When process screen returns with true (payment successful)
-        if (result == true && mounted) {
-          // Pop the request form screen with true, returning to list
-          Navigator.of(context).pop(true);
-        }
-      });
+      );
+
+      if (!mounted) return;
+
+      setState(() => _isSubmitting = false);
+
+      if (response.success) {
+        // Update local patientData with the new preference
+        widget.patientData['emergency_contact_notify'] = _shareWithEmergencyContact;
+        
+        _showSuccess('Care request submitted successfully!');
+        
+        // Return true to trigger refresh in list screen
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            Navigator.of(context).pop(true);
+          }
+        });
+      } else {
+        _showError(response.message);
+      }
+    } catch (e) {
+      setState(() => _isSubmitting = false);
+      _showError('Failed to submit request: $e');
     }
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF199A8E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -442,11 +525,13 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 const SizedBox(height: 12),
                 _buildDescriptionField(),
                 const SizedBox(height: 24),
+                _buildEmergencyContactCheckbox(),
+                const SizedBox(height: 24),
                 _buildSectionTitle('Service Location', Icons.location_on),
                 const SizedBox(height: 12),
                 _buildLocationFields(),
                 const SizedBox(height: 24),
-                _buildSectionTitle('Preferences (Optional)', Icons.tune),
+                _buildSectionTitle('Scheduling Preferences', Icons.tune),
                 const SizedBox(height: 12),
                 _buildPreferencesFields(),
                 const SizedBox(height: 32),
@@ -471,9 +556,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF199A8E).withOpacity(0.2),
-        ),
+        border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.2)),
       ),
       child: Row(
         children: [
@@ -483,11 +566,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               color: const Color(0xFF199A8E).withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.info_outline,
-              color: Color(0xFF199A8E),
-              size: 24,
-            ),
+            child: const Icon(Icons.info_outline, color: Color(0xFF199A8E), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -496,19 +575,12 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               children: [
                 const Text(
                   'About Care Requests',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Tell us about your care needs and we\'ll match you with a qualified nurse',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -525,11 +597,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1A1A1A),
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
         ),
       ],
     );
@@ -561,18 +629,13 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               color: isSelected ? const Color(0xFF199A8E) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected
-                    ? const Color(0xFF199A8E)
-                    : Colors.grey.shade300,
+                color: isSelected ? const Color(0xFF199A8E) : Colors.grey.shade300,
                 width: isSelected ? 2 : 1,
               ),
             ),
             child: Row(
               children: [
-                Text(
-                  type['icon']!,
-                  style: const TextStyle(fontSize: 20),
-                ),
+                Text(type['icon']!, style: const TextStyle(fontSize: 20)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -595,69 +658,109 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   }
 
   Widget _buildUrgencySelection() {
-    return Row(
-      children: urgencyLevels.map((level) {
-        final isSelected = _selectedUrgency == level;
-        Color color;
-        IconData icon;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: urgencyLevels.map((level) {
+            final isSelected = _selectedUrgency == level;
+            Color color;
+            IconData icon;
 
-        switch (level) {
-          case 'routine':
-            color = const Color(0xFF199A8E);
-            icon = Icons.schedule;
-            break;
-          case 'urgent':
-            color = const Color(0xFFFF9A00);
-            icon = Icons.warning_amber;
-            break;
-          case 'emergency':
-            color = const Color(0xFFFF4757);
-            icon = Icons.emergency;
-            break;
-          default:
-            color = Colors.grey;
-            icon = Icons.help;
-        }
+            switch (level) {
+              case 'routine':
+                color = const Color(0xFF199A8E);
+                icon = Icons.schedule;
+                break;
+              case 'urgent':
+                color = const Color(0xFFFF9A00);
+                icon = Icons.warning_amber;
+                break;
+              case 'emergency':
+                color = const Color(0xFFFF4757);
+                icon = Icons.emergency;
+                break;
+              default:
+                color = Colors.grey;
+                icon = Icons.help;
+            }
 
-        return Expanded(
-          child: GestureDetector(
-            onTap: () {
-              _dismissKeyboard();
-              setState(() => _selectedUrgency = level);
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: isSelected ? color : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: isSelected ? color : Colors.grey.shade300,
-                  width: isSelected ? 2 : 1,
+            return Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  _dismissKeyboard();
+                  _onUrgencyChanged(level);
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isSelected ? color : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected ? color : Colors.grey.shade300,
+                      width: isSelected ? 2 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(icon, color: isSelected ? Colors.white : color, size: 24),
+                      const SizedBox(height: 4),
+                      Text(
+                        level.capitalize(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? Colors.white : color,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: Column(
+            );
+          }).toList(),
+        ),
+        // Show date constraint hint
+        if (_selectedUrgency == 'urgent' || _selectedUrgency == 'emergency')
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: (_selectedUrgency == 'emergency' 
+                    ? const Color(0xFFFF4757) 
+                    : const Color(0xFFFF9A00)).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
                 children: [
                   Icon(
-                    icon,
-                    color: isSelected ? Colors.white : color,
-                    size: 24,
+                    Icons.info_outline,
+                    size: 16,
+                    color: _selectedUrgency == 'emergency' 
+                        ? const Color(0xFFFF4757) 
+                        : const Color(0xFFFF9A00),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    level.capitalize(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : color,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _selectedUrgency == 'emergency'
+                          ? 'Emergency requests must start within 4 days'
+                          : 'Urgent requests must start within 7 days',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _selectedUrgency == 'emergency' 
+                            ? const Color(0xFFFF4757) 
+                            : const Color(0xFFFF9A00),
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 
@@ -686,12 +789,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please describe your care needs';
-            }
-            if (value.length < 20) {
-              return 'Please provide at least 20 characters';
-            }
+            if (value == null || value.isEmpty) return 'Please describe your care needs';
+            if (value.length < 20) return 'Please provide at least 20 characters';
             return null;
           },
         ),
@@ -723,10 +822,83 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     );
   }
 
+  Widget _buildEmergencyContactCheckbox() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _shareWithEmergencyContact = !_shareWithEmergencyContact);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: _shareWithEmergencyContact 
+              ? const Color(0xFF199A8E).withOpacity(0.1) 
+              : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _shareWithEmergencyContact 
+                ? const Color(0xFF199A8E) 
+                : Colors.grey.shade300,
+            width: _shareWithEmergencyContact ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: _shareWithEmergencyContact 
+                    ? const Color(0xFF199A8E) 
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: _shareWithEmergencyContact 
+                      ? const Color(0xFF199A8E) 
+                      : Colors.grey.shade400,
+                  width: 2,
+                ),
+              ),
+              child: _shareWithEmergencyContact
+                  ? const Icon(
+                      Icons.check,
+                      size: 16,
+                      color: Colors.white,
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Share care plan progress with emergency contact',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1A1A),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Your emergency contact will receive updates about your care progress',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildLocationFields() {
     return Column(
       children: [
-        // Wrap in a container to ensure proper sizing
         Column(
           children: [
             TextFormField(
@@ -803,14 +975,11 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 ),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Service address is required';
-                }
+                if (value == null || value.isEmpty) return 'Service address is required';
                 return null;
               },
             ),
             
-            // Dropdown for search results - render OUTSIDE the Stack
             if (_showAddressDropdown)
               Container(
                 margin: const EdgeInsets.only(top: 8),
@@ -830,17 +999,15 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 child: _isSearchingLocation
                     ? Container(
                         padding: const EdgeInsets.all(24),
-                        child: Center(
+                        child: const Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  const Color(0xFF199A8E),
-                                ),
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
                               ),
-                              const SizedBox(height: 12),
-                              const Text('Searching locations...'),
+                              SizedBox(height: 12),
+                              Text('Searching locations...'),
                             ],
                           ),
                         ),
@@ -851,27 +1018,11 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  Icons.location_off,
-                                  size: 48,
-                                  color: Colors.grey.shade400,
-                                ),
+                                Icon(Icons.location_off, size: 48, color: Colors.grey.shade400),
                                 const SizedBox(height: 12),
-                                Text(
-                                  'No locations found',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ),
+                                Text('No locations found', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
                                 const SizedBox(height: 4),
-                                Text(
-                                  'Try a different search term',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                ),
+                                Text('Try a different search term', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                               ],
                             ),
                           )
@@ -880,8 +1031,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                             padding: EdgeInsets.zero,
                             itemCount: _addressSearchResults.length,
                             itemBuilder: (context, index) {
-                              return _buildAddressSearchResultItem(
-                                  _addressSearchResults[index]);
+                              return _buildAddressSearchResultItem(_addressSearchResults[index]);
                             },
                           ),
               ),
@@ -969,12 +1119,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.grey.shade200,
-                width: 1,
-              ),
-            ),
+            border: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
           ),
           child: Row(
             children: [
@@ -985,11 +1130,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   color: const Color(0xFF199A8E).withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
-                  icon,
-                  color: const Color(0xFF199A8E),
-                  size: 18,
-                ),
+                child: Icon(icon, color: const Color(0xFF199A8E), size: 18),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -998,20 +1139,13 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   children: [
                     Text(
                       result.mainText,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1A1A1A),
-                      ),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
                     ),
                     if (result.secondaryText.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         result.secondaryText,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade600,
-                        ),
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1019,11 +1153,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14,
-                color: Colors.grey.shade400,
-              ),
+              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
             ],
           ),
         ),
@@ -1032,6 +1162,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   }
 
   Widget _buildPreferencesFields() {
+    final bool isUrgentOrEmergency = _selectedUrgency == 'urgent' || _selectedUrgency == 'emergency';
+    
     return Column(
       children: [
         GestureDetector(
@@ -1039,15 +1171,13 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             _dismissKeyboard();
             final date = await showDatePicker(
               context: context,
-              initialDate: DateTime.now().add(const Duration(days: 1)),
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(const Duration(days: 90)),
+              initialDate: _preferredStartDate ?? _minStartDate,
+              firstDate: _minStartDate,
+              lastDate: _maxStartDate,
               builder: (context, child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.light(
-                      primary: Color(0xFF199A8E),
-                    ),
+                    colorScheme: const ColorScheme.light(primary: Color(0xFF199A8E)),
                   ),
                   child: child!,
                 );
@@ -1062,25 +1192,50 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade300),
+              border: Border.all(
+                color: isUrgentOrEmergency && _preferredStartDate == null
+                    ? Colors.red.shade300
+                    : Colors.grey.shade300,
+              ),
             ),
             child: Row(
               children: [
-                const Icon(Icons.calendar_today, color: Color(0xFF199A8E)),
+                Icon(
+                  Icons.calendar_today, 
+                  color: isUrgentOrEmergency 
+                      ? (_selectedUrgency == 'emergency' ? const Color(0xFFFF4757) : const Color(0xFFFF9A00))
+                      : const Color(0xFF199A8E),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    _preferredStartDate == null
-                        ? 'Preferred start date'
-                        : 'Start: ${_preferredStartDate!.day}/${_preferredStartDate!.month}/${_preferredStartDate!.year}',
-                    style: TextStyle(
-                      color: _preferredStartDate == null
-                          ? Colors.grey.shade600
-                          : const Color(0xFF1A1A1A),
-                      fontSize: 14,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _preferredStartDate == null
+                            ? _dateHintText
+                            : 'Start: ${_preferredStartDate!.day}/${_preferredStartDate!.month}/${_preferredStartDate!.year}',
+                        style: TextStyle(
+                          color: _preferredStartDate == null ? Colors.grey.shade600 : const Color(0xFF1A1A1A),
+                          fontSize: 14,
+                        ),
+                      ),
+                      if (isUrgentOrEmergency && _preferredStartDate == null)
+                        Text(
+                          'Required for ${_selectedUrgency} requests',
+                          style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                        ),
+                    ],
                   ),
                 ),
+                if (_preferredStartDate != null)
+                  IconButton(
+                    icon: const Icon(Icons.clear, size: 18),
+                    color: Colors.grey,
+                    onPressed: () => setState(() => _preferredStartDate = null),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
               ],
             ),
           ),
@@ -1089,7 +1244,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         DropdownButtonFormField<String>(
           value: _selectedTime,
           decoration: InputDecoration(
-            hintText: 'Preferred time of day',
+            hintText: 'Preferred time of day (Optional)',
             prefixIcon: const Icon(Icons.access_time, color: Color(0xFF199A8E)),
             filled: true,
             fillColor: Colors.white,
@@ -1107,10 +1262,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             ),
           ),
           items: timePreferences
-              .map((time) => DropdownMenuItem(
-                    value: time,
-                    child: Text(time.capitalize()),
-                  ))
+              .map((time) => DropdownMenuItem(value: time, child: Text(time.capitalize())))
               .toList(),
           onChanged: (value) {
             _dismissKeyboard();
@@ -1126,22 +1278,26 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       width: double.infinity,
       height: 54,
       child: ElevatedButton(
-        onPressed: _submitRequest,
+        onPressed: _isSubmitting ? null : _submitRequest,
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF199A8E),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          disabledBackgroundColor: const Color(0xFF199A8E).withOpacity(0.6),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
-        child: const Text(
-          'Continue to Payment',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        child: _isSubmitting
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : const Text(
+                'Submit Request',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
       ),
     );
   }

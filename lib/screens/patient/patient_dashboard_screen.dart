@@ -47,8 +47,10 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
 
   final NotificationService _notificationService = NotificationService();
   int _unreadNotificationCount = 0;
-  // 🔥 REMOVED: No more polling timer!
-  // Timer? _notificationPollingTimer;
+
+  // Listener cleanup functions
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
 
   // Visibility tracking
   bool _isTabVisible = false;
@@ -57,6 +59,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   // Screen visibility tracking for battery optimization
   bool _isScreenVisible = true;
 
+  // Track if notification was received while app was paused (local flag)
+  bool _pendingNotificationRefresh = false;
+
   // CRITICAL: Keep state alive when switching tabs
   @override
   bool get wantKeepAlive => true;
@@ -64,11 +69,11 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // 🔥 REMOVED: No more polling timer to cancel!
-    // _notificationPollingTimer?.cancel();
-    
-    // Clean up FCM callback
-    _notificationService.onNotificationCountChanged = null;
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
   }
 
@@ -90,39 +95,85 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   // OPTIMIZED: Detect app lifecycle changes for battery saving
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
     if (state == AppLifecycleState.resumed) {
       _isScreenVisible = true;
-      
-      if (_isTabVisible) {
-        // Smart refresh: Only if data is actually stale
-        final shouldRefresh = _lastFetchTime == null || 
+      debugPrint('🔄 [Patient Dashboard] App resumed - checking for pending notifications');
+
+      // Check if notification was received while in background (from tapping notification)
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+
+      // Check if notification was received while app was paused (local tracking)
+      final hasPendingRefresh = _pendingNotificationRefresh;
+
+      // Force refresh if any notification was received while away
+      if (hasBackgroundNotification || hasPendingRefresh) {
+        debugPrint('📱 [Patient Dashboard] Notification received while away - forcing refresh');
+        debugPrint('   - Background notification (tapped): $hasBackgroundNotification');
+        debugPrint('   - Pending refresh (received while paused): $hasPendingRefresh');
+
+        // Clear both flags
+        _notificationService.clearBackgroundNotificationFlag();
+        _pendingNotificationRefresh = false;
+
+        // Force dashboard reload
+        _loadDashboardData(forceRefresh: true, silent: true);
+
+        // Also refresh notification badge count explicitly
+        _loadUnreadNotificationCount();
+      } else if (_isTabVisible) {
+        // Smart refresh: Only if data is actually stale (existing cache logic)
+        final shouldRefresh = _lastFetchTime == null ||
             DateTime.now().difference(_lastFetchTime!) >= Duration(minutes: 5);
-        
+
         if (shouldRefresh) {
           _loadDashboardData(forceRefresh: true, silent: true);
         }
-        
-        // Always refresh lightweight notification count
-        _loadUnreadNotificationCount();
       }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [Patient Dashboard] App paused');
     }
   }
 
   // ==================== FCM REAL-TIME UPDATES ====================
 
   /// ⚡ Set up FCM callback for real-time notification count updates
-  /// This eliminates the need for polling!
+  /// Uses multi-listener pattern so all screens get updates!
   void _setupFcmNotificationUpdates() {
-    debugPrint('⚡ [Dashboard] Setting up FCM real-time notification updates');
-    
-    _notificationService.onNotificationCountChanged = (newCount) {
+    debugPrint('⚡ [Patient Dashboard] Setting up FCM real-time notification updates (multi-listener)');
+
+    // Update notification badge count - using multi-listener pattern
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
       if (mounted) {
         setState(() {
           _unreadNotificationCount = newCount;
         });
-        debugPrint('🔔 [Dashboard] Notification count updated in real-time: $newCount');
+        debugPrint('🔔 [Patient Dashboard] Notification count updated: $newCount');
       }
-    };
+    });
+
+    // Refresh dashboard when notification received (foreground or background)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted) {
+        if (_isScreenVisible) {
+          // App is in foreground - refresh dashboard data immediately
+          debugPrint('🔄 [Patient Dashboard] Notification received (foreground) - triggering silent refresh');
+          _loadDashboardData(forceRefresh: true, silent: true);
+          // NOTE: Don't call _loadUnreadNotificationCount() here!
+          // The badge count is already updated via the count listener (addNotificationCountListener)
+          // Calling the API here would overwrite the correct count with stale data
+        } else {
+          // App is in background/paused - set flag to refresh on resume
+          debugPrint('🔄 [Patient Dashboard] Notification received (background) - setting pending refresh flag');
+          _pendingNotificationRefresh = true;
+        }
+      }
+    });
   }
 
   /// Load unread notification count (only called once on init and resume)
@@ -157,9 +208,10 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   /// Open notifications sheet (new modern bottom sheet)
   void _openNotificationsSheet() async {
     await showNotificationsSheet(context);
-    
-    // Refresh count after closing (in case user marked as read)
-    _loadUnreadNotificationCount();
+
+    // Refresh badge after closing
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Patient Dashboard] Badge refreshed after closing notifications');
   }
 
   // ==================== PUBLIC METHODS FOR PARENT NAVIGATION ====================
