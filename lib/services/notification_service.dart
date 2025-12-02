@@ -3,11 +3,13 @@
 // ✅ FIXED: Foreground badge updates now work correctly
 // ✅ FIXED: Title/body extraction from data field
 // ✅ FIXED: Better error handling and logging
+// ✅ FIXED: iOS MethodChannel for foreground notification forwarding
 
 import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../utils/api_client.dart';
 import '../utils/api_config.dart';
 import '../models/notification/notification_models.dart';
@@ -24,6 +26,10 @@ class NotificationService {
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
+
+  // iOS MethodChannel for receiving forwarded notifications from native
+  static const MethodChannel _iosNotificationChannel =
+      MethodChannel('com.healthme/notifications');
 
   String? _fcmToken;
   String? get fcmToken => _fcmToken;
@@ -166,6 +172,9 @@ class NotificationService {
       // Set up message handlers
       _setupMessageHandlers();
 
+      // ✅ iOS: Set up MethodChannel to receive forwarded notifications from native
+      _setupiOSNotificationChannel();
+
       // ✅ CRITICAL: Clear badge when app opens
       await _clearBadgeOnStartup();
 
@@ -173,6 +182,41 @@ class NotificationService {
     } catch (e) {
       debugPrint('💥 [NotificationService] Initialization error: $e');
       rethrow;
+    }
+  }
+
+  /// Set up iOS MethodChannel to receive notifications forwarded from AppDelegate
+  /// This is needed because iOS native code handles the notification display,
+  /// but we still need Flutter to know about it for chat refresh, badge updates, etc.
+  void _setupiOSNotificationChannel() {
+    if (!kIsWeb && Platform.isIOS) {
+      _iosNotificationChannel.setMethodCallHandler((call) async {
+        if (call.method == 'onForegroundNotification') {
+          debugPrint('📱 [NotificationService] iOS forwarded notification received!');
+
+          final Map<dynamic, dynamic>? data = call.arguments as Map<dynamic, dynamic>?;
+          debugPrint('📋 [NotificationService] iOS notification data: $data');
+
+          if (data != null) {
+            // Extract badge count if available
+            final badgeCount = data['badge_count'];
+            if (badgeCount != null) {
+              final count = int.tryParse(badgeCount.toString()) ?? (_currentUnreadCount + 1);
+              debugPrint('🔔 [NotificationService] Badge count from iOS: $count');
+              _notifyCountListeners(count);
+            } else {
+              // Increment optimistically if no badge count
+              _notifyCountListeners(_currentUnreadCount + 1);
+            }
+
+            // Notify all received listeners (this triggers chat refresh, dashboard refresh, etc.)
+            debugPrint('🔄 [NotificationService] Triggering refresh for all listeners (iOS forward)');
+            _notifyReceivedListeners();
+          }
+        }
+        return null;
+      });
+      debugPrint('✅ [NotificationService] iOS MethodChannel handler set up');
     }
   }
 
@@ -341,11 +385,16 @@ class NotificationService {
       } catch (e, stackTrace) {
         debugPrint('❌ [NotificationService] Error in foreground message handler: $e');
         debugPrint('Stack trace: $stackTrace');
-        
+
         // Even if there's an error, try to update with optimistic count
         final fallbackCount = _currentUnreadCount + 1;
         await _updateBadge(fallbackCount);
         _notifyCountListeners(fallbackCount);
+
+        // ✅ CRITICAL FIX: Always notify received listeners even on error
+        // This ensures chat screens and other listeners refresh even if badge update fails
+        debugPrint('🔄 [NotificationService] Triggering refresh for listeners (fallback after error)');
+        _notifyReceivedListeners();
       }
     });
 

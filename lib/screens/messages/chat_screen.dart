@@ -1,5 +1,6 @@
 // lib/screens/messages/chat_screen.dart
 // Chat screen for individual conversations with pagination
+// Uses push notifications for real-time updates (no polling - battery efficient)
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -55,6 +56,9 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   // Notification listener cleanup
   VoidCallback? _removeNotificationListener;
 
+  // Track if notification was received while app was paused
+  bool _pendingMessageRefresh = false;
+
   @override
   void initState() {
     super.initState();
@@ -80,74 +84,116 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _isScreenVisible = true;
-      // Refresh messages when app returns to foreground
-      _loadNewMessages();
+      debugPrint('🔄 [ChatScreen] App resumed');
+
+      // Check if notification was received while paused
+      if (_pendingMessageRefresh) {
+        debugPrint('📱 [ChatScreen] Pending refresh from background notification');
+        _pendingMessageRefresh = false;
+        _refreshMessages();
+      }
     } else if (state == AppLifecycleState.paused) {
       _isScreenVisible = false;
     }
   }
 
-  /// Set up listener for incoming message notifications (battery-efficient, push-based)
+  // ==================== NOTIFICATION HANDLING ====================
+
+  /// Set up listener for incoming message notifications
+  /// Matches the pattern used in patient_dashboard_screen
   void _setupNotificationListener() {
+    debugPrint('🔧 [ChatScreen] Setting up notification listener for user ${widget.userId}...');
+
     _removeNotificationListener = _notificationService.addNotificationReceivedListener(() {
-      if (mounted && _isScreenVisible) {
-        // Only refresh if we're on screen - battery optimization
-        debugPrint('📬 [ChatScreen] Notification received - checking for new messages');
-        _loadNewMessages();
+      debugPrint('═══════════════════════════════════════════════════════');
+      debugPrint('📬 [ChatScreen] NOTIFICATION RECEIVED CALLBACK FIRED!');
+      debugPrint('   mounted: $mounted');
+      debugPrint('   _isScreenVisible: $_isScreenVisible');
+      debugPrint('   userId: ${widget.userId}');
+      debugPrint('═══════════════════════════════════════════════════════');
+
+      if (mounted) {
+        if (_isScreenVisible) {
+          // App is in foreground - refresh immediately (like dashboard)
+          debugPrint('🔄 [ChatScreen] Foreground - calling _refreshMessages() NOW');
+          _refreshMessages();
+        } else {
+          // App is in background - set flag to refresh on resume
+          debugPrint('📌 [ChatScreen] Background - setting pending refresh flag');
+          _pendingMessageRefresh = true;
+        }
+      } else {
+        debugPrint('⚠️ [ChatScreen] NOT mounted - skipping refresh');
       }
     });
+
+    debugPrint('✅ [ChatScreen] Notification listener registered successfully');
   }
 
-  /// Load only new messages (for real-time updates)
-  /// This fetches page 1 and merges any new messages at the bottom
-  Future<void> _loadNewMessages() async {
-    if (!mounted || _isLoading) return;
+  /// Refresh messages silently - only fetch recent messages (not full page)
+  /// This is efficient: we only fetch 10 messages to check for new ones
+  Future<void> _refreshMessages() async {
+    debugPrint('═══════════════════════════════════════════════════════');
+    debugPrint('🔄 [ChatScreen] _refreshMessages() CALLED');
+    debugPrint('   mounted: $mounted');
+    debugPrint('   current message count: ${_messages.length}');
+    debugPrint('═══════════════════════════════════════════════════════');
+
+    if (!mounted) {
+      debugPrint('⚠️ [ChatScreen] Not mounted, aborting refresh');
+      return;
+    }
 
     try {
+      debugPrint('📡 [ChatScreen] Fetching recent messages from API...');
+
+      // Only fetch 10 recent messages for refresh (efficient)
+      // Full page (30) is only fetched on initial load or scroll-up
       final response = await _messageService.getConversation(
         widget.userId,
         page: 1,
-        perPage: _messagesPerPage,
+        perPage: 10, // Small fetch for refresh - we only need new messages
       );
 
+      debugPrint('📥 [ChatScreen] API returned ${response.messages.length} messages');
+
       if (mounted && response.messages.isNotEmpty) {
-        final newMessages = response.messages.toList();
-
-        // Find messages we don't have yet (compare by ID)
         final existingIds = _messages.map((m) => m.id).toSet();
-        final trulyNewMessages = newMessages.where((m) => !existingIds.contains(m.id)).toList();
+        debugPrint('📋 [ChatScreen] Existing message IDs: $existingIds');
 
-        if (trulyNewMessages.isNotEmpty) {
+        final newMessages = response.messages
+            .where((m) => !existingIds.contains(m.id))
+            .toList();
+
+        debugPrint('✨ [ChatScreen] Found ${newMessages.length} NEW messages (not in existing list)');
+
+        if (newMessages.isNotEmpty) {
+          debugPrint('📝 [ChatScreen] New message IDs: ${newMessages.map((m) => m.id).toList()}');
+
           setState(() {
-            // Append new messages at the end (they're the most recent)
-            _messages.addAll(trulyNewMessages);
+            _messages.addAll(newMessages);
           });
 
-          // Scroll to bottom to show new message
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _scrollToBottom();
           });
 
-          // Mark as read
           _markConversationAsRead();
-
-          debugPrint('✅ [ChatScreen] Added ${trulyNewMessages.length} new messages');
+          debugPrint('✅ [ChatScreen] Successfully added ${newMessages.length} new messages!');
+          debugPrint('   Total messages now: ${_messages.length}');
+        } else {
+          debugPrint('ℹ️ [ChatScreen] No new messages to add (already have them all)');
         }
+      } else {
+        debugPrint('ℹ️ [ChatScreen] No messages returned or not mounted');
       }
-    } catch (e) {
-      debugPrint('❌ [ChatScreen] Error loading new messages: $e');
+    } catch (e, stackTrace) {
+      debugPrint('❌ [ChatScreen] Error refreshing messages: $e');
+      debugPrint('   Stack trace: $stackTrace');
     }
   }
 
-  /// Detect scroll position to load more messages when scrolling up
-  void _onScroll() {
-    // Load more when user scrolls near the top (older messages)
-    if (_scrollController.position.pixels <= 100 &&
-        !_isLoadingMore &&
-        _hasMorePages) {
-      _loadMoreMessages();
-    }
-  }
+  // ==================== MESSAGE LOADING ====================
 
   Future<void> _loadCurrentUser() async {
     final user = await _authService.getCurrentUser();
@@ -250,9 +296,42 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
+  // ==================== SCROLL HANDLING ====================
+
+  /// Detect scroll position to load more messages when scrolling up
+  void _onScroll() {
+    // Load more when user scrolls near the top (older messages)
+    if (_scrollController.position.pixels <= 100 &&
+        !_isLoadingMore &&
+        _hasMorePages) {
+      _loadMoreMessages();
+    }
+  }
+
+  void _scrollToBottom({bool animated = true}) {
+    if (_scrollController.hasClients) {
+      if (animated) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      } else {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    }
+  }
+
+  // ==================== MESSAGE ACTIONS ====================
+
   Future<void> _markConversationAsRead() async {
     try {
       await _messageService.markConversationAsRead(widget.userId);
+
+      // ✅ FIX: Refresh notification badge after marking as read
+      // This syncs the badge with the backend (which deletes read message notifications)
+      debugPrint('🔄 [ChatScreen] Refreshing notification badge after marking as read...');
+      await _notificationService.refreshBadge();
     } catch (e) {
       debugPrint('Failed to mark conversation as read: $e');
     }
@@ -318,19 +397,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     }
   }
 
-  void _scrollToBottom({bool animated = true}) {
-    if (_scrollController.hasClients) {
-      if (animated) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      } else {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
-      }
-    }
-  }
+  // ==================== UI BUILD ====================
 
   @override
   Widget build(BuildContext context) {
@@ -785,6 +852,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     );
   }
 
+  // ==================== OPTIONS MENU ====================
+
   void _showOptionsMenu() {
     showModalBottomSheet(
       context: context,
@@ -808,11 +877,19 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.refresh),
-                title: const Text('Refresh'),
+                leading: const Icon(Icons.refresh, color: AppColors.primaryGreen),
+                title: const Text('Refresh Messages'),
+                subtitle: const Text('Check for new messages'),
                 onTap: () {
                   Navigator.pop(context);
-                  _loadMessages();
+                  _refreshMessages();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Checking for new messages...'),
+                      duration: Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 },
               ),
               ListTile(
@@ -846,6 +923,8 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       ),
     );
   }
+
+  // ==================== UTILITY METHODS ====================
 
   String _getInitials(String name) {
     final parts = name.trim().split(' ');

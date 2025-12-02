@@ -6,6 +6,7 @@ import '../../utils/app_colors.dart';
 import '../../utils/api_config.dart';
 import '../../models/messages/message_models.dart';
 import '../../services/messages/message_service.dart';
+import '../../services/notification_service.dart';
 import 'chat_screen.dart';
 
 class ConversationsScreen extends StatefulWidget {
@@ -20,8 +21,10 @@ class ConversationsScreen extends StatefulWidget {
   State<ConversationsScreen> createState() => _ConversationsScreenState();
 }
 
-class _ConversationsScreenState extends State<ConversationsScreen> {
+class _ConversationsScreenState extends State<ConversationsScreen>
+    with WidgetsBindingObserver {
   final MessageService _messageService = MessageService();
+  final NotificationService _notificationService = NotificationService();
 
   List<Conversation> _conversations = [];
   List<Contact> _contacts = [];
@@ -32,7 +35,58 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadConversations();
+    _setupNotificationListener();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _notificationService.removeNotificationReceivedListener(_onNotificationReceived);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh conversations when app comes to foreground
+    if (state == AppLifecycleState.resumed) {
+      debugPrint('📱 [ConversationsScreen] App resumed, refreshing conversations...');
+      _refreshConversations();
+    }
+  }
+
+  /// Set up listener for incoming notifications
+  void _setupNotificationListener() {
+    debugPrint('🔔 [ConversationsScreen] Setting up notification listener...');
+    _notificationService.addNotificationReceivedListener(_onNotificationReceived);
+  }
+
+  /// Called when a notification is received
+  void _onNotificationReceived() {
+    debugPrint('📬 [ConversationsScreen] Notification received! Refreshing conversations...');
+    _refreshConversations();
+  }
+
+  /// Silently refresh conversations without showing loading indicator
+  Future<void> _refreshConversations() async {
+    if (!mounted) return;
+
+    debugPrint('🔄 [ConversationsScreen] Silently refreshing conversations...');
+
+    try {
+      final response = await _messageService.getConversations();
+      if (mounted) {
+        setState(() {
+          _conversations = response.data;
+        });
+        debugPrint('✅ [ConversationsScreen] Conversations refreshed: ${_conversations.length} conversations');
+      }
+    } catch (e) {
+      debugPrint('❌ [ConversationsScreen] Error refreshing conversations: $e');
+      // Don't show error for silent refresh
+    }
   }
 
   Future<void> _loadConversations() async {
@@ -240,7 +294,7 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
     String? userAvatar,
     String? userRole,
   }) async {
-    final result = await Navigator.push<bool>(
+    await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => ChatScreen(
@@ -252,10 +306,10 @@ class _ConversationsScreenState extends State<ConversationsScreen> {
       ),
     );
 
-    // Refresh conversations if a message was sent
-    if (result == true) {
-      _loadConversations();
-    }
+    // Always refresh conversations when returning from chat
+    // This ensures read status and new messages are reflected
+    debugPrint('🔄 [ConversationsScreen] Returned from chat, refreshing...');
+    _refreshConversations();
   }
 
   @override

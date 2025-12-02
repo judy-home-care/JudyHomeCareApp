@@ -5,19 +5,23 @@ import FirebaseMessaging
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
+
+  // MethodChannel for forwarding notifications to Flutter
+  private var notificationChannel: FlutterMethodChannel?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    
+
     // STEP 1: Initialize Firebase FIRST (before anything else)
     FirebaseApp.configure()
     print("🔥 Firebase configured")
-    
+
     // STEP 2: Set up notification center delegate (iOS 10+)
     if #available(iOS 10.0, *) {
       UNUserNotificationCenter.current().delegate = self
-      
+
       // Request notification permissions
       let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
       UNUserNotificationCenter.current().requestAuthorization(
@@ -39,18 +43,26 @@ import FirebaseMessaging
         UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
       application.registerUserNotificationSettings(settings)
     }
-    
+
     // STEP 3: Register for remote notifications (CRITICAL for APNS token)
     application.registerForRemoteNotifications()
     print("📲 Registered for remote notifications")
-    
+
     // STEP 4: Set Firebase Messaging delegate
     Messaging.messaging().delegate = self
     print("✅ Firebase Messaging delegate set")
-    
+
     // STEP 5: Register Flutter plugins
     GeneratedPluginRegistrant.register(with: self)
-    
+
+    // STEP 6: Set up MethodChannel for forwarding notifications to Flutter
+    let controller = window?.rootViewController as! FlutterViewController
+    notificationChannel = FlutterMethodChannel(
+      name: "com.healthme/notifications",
+      binaryMessenger: controller.binaryMessenger
+    )
+    print("✅ Notification MethodChannel set up")
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
   
@@ -116,11 +128,27 @@ import FirebaseMessaging
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
   ) {
     let userInfo = notification.request.content.userInfo
-    
+
     print("📬 Notification received in FOREGROUND")
     print("📋 Title: \(notification.request.content.title)")
     print("📋 Body: \(notification.request.content.body)")
-    
+
+    // Forward notification data to Flutter via MethodChannel
+    // This allows Flutter to refresh chat/dashboard even while iOS shows the notification
+    var data: [String: Any] = [:]
+    for (key, value) in userInfo {
+      if let stringKey = key as? String {
+        data[stringKey] = value
+      }
+    }
+    data["title"] = notification.request.content.title
+    data["body"] = notification.request.content.body
+
+    DispatchQueue.main.async { [weak self] in
+      self?.notificationChannel?.invokeMethod("onForegroundNotification", arguments: data)
+      print("📤 Forwarded notification to Flutter")
+    }
+
     // Show notification even when app is in foreground
     if #available(iOS 14.0, *) {
       completionHandler([[.banner, .badge, .sound]])
