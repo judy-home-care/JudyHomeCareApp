@@ -151,6 +151,10 @@ class ScheduleItem {
   final String patientName;  // For nurses: patient name | For patients: nurse name
   final int? patientAge;
   final DateTime date;
+  final DateTime? startDate;
+  final DateTime? endDate;
+  final String? startDateDisplay;
+  final String? endDateDisplay;
   final String startTime;
   final String endTime;
   final String shiftType;
@@ -168,12 +172,20 @@ class ScheduleItem {
   final String? nursePhone;  // Only for patients viewing schedules
   final bool hasPendingRescheduleRequest;
   final RescheduleRequestInfo? rescheduleRequest;
+  final bool isMultiDay;
+  final int? totalDays;
+  final int? dayNumber;
+  final String? dayLabel;
 
   ScheduleItem({
     required this.id,
     required this.patientName,
     this.patientAge,
     required this.date,
+    this.startDate,
+    this.endDate,
+    this.startDateDisplay,
+    this.endDateDisplay,
     required this.startTime,
     required this.endTime,
     required this.shiftType,
@@ -191,7 +203,19 @@ class ScheduleItem {
     this.nursePhone,
     this.hasPendingRescheduleRequest = false,
     this.rescheduleRequest,
+    this.isMultiDay = false,
+    this.totalDays,
+    this.dayNumber,
+    this.dayLabel,
   });
+
+  /// Get formatted date range display for multi-day schedules
+  String get dateRangeDisplay {
+    if (isMultiDay && startDateDisplay != null && endDateDisplay != null) {
+      return '$startDateDisplay - $endDateDisplay';
+    }
+    return startDateDisplay ?? '';
+  }
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json) {
     // Handle both nurse view (patientName) and patient view (nurseName)
@@ -213,15 +237,23 @@ class ScheduleItem {
       date: json['date'] != null
           ? DateTime.parse(json['date'] as String)
           : DateTime.now(),
+      startDate: json['startDate'] != null
+          ? DateTime.tryParse(json['startDate'].toString())
+          : null,
+      endDate: json['endDate'] != null
+          ? DateTime.tryParse(json['endDate'].toString())
+          : null,
+      startDateDisplay: json['startDateDisplay']?.toString(),
+      endDateDisplay: json['endDateDisplay']?.toString(),
       startTime: json['startTime']?.toString() ?? '00:00',
       endTime: json['endTime']?.toString() ?? '00:00',
-      shiftType: json['shiftType']?.toString() ?? 
+      shiftType: json['shiftType']?.toString() ??
                  _inferShiftType(json['startTime']?.toString()),
       location: json['location']?.toString() ?? 'Location not specified',
       careType: json['careType']?.toString() ?? 'General Care',
       status: json['status']?.toString() ?? 'scheduled',
       notes: json['notes']?.toString() ?? '',
-      isCompleted: json['isCompleted'] == true || 
+      isCompleted: json['isCompleted'] == true ||
                    json['isCompleted'] == 'true' ||
                    json['status']?.toString().toLowerCase() == 'completed',
       priority: json['priority']?.toString() ?? 'medium',
@@ -242,6 +274,10 @@ class ScheduleItem {
           json['hasPendingRescheduleRequest'] == 1 ||
           json['has_pending_reschedule'] == true ||
           json['has_pending_reschedule'] == 1,
+      isMultiDay: json['isMultiDay'] == true,
+      totalDays: json['totalDays'] as int?,
+      dayNumber: json['dayNumber'] as int?,
+      dayLabel: json['dayLabel']?.toString(),
       // Parse reschedule request details if available
       rescheduleRequest: json['rescheduleRequest'] != null
           ? RescheduleRequestInfo.fromJson(json['rescheduleRequest'] as Map<String, dynamic>)

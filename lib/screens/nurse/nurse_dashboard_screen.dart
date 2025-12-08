@@ -56,7 +56,11 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   
   // 🆕 OPTIMIZATION: Debounce timer for tab visibility
   Timer? _visibilityDebounce;
-  
+
+  // 🆕 Rate limiting for "Dashboard updated" notification
+  DateTime? _lastNotificationShownTime;
+  static const Duration _minNotificationInterval = Duration(seconds: 5);
+
   // Screen visibility tracking for battery optimization
   bool _isScreenVisible = true;
 
@@ -1167,35 +1171,44 @@ String _getRemainingCacheTime() {
     bool forceRefresh = false,
     bool silent = false,
   }) async {
-    // Rate limiting check
-    if (!forceRefresh && _lastRefreshAttempt != null) {
+    // Rate limiting check - applies to ALL refreshes (including silent ones)
+    if (_lastRefreshAttempt != null) {
       final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
       if (timeSinceLastAttempt < _minRefreshInterval) {
-        debugPrint('⏱️ Rate limited - last attempt ${timeSinceLastAttempt.inSeconds}s ago');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Row(
-                children: [
-                  const Icon(Icons.schedule, color: Colors.white, size: 20),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: const Color(0xFFFF9A00),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+        // For silent refreshes, just skip quietly
+        if (silent) {
+          debugPrint('⏭️ Silent refresh rate limited - last attempt ${timeSinceLastAttempt.inSeconds}s ago');
+          return;
         }
-        return;
+        // For manual refreshes, show a message
+        if (!forceRefresh) {
+          debugPrint('⏱️ Rate limited - last attempt ${timeSinceLastAttempt.inSeconds}s ago');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.schedule, color: Colors.white, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: const Color(0xFFFF9A00),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+          return;
+        }
+        // For explicit forceRefresh (like pull-to-refresh), allow it through
       }
     }
 
@@ -1252,10 +1265,22 @@ String _getRemainingCacheTime() {
     }
   }
 
-  /// Show notification when data updates in background
+  /// Show notification when data updates in background (rate-limited)
   void _showDataUpdatedNotification() {
     if (!mounted) return;
-    
+
+    // Rate limit: Only show notification if enough time has passed since last one
+    final now = DateTime.now();
+    if (_lastNotificationShownTime != null) {
+      final timeSinceLastNotification = now.difference(_lastNotificationShownTime!);
+      if (timeSinceLastNotification < _minNotificationInterval) {
+        debugPrint('⏭️ Skipping notification - shown ${timeSinceLastNotification.inSeconds}s ago');
+        return;
+      }
+    }
+
+    _lastNotificationShownTime = now;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -2105,17 +2130,13 @@ DateTime _parseTimeString(String timeStr) {
 }
 
 Widget _buildScheduleCard(ScheduleVisit visit) {
-  String timeRange = visit.endTime != null 
-      ? '${visit.time} - ${visit.endTime}'
-      : visit.time;
-  
   String formattedCareType = visit.careType
       .split('_')
       .map((word) => word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1))
       .join(' ');
-  
-  bool isCompleted = visit.status?.toLowerCase() == 'completed';
-  
+
+  bool isCompleted = visit.status.toLowerCase() == 'completed';
+
   return GestureDetector(
     onTap: () => _showScheduleDetailModal(visit),
     child: Container(
@@ -2139,37 +2160,59 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Date range row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  if (isCompleted) ...[
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF199A8E).withOpacity(0.1),
-                        shape: BoxShape.circle,
+              Expanded(
+                child: Row(
+                  children: [
+                    if (isCompleted) ...[
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF199A8E).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle,
+                          color: Color(0xFF199A8E),
+                          size: 16,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.check_circle,
-                        color: Color(0xFF199A8E),
-                        size: 16,
+                      const SizedBox(width: 8),
+                    ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            visit.dateRangeDisplay,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: isCompleted
+                                  ? const Color(0xFF199A8E)
+                                  : Colors.white.withOpacity(0.9),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            visit.timeRangeDisplay,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isCompleted
+                                  ? const Color(0xFF199A8E).withOpacity(0.7)
+                                  : Colors.white.withOpacity(0.6),
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
                   ],
-                  Text(
-                    timeRange,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: isCompleted 
-                          ? const Color(0xFF199A8E)
-                          : Colors.white.withOpacity(0.7),
-                      letterSpacing: -0.2,
-                    ),
-                  ),
-                ],
+                ),
               ),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -2229,7 +2272,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                       letterSpacing: -0.2,
                     ),
                   ),
-                  if (visit.duration.isNotEmpty && visit.duration != '0h 0m') ...[
+                  if (visit.timeCompleted != null && visit.timeCompleted!.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Container(
                       width: 1,
@@ -2244,7 +2287,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      visit.duration,
+                      visit.timeCompleted!,
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -2515,16 +2558,24 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
 
                         _buildInfoGrid([
                           _buildInfoItem(
+                            Icons.calendar_today_outlined,
+                            'Date',
+                            visit.dateRangeDisplay,
+                          ),
+                          _buildInfoItem(
                             Icons.access_time,
                             'Time',
-                            visit.endTime != null 
-                                ? '${visit.time} - ${visit.endTime}'
-                                : visit.time,
+                            visit.timeRangeDisplay,
                           ),
                           _buildInfoItem(
                             Icons.timer_outlined,
-                            'Duration',
-                            visit.duration,
+                            'Daily Duration',
+                            visit.dailyDuration,
+                          ),
+                          _buildInfoItem(
+                            Icons.date_range_outlined,
+                            'Assignment',
+                            visit.assignmentDuration,
                           ),
                           _buildInfoItem(
                             Icons.location_on_outlined,
@@ -2534,7 +2585,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                           _buildInfoItem(
                             Icons.medical_services_outlined,
                             'Care Type',
-                            visit.careType.split('_').map((word) => 
+                            visit.careType.split('_').map((word) =>
                               word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1)
                             ).join(' '),
                           ),
@@ -2579,7 +2630,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                     ),
                                   ],
                                 ),
-                                if (visit.duration.isNotEmpty) ...[
+                                if (visit.timeCompleted != null && visit.timeCompleted!.isNotEmpty) ...[
                                   const SizedBox(height: 16),
                                   Container(
                                     padding: const EdgeInsets.all(16),
@@ -2597,7 +2648,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                         ),
                                         const SizedBox(width: 8),
                                         const Text(
-                                          'Total Time:',
+                                          'Time Worked:',
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Color(0xFF666666),
@@ -2605,7 +2656,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          visit.duration,
+                                          visit.timeCompleted!,
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -3166,12 +3217,6 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
 
   Color priorityColor = _getPriorityColor(patient.priority);
   String priorityText = patient.priority.toUpperCase();
-  
-  // Build time display - show range if endTime exists
-  String timeDisplay = patient.scheduledTime;
-  if (patient.endTime != null && patient.endTime!.isNotEmpty) {
-    timeDisplay = '${patient.scheduledTime} - ${patient.endTime}';
-  }
 
   return GestureDetector(
     onTap: () => _showPatientScheduleDetails(patient),
@@ -3364,7 +3409,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              timeDisplay,
+                              patient.dateRangeDisplay,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade800,
@@ -3374,7 +3419,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              patient.timeUntil,
+                              '${patient.timeRangeDisplay} • ${patient.timeUntil}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Colors.grey.shade600,
@@ -3528,12 +3573,6 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
   Widget _buildScheduleDetailCard(ScheduleInfo schedule) {
     bool isToday = schedule.isToday;
     
-    // Build time range from backend-provided times
-    String timeDisplay = schedule.scheduledTime;
-    if (schedule.endTime != null && schedule.endTime!.isNotEmpty) {
-      timeDisplay = '${schedule.scheduledTime} - ${schedule.endTime}';
-    }
-    
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -3551,23 +3590,27 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    isToday ? Icons.calendar_today : Icons.calendar_month_outlined,
-                    size: 16,
-                    color: isToday ? Colors.white70 : const Color(0xFF199A8E),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    schedule.scheduledDate,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: isToday ? Colors.white70 : Colors.grey.shade600,
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(
+                      isToday ? Icons.calendar_today : Icons.calendar_month_outlined,
+                      size: 16,
+                      color: isToday ? Colors.white70 : const Color(0xFF199A8E),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        schedule.dateRangeDisplay,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: isToday ? Colors.white70 : Colors.grey.shade600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               if (isToday)
                 Container(
@@ -3588,10 +3631,10 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
             ],
           ),
           const SizedBox(height: 12),
-          
+
           // Display time range (start - end) or just start time
           Text(
-            timeDisplay,
+            schedule.timeRangeDisplay,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -3645,12 +3688,14 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                 color: isToday ? Colors.white70 : Colors.grey.shade600,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Duration: ${schedule.duration}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: isToday ? Colors.white : const Color(0xFF1A1A1A),
+              Expanded(
+                child: Text(
+                  'Duration: ${schedule.dailyDuration}${schedule.isMultiDay ? ' (${schedule.assignmentDuration})' : ''}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: isToday ? Colors.white : const Color(0xFF1A1A1A),
+                  ),
                 ),
               ),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:convert';
+import '../models/contact_person/contact_person_models.dart';
 
 class SecureStorage {
   static final SecureStorage _instance = SecureStorage._internal();
@@ -21,6 +22,9 @@ class SecureStorage {
   static const String _expiresAtKey = 'token_expires_at';
   static const String _rememberMeKey = 'remember_me';
   static const String _lastValidationKey = 'last_validation';
+  static const String _userTypeKey = 'user_type';
+  static const String _contactPersonKey = 'contact_person_data';
+  static const String _selectedPatientIdKey = 'selected_patient_id';
 
   // Token operations
   Future<void> saveToken(String token) async {
@@ -129,6 +133,9 @@ class SecureStorage {
     await deleteTokenExpiry();
     await _storage.delete(key: _rememberMeKey);
     await _storage.delete(key: _lastValidationKey);
+    await deleteUserType();
+    await deleteContactPersonData();
+    await deleteSelectedPatientId();
   }
 
   // Check if user is logged in - IMPROVED VERSION
@@ -152,6 +159,89 @@ class SecureStorage {
       // If there's any error, try to determine if we have basic auth data
       final token = await getToken();
       return token != null && token.isNotEmpty;
+    }
+  }
+
+  // ==================== USER TYPE OPERATIONS ====================
+
+  /// Save user type (patient, nurse, contact_person)
+  Future<void> saveUserType(String userType) async {
+    await _storage.write(key: _userTypeKey, value: userType);
+  }
+
+  /// Get user type
+  Future<String?> getUserType() async {
+    return await _storage.read(key: _userTypeKey);
+  }
+
+  /// Delete user type
+  Future<void> deleteUserType() async {
+    await _storage.delete(key: _userTypeKey);
+  }
+
+  // ==================== CONTACT PERSON OPERATIONS ====================
+
+  /// Save contact person data
+  Future<void> saveContactPersonData(ContactPersonUser contactPerson) async {
+    await _storage.write(
+      key: _contactPersonKey,
+      value: jsonEncode(contactPerson.toJson()),
+    );
+  }
+
+  /// Get contact person data
+  Future<ContactPersonUser?> getContactPersonData() async {
+    final data = await _storage.read(key: _contactPersonKey);
+    if (data != null) {
+      try {
+        final json = jsonDecode(data) as Map<String, dynamic>;
+        return ContactPersonUser.fromJson(json);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /// Delete contact person data
+  Future<void> deleteContactPersonData() async {
+    await _storage.delete(key: _contactPersonKey);
+  }
+
+  /// Save selected patient ID for contact person
+  Future<void> saveSelectedPatientId(int patientId) async {
+    await _storage.write(key: _selectedPatientIdKey, value: patientId.toString());
+  }
+
+  /// Get selected patient ID
+  Future<int?> getSelectedPatientId() async {
+    final data = await _storage.read(key: _selectedPatientIdKey);
+    if (data != null) {
+      return int.tryParse(data);
+    }
+    return null;
+  }
+
+  /// Delete selected patient ID
+  Future<void> deleteSelectedPatientId() async {
+    await _storage.delete(key: _selectedPatientIdKey);
+  }
+
+  /// Check if contact person is logged in
+  Future<bool> isContactPersonLoggedIn() async {
+    try {
+      final token = await getToken();
+      if (token == null || token.isEmpty) return false;
+
+      final userType = await getUserType();
+      if (userType != 'contact_person') return false;
+
+      final contactPerson = await getContactPersonData();
+      if (contactPerson == null) return false;
+
+      return true;
+    } catch (e) {
+      return false;
     }
   }
 }

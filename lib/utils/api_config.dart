@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   // Base URL - can be changed based on environment
-  static const String _localBaseUrl = 'http://localhost:8000';
+  static const String _localBaseUrl = 'https://ff8071514ed1.ngrok-free.app';
   static const String _productionBaseUrl = 'https://portal.judyscareagency.com'; // Replace with your production URL
 
   // Get base URL based on environment
@@ -21,16 +21,16 @@ class ApiConfig {
  
   // API endpoints
   static const String authPrefix = '/api/auth';
-  static const String loginEndpoint = '$authPrefix/login';
+  static const String loginEndpoint = '$authPrefix/mobile-login';
   static const String registerEndpoint = '$authPrefix/register';
   static const String logoutEndpoint = '$authPrefix/logout';
   static const String meEndpoint = '$authPrefix/me';
 
-  // Password reset endpoints
-  static const String forgotPasswordEndpoint = '$authPrefix/forgot-password';
-  static const String verifyResetOtpEndpoint = '$authPrefix/verify-reset-otp';
-  static const String resendResetOtpEndpoint = '$authPrefix/resend-reset-otp';
-  static const String resetPasswordEndpoint = '$authPrefix/reset-password';
+  // Password reset endpoints (mobile - SMS based)
+  static const String forgotPasswordEndpoint = '$authPrefix/mobile-forgot-password';
+  static const String verifyResetOtpEndpoint = '$authPrefix/mobile-verify-reset-otp';
+  static const String resendResetOtpEndpoint = '$authPrefix/mobile-resend-reset-otp';
+  static const String resetPasswordEndpoint = '$authPrefix/mobile-reset-password';
   static const String requestCallbackEndpoint = '$authPrefix/request-callback';
 
   static const String verifyLoginTwoFactorEndpoint = '$authPrefix/verify-login-2fa';
@@ -313,6 +313,95 @@ static String refundPaymentEndpoint(int paymentId) =>
       '$messagesPrefix/$messageId';
 
   // ==================== END MESSAGE ENDPOINTS ====================
+
+  // ==================== CONTACT PERSON ENDPOINTS ====================
+
+  /// Contact Person prefix
+  static const String contactPersonAuthPrefix = '$authPrefix/contact-person';
+  static const String contactPersonPrefix = '$mobilePrefix/contact-person';
+
+  // Authentication
+  static const String contactPersonLoginEndpoint = '$contactPersonAuthPrefix/login';
+  static const String contactPersonVerifyOtpEndpoint = '$contactPersonAuthPrefix/verify-otp';
+  static const String contactPersonResendOtpEndpoint = '$contactPersonAuthPrefix/resend-otp';
+  static const String contactPersonLogoutEndpoint = '$contactPersonPrefix/logout';
+
+  // Patient Access
+  static const String contactPersonPatientsEndpoint = '$contactPersonPrefix/patients';
+
+  static String contactPersonPatientDetailEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId';
+
+  static String contactPersonPatientDashboardEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/dashboard';
+
+  // Care Plans
+  static String contactPersonCarePlansEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/care-plans';
+
+  static String contactPersonCarePlanDetailEndpoint(int patientId, int carePlanId) =>
+      '$contactPersonPrefix/patient/$patientId/care-plans/$carePlanId';
+
+  static String contactPersonCarePlanEntriesEndpoint(int patientId, int carePlanId) =>
+      '$contactPersonPrefix/patient/$patientId/care-plans/$carePlanId/entries';
+
+  // Schedules
+  static String contactPersonSchedulesEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/schedules';
+
+  static String contactPersonRequestRescheduleEndpoint(int patientId, int scheduleId) =>
+      '$contactPersonPrefix/patient/$patientId/schedules/$scheduleId/request-reschedule';
+
+  // Progress Notes
+  static String contactPersonProgressNotesEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/progress-notes';
+
+  static String contactPersonProgressNoteDetailEndpoint(int patientId, int noteId) =>
+      '$contactPersonPrefix/patient/$patientId/progress-notes/$noteId';
+
+  // Care Requests
+  static String contactPersonCareRequestInfoEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/info';
+
+  static String contactPersonPaymentConfigEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/payment-config';
+
+  static String contactPersonCareRequestsEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests';
+
+  static String contactPersonCareRequestDetailEndpoint(int patientId, int requestId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId';
+
+  static String contactPersonCancelCareRequestEndpoint(int patientId, int requestId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/cancel';
+
+  static String contactPersonInitiatePaymentEndpoint(int patientId, int requestId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/payment/initiate';
+
+  static String contactPersonVerifyPaymentEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/payment/verify';
+
+  // Feedback
+  static String contactPersonFeedbackEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/feedback';
+
+  static String contactPersonFeedbackNursesEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/feedback/nurses';
+
+  static String contactPersonFeedbackStatisticsEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/feedback/statistics';
+
+  // Transport Requests
+  static String contactPersonTransportRequestsEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/transport-requests';
+
+  static String contactPersonAvailableDriversEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/transport-requests/drivers/available';
+
+  static String contactPersonTransportRequestDetailEndpoint(int patientId, int requestId) =>
+      '$contactPersonPrefix/patient/$patientId/transport-requests/$requestId';
+
+  // ==================== END CONTACT PERSON ENDPOINTS ====================
 
   // Timeouts
   static const Duration connectionTimeout = Duration(seconds: 10);

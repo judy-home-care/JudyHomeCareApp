@@ -9,7 +9,7 @@ class ForgotPasswordService {
 
   final _apiClient = ApiClient();
 
-  /// Send forgot password code (email or SMS)
+  /// Send forgot password OTP via SMS
   Future<ForgotPasswordResponse> sendResetCode(ForgotPasswordRequest request) async {
     try {
       final response = await _apiClient.post(
@@ -105,26 +105,18 @@ class ForgotPasswordService {
     }
   }
 
-  /// Format phone number for API
+  /// Format phone number for API (returns with country code like +233557447800)
   String formatPhoneNumber(String phone, String countryCode) {
-    // Remove all non-numeric characters
+    // Remove all non-numeric characters from phone
     String cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
 
-    // Add country code if not present
-    if (!cleaned.startsWith(countryCode.replaceAll('+', ''))) {
-      // If number starts with 0, remove it before adding country code
-      if (cleaned.startsWith('0')) {
-        cleaned = cleaned.substring(1);
-      }
-      cleaned = countryCode.replaceAll('+', '') + cleaned;
+    // If number starts with 0, remove it
+    if (cleaned.startsWith('0')) {
+      cleaned = cleaned.substring(1);
     }
 
-    return cleaned;
-  }
-
-  /// Validate email format
-  bool isValidEmail(String email) {
-    return RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    // Combine country code with phone number
+    return '$countryCode$cleaned';
   }
 
   /// Validate phone format (basic)

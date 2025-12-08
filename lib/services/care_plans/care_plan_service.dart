@@ -207,7 +207,7 @@ class CarePlanService {
           'start_date': startDate,
           if (endDate != null) 'end_date': endDate,
           'frequency': transformedFrequency,
-          'care_tasks': careTasks,
+          'care_plan_entries': careTasks,
         },
         requiresAuth: true,
       );
@@ -554,31 +554,43 @@ Future<List<Map<String, dynamic>>> getPatientCareRequests(int patientId) async {
   }
 
   /// Transform frequency from UI format to backend format
-  /// Note: Backend has inconsistent naming (uses both hyphens and underscores)
+  /// Backend accepts: once_daily, weekly, twice_weekly, monthly, as_needed
   /// Examples:
-  ///   "Daily" → "daily"
+  ///   "Daily" → "once_daily"
   ///   "Weekly" → "weekly"
-  ///   "Bi-weekly" → "bi-weekly" (special case - backend uses hyphen!)
+  ///   "Twice Weekly" / "Bi-weekly" → "twice_weekly"
   ///   "Monthly" → "monthly"
-  ///   "As Needed" → "as_needed" (special case - backend uses underscore!)
+  ///   "As Needed" → "as_needed"
   String _transformFrequency(String frequency) {
     if (frequency.isEmpty) return '';
-    
+
     final normalized = frequency.toLowerCase().trim();
-    
-    // Handle special cases that don't follow the pattern
+
     switch (normalized) {
+      case 'daily':
+      case 'once daily':
+      case 'once_daily':
+        return 'once_daily';
+
+      case 'weekly':
+        return 'weekly';
+
+      case 'twice weekly':
+      case 'twice_weekly':
       case 'bi-weekly':
       case 'bi weekly':
       case 'biweekly':
-        return 'bi-weekly';  // Backend expects hyphen for this one
-        
+        return 'twice_weekly';
+
+      case 'monthly':
+        return 'monthly';
+
       case 'as needed':
       case 'as-needed':
+      case 'as_needed':
       case 'asneeded':
-        return 'as_needed';  // Backend expects underscore for this one
-        
-      // Regular cases (daily, weekly, monthly)
+        return 'as_needed';
+
       default:
         return normalized.replaceAll(RegExp(r'\s+'), '_').replaceAll('-', '_');
     }

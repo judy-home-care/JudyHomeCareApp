@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart'; 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import '../../utils/app_colors.dart';
 import '../../services/auth/auth_service.dart';
 import '../../models/auth/auth_models.dart';
@@ -15,7 +16,7 @@ import '../onboarding/get_started_screen.dart';
 
 // CRITICAL: Cache regex patterns as static constants
 class _ValidationPatterns {
-  static final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+  static final phoneRegex = RegExp(r'^\d{9,10}$');
   _ValidationPatterns._();
 }
 
@@ -34,37 +35,70 @@ class _LoginScreenState extends State<LoginScreen> {
   static const Color _textGrey = Color(0xFF666666);
   static const Color _borderGrey = Color(0xFFE5E5E5);
   static const Color _backgroundGrey = Color(0xFFF8FAFB);
-  
+
   static final _inputBorderRadius = BorderRadius.circular(16);
   static final _buttonBorderRadius = BorderRadius.circular(16);
-  
+
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
-  
+
   bool _isPasswordVisible = false;
   bool _isLoading = false;
   bool _rememberMe = false;
 
+  // Country code selection
+  String _selectedCountryCode = '+233';
+  String _selectedCountryFlag = '🇬🇭';
+
+  final List<Map<String, String>> _countries = [
+    {'name': 'Ghana', 'code': '+233', 'flag': '🇬🇭'},
+    {'name': 'Nigeria', 'code': '+234', 'flag': '🇳🇬'},
+    {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
+    {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
+  ];
+
   @override
   void dispose() {
-    _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _showCountryPicker() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(25),
+          topRight: Radius.circular(25),
+        ),
+      ),
+      builder: (context) => _CountryPicker(
+        countries: _countries,
+        onCountrySelected: (code, flag) {
+          setState(() {
+            _selectedCountryCode = code;
+            _selectedCountryFlag = flag;
+          });
+        },
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
-    
+
     final topSpacing = screenHeight > 700 ? 40.0 : 20.0;
     final headerSpacing = screenHeight > 700 ? 50.0 : 30.0;
     final formSpacing = screenHeight > 700 ? 40.0 : 24.0;
     final signUpSpacing = screenHeight > 700 ? 30.0 : 20.0;
     final bottomSpacing = screenHeight > 700 ? 30.0 : 16.0;
-    
+
     return Scaffold(
       backgroundColor: _backgroundGrey,
       resizeToAvoidBottomInset: true,
@@ -77,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: LayoutBuilder(
             builder: (context, constraints) {
               final bottomInset = mediaQuery.viewInsets.bottom;
-              
+
               return SingleChildScrollView(
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 physics: const ClampingScrollPhysics(),
@@ -104,11 +138,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           RepaintBoundary(
                             child: _LoginForm(
                               formKey: _formKey,
-                              emailController: _emailController,
+                              phoneController: _phoneController,
                               passwordController: _passwordController,
                               isPasswordVisible: _isPasswordVisible,
                               rememberMe: _rememberMe,
                               isLoading: _isLoading,
+                              selectedCountryCode: _selectedCountryCode,
+                              selectedCountryFlag: _selectedCountryFlag,
+                              onCountryPickerTap: _showCountryPicker,
                               onPasswordVisibilityToggle: () {
                                 setState(() {
                                   _isPasswordVisible = !_isPasswordVisible;
@@ -147,14 +184,16 @@ class _LoginScreenState extends State<LoginScreen> {
       FocusScope.of(context).unfocus();
 
       try {
+        final fullPhone = '$_selectedCountryCode${_phoneController.text.trim()}';
+
         final loginRequest = LoginRequest(
-          email: _emailController.text.trim(),
+          phone: fullPhone,
           password: _passwordController.text,
           rememberMe: _rememberMe,
         );
 
         if (kDebugMode) {
-          print('🔵 Starting login process...');
+          print('🔵 Starting login process with phone: $fullPhone');
         }
 
         final response = await _authService.login(loginRequest);
@@ -175,7 +214,7 @@ class _LoginScreenState extends State<LoginScreen> {
               print('✅ 2FA required - navigating to verification screen');
               print('   Method: ${response.twoFactorData!['two_factor_method']}');
             }
-            _handle2FARequired(response);
+            _handle2FARequired(response, fullPhone);
           } else if (response.data != null) {
             if (kDebugMode) {
               print('✅ Normal login - navigating to dashboard');
@@ -211,21 +250,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _handle2FARequired(LoginResponse response) {
+  void _handle2FARequired(LoginResponse response, String phone) {
     if (kDebugMode) {
       print('🔵 Navigating to 2FA screen with data: ${response.twoFactorData}');
     }
-    
+
     setState(() {
       _isLoading = false;
     });
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => TwoFactorLoginScreen(
           twoFactorData: response.twoFactorData!,
-          email: _emailController.text.trim(),
+          email: phone, // Using phone as identifier
           password: _passwordController.text,
           rememberMe: _rememberMe,
         ),
@@ -235,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _handleSuccessfulLogin(LoginData loginData) {
     final user = loginData.user;
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Welcome back, ${user.firstName}!'),
@@ -275,7 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
         break;
-        
+
       case 'patient':
         Navigator.pushReplacement(
           context,
@@ -300,16 +339,16 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
         break;
-        
+
       case 'doctor':
         _showInfoMessage('Doctor dashboard coming soon!');
         break;
-        
+
       case 'admin':
       case 'superadmin':
         _showInfoMessage('Admin dashboard coming soon!');
         break;
-        
+
       default:
         _showErrorMessage('Invalid user role.');
     }
@@ -358,7 +397,7 @@ class _Header extends StatelessWidget {
               onTap: () => Navigator.pushReplacement(
                 context,
                 PageRouteBuilder(
-                  pageBuilder: (context, animation, secondaryAnimation) => 
+                  pageBuilder: (context, animation, secondaryAnimation) =>
                       const LoginSignupScreen(),
                   transitionDuration: const Duration(milliseconds: 300),
                 ),
@@ -447,22 +486,28 @@ class _WelcomeSection extends StatelessWidget {
 
 class _LoginForm extends StatelessWidget {
   final GlobalKey<FormState> formKey;
-  final TextEditingController emailController;
+  final TextEditingController phoneController;
   final TextEditingController passwordController;
   final bool isPasswordVisible;
   final bool rememberMe;
   final bool isLoading;
+  final String selectedCountryCode;
+  final String selectedCountryFlag;
+  final VoidCallback onCountryPickerTap;
   final VoidCallback onPasswordVisibilityToggle;
   final VoidCallback onRememberMeToggle;
   final Future<void> Function() onLogin;
 
   const _LoginForm({
     required this.formKey,
-    required this.emailController,
+    required this.phoneController,
     required this.passwordController,
     required this.isPasswordVisible,
     required this.rememberMe,
     required this.isLoading,
+    required this.selectedCountryCode,
+    required this.selectedCountryFlag,
+    required this.onCountryPickerTap,
     required this.onPasswordVisibilityToggle,
     required this.onRememberMeToggle,
     required this.onLogin,
@@ -476,22 +521,12 @@ class _LoginForm extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _OptimizedTextField(
-            controller: emailController,
-            label: 'Email Address',
-            hint: 'your.email@example.com',
-            icon: Icons.mail_outline,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!_ValidationPatterns.emailRegex.hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
+          // Phone Number Field with Country Code
+          _PhoneTextField(
+            controller: phoneController,
+            selectedCountryCode: selectedCountryCode,
+            selectedCountryFlag: selectedCountryFlag,
+            onCountryPickerTap: onCountryPickerTap,
           ),
           const SizedBox(height: 20),
           _OptimizedTextField(
@@ -526,6 +561,163 @@ class _LoginForm extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PhoneTextField extends StatelessWidget {
+  final TextEditingController controller;
+  final String selectedCountryCode;
+  final String selectedCountryFlag;
+  final VoidCallback onCountryPickerTap;
+
+  const _PhoneTextField({
+    required this.controller,
+    required this.selectedCountryCode,
+    required this.selectedCountryFlag,
+    required this.onCountryPickerTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Phone Number',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: _LoginScreenState._textDark,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // Country Code Selector
+            GestureDetector(
+              onTap: onCountryPickerTap,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: _LoginScreenState._borderGrey,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      selectedCountryFlag,
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      selectedCountryCode,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: _LoginScreenState._textDark,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 20,
+                      color: _LoginScreenState._textGrey,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Phone Input
+            Expanded(
+              child: TextFormField(
+                controller: controller,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                  _NoLeadingZeroFormatter(),
+                ],
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Enter phone number';
+                  }
+                  if (value.length < 9) {
+                    return 'Invalid phone number';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  hintText: '24 XXX XXXX',
+                  hintStyle: const TextStyle(
+                    color: Color(0xFF9E9E9E),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.phone_outlined,
+                    size: 20,
+                    color: _LoginScreenState._primaryColor,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: _LoginScreenState._inputBorderRadius,
+                    borderSide: const BorderSide(
+                      color: _LoginScreenState._borderGrey,
+                      width: 1,
+                    ),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: _LoginScreenState._inputBorderRadius,
+                    borderSide: const BorderSide(
+                      color: _LoginScreenState._borderGrey,
+                      width: 1,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: _LoginScreenState._inputBorderRadius,
+                    borderSide: const BorderSide(
+                      color: _LoginScreenState._primaryColor,
+                      width: 2,
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: _LoginScreenState._inputBorderRadius,
+                    borderSide: const BorderSide(
+                      color: Colors.red,
+                      width: 1,
+                    ),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: _LoginScreenState._inputBorderRadius,
+                    borderSide: const BorderSide(
+                      color: Colors.red,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  filled: true,
+                  fillColor: Colors.white,
+                ),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: _LoginScreenState._textDark,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -571,20 +763,20 @@ class _OptimizedTextFieldState extends State<_OptimizedTextField> {
   void initState() {
     super.initState();
     _focusNode = FocusNode();
-    
+
     _normalDecoration = _buildDecoration(
       hint: widget.hint,
       icon: widget.icon,
       suffixIcon: null,
     );
-    
+
     if (widget.isPassword) {
       _normalPasswordDecoration = _buildDecoration(
         hint: widget.hint,
         icon: widget.icon,
         suffixIcon: Icons.visibility_off_outlined,
       );
-      
+
       _visiblePasswordDecoration = _buildDecoration(
         hint: widget.hint,
         icon: widget.icon,
@@ -672,8 +864,8 @@ class _OptimizedTextFieldState extends State<_OptimizedTextField> {
 
   InputDecoration get _currentDecoration {
     if (!widget.isPassword) return _normalDecoration;
-    return widget.isPasswordVisible! 
-        ? _visiblePasswordDecoration 
+    return widget.isPasswordVisible!
+        ? _visiblePasswordDecoration
         : _normalPasswordDecoration;
   }
 
@@ -762,11 +954,11 @@ class _OptionsRow extends StatelessWidget {
                 width: 20,
                 height: 20,
                 decoration: BoxDecoration(
-                  color: rememberMe 
+                  color: rememberMe
                       ? _LoginScreenState._primaryColor
                       : Colors.white,
                   border: Border.all(
-                    color: rememberMe 
+                    color: rememberMe
                         ? _LoginScreenState._primaryColor
                         : _LoginScreenState._borderGrey,
                     width: rememberMe ? 1 : 1.5,
@@ -798,7 +990,7 @@ class _OptionsRow extends StatelessWidget {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => 
+                pageBuilder: (context, animation, secondaryAnimation) =>
                     const ForgotPasswordScreen(),
                 transitionDuration: const Duration(milliseconds: 300),
               ),
@@ -897,7 +1089,7 @@ class _SignUpLink extends StatelessWidget {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => 
+                pageBuilder: (context, animation, secondaryAnimation) =>
                     const GetStartedScreen(),
                 transitionDuration: const Duration(milliseconds: 300),
               ),
@@ -914,5 +1106,90 @@ class _SignUpLink extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _CountryPicker extends StatelessWidget {
+  final List<Map<String, String>> countries;
+  final Function(String code, String flag) onCountrySelected;
+
+  const _CountryPicker({
+    required this.countries,
+    required this.onCountrySelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle bar
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Select Country',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ...countries.map((country) => ListTile(
+            leading: Text(
+              country['flag']!,
+              style: const TextStyle(fontSize: 28),
+            ),
+            title: Text(
+              country['name']!,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            trailing: Text(
+              country['code']!,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            onTap: () {
+              onCountrySelected(country['code']!, country['flag']!);
+              Navigator.pop(context);
+            },
+          )),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+}
+
+/// Custom TextInputFormatter that prevents "0" as the first character
+class _NoLeadingZeroFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // If the new value starts with "0", reject the change
+    if (newValue.text.isNotEmpty && newValue.text.startsWith('0')) {
+      return oldValue;
+    }
+    return newValue;
   }
 }

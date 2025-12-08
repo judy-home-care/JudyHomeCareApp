@@ -1,7 +1,7 @@
 name: Judy_Home_HealthCare
 description: "A new Flutter project."
 publish_to: 'none'
-version: 1.0.0+4
+version: 1.0.0+6
 
 environment:
   sdk: ^3.9.0

@@ -4,144 +4,62 @@ import '../../services/care_plans/care_plan_service.dart';
 import '../../models/care_plans/care_plan_models.dart';
 import '../../widgets/searchable_dropdown.dart';
 
-class EditCarePlanModal extends StatefulWidget {
-  final CarePlan carePlan;
+class CreateCarePlanModal extends StatefulWidget {
   final VoidCallback onSuccess;
-  final List<CarePlan> existingCarePlans;
 
-  const EditCarePlanModal({
+  const CreateCarePlanModal({
     Key? key,
-    required this.carePlan,
     required this.onSuccess,
-    required this.existingCarePlans,
   }) : super(key: key);
 
   @override
-  State<EditCarePlanModal> createState() => _EditCarePlanModalState();
+  State<CreateCarePlanModal> createState() => _CreateCarePlanModalState();
 }
 
-class _EditCarePlanModalState extends State<EditCarePlanModal> {
+class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
   final _formKey = GlobalKey<FormState>();
   final _carePlanService = CarePlanService();
   bool _isSaving = false;
-  
+
   // Form Controllers
-  late TextEditingController _titleController;
-  late TextEditingController _descriptionController;
-  
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+
   // Dropdown Values
   String? _selectedPatientId;
   String? _selectedDoctorId;
-  String? _selectedCareRequestId;  // ✅ ADDED
+  String? _selectedCareRequestId;
   String? _selectedCareType;
   String? _selectedPriority;
   String? _selectedFrequency;
-  
+
   // Date Values
-  late DateTime _startDate;
+  DateTime _startDate = DateTime.now();
   DateTime? _endDate;
-  
+
   // Available Options
   List<Map<String, dynamic>> _patients = [];
   List<Map<String, dynamic>> _doctors = [];
-  List<Map<String, dynamic>> _careRequests = [];  // ✅ ADDED
-  bool _loadingCareRequests = false;  // ✅ ADDED
-  
+  List<Map<String, dynamic>> _careRequests = [];
+  bool _loadingCareRequests = false;
+  bool _loadingDropdowns = true;
+
   final List<String> _careTypes = [
     'General Care',
     'Elderly Care',
-    'Post-Surgery Care',
+    'Post-Surgical Care',
     'Pediatric Care',
     'Chronic Disease Management',
     'Palliative Care',
     'Rehabilitation Care',
   ];
   final List<String> _priorities = ['Low', 'Medium', 'High'];
-  final List<String> _frequencies = ['Daily', 'Weekly', 'Bi-weekly', 'Monthly', 'As Needed'];
+  final List<String> _frequencies = ['Daily', 'Weekly', 'Twice Weekly', 'Monthly', 'As Needed'];
 
   @override
   void initState() {
     super.initState();
-    _initializeControllers();
     _loadDropdownData();
-  }
-
-  void _initializeControllers() {
-    // Initialize text controllers with existing data
-    _titleController = TextEditingController(text: widget.carePlan.carePlan);
-    _descriptionController = TextEditingController(text: widget.carePlan.description);
-
-    // Set dropdown values - TRANSFORM FROM BACKEND TO UI FORMAT
-    _selectedPatientId = widget.carePlan.patientId?.toString();
-    _selectedDoctorId = widget.carePlan.doctorId?.toString();
-    _selectedCareRequestId = widget.carePlan.careRequestId?.toString();  // ✅ ADDED
-    _selectedCareType = _transformCareTypeFromBackend(widget.carePlan.careType);
-    _selectedPriority = _transformPriorityFromBackend(widget.carePlan.priority);
-    _selectedFrequency = _transformFrequencyFromBackend(widget.carePlan.frequency);
-    
-    // Debug logging
-    debugPrint('🔄 Initializing Edit Modal:');
-    debugPrint('   Backend Care Type: "${widget.carePlan.careType}" → UI: "$_selectedCareType"');
-    debugPrint('   Backend Priority: "${widget.carePlan.priority}" → UI: "$_selectedPriority"');
-    debugPrint('   Backend Frequency: "${widget.carePlan.frequency}" → UI: "$_selectedFrequency"');
-    debugPrint('   Care Request ID: $_selectedCareRequestId');
-    
-    // Set dates
-    _startDate = widget.carePlan.startDate != null 
-        ? _parseDate(widget.carePlan.startDate!) 
-        : DateTime.now();
-    _endDate = widget.carePlan.endDate != null 
-        ? _parseDate(widget.carePlan.endDate!) 
-        : null;
-  }
-
-  String _transformCareTypeToBackend(String uiValue) {
-    if (uiValue.isEmpty) return '';
-    return uiValue.toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
-  }
-
-  String _transformPriorityToBackend(String uiValue) {
-    if (uiValue.isEmpty) return '';
-    return uiValue.toLowerCase();
-  }
-
-  String _transformFrequencyToBackend(String uiValue) {
-    if (uiValue.isEmpty) return '';
-    
-    final normalized = uiValue.toLowerCase().trim();
-    
-    switch (normalized) {
-      case 'daily':
-        return 'once_daily';
-      case 'bi-weekly':
-      case 'bi weekly':
-      case 'biweekly':
-        return 'twice_weekly';
-      case 'as needed':
-        return 'as_needed';
-      case 'weekly':
-        return 'weekly';
-      case 'monthly':
-        return 'monthly';
-      default:
-        return normalized.replaceAll(' ', '_').replaceAll('-', '_');
-    }
-  }
-
-  DateTime _parseDate(String dateStr) {
-    try {
-      final parts = dateStr.split('-');
-      if (parts.length == 3) {
-        return DateTime(
-          int.parse(parts[0]),
-          int.parse(parts[1]),
-          int.parse(parts[2]),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error parsing date: $dateStr');
-    }
-    return DateTime.now();
   }
 
   @override
@@ -160,20 +78,17 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         setState(() {
           _doctors = doctors;
           _patients = patients;
+          _loadingDropdowns = false;
         });
-        
+
         debugPrint('✅ Loaded ${_doctors.length} doctors and ${_patients.length} patients');
-        
-        // ✅ Load care requests for the current patient
-        if (_selectedPatientId != null) {
-          _loadCareRequestsForPatient(_selectedPatientId!);
-        }
       }
     } catch (e) {
       debugPrint('❌ Error loading dropdown data: $e');
-      _loadDropdownDataFromExistingCarePlans();
-      
       if (mounted) {
+        setState(() {
+          _loadingDropdowns = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
@@ -182,7 +97,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Text(
-                    'Could not load all options. Using available data.',
+                    'Could not load all options. Please try again.',
                     style: TextStyle(fontSize: 14),
                   ),
                 ),
@@ -198,7 +113,6 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
     }
   }
 
-  // ✅ ADDED THIS METHOD
   Future<void> _loadCareRequestsForPatient(String patientId) async {
     if (patientId.isEmpty) {
       setState(() {
@@ -213,24 +127,13 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
 
     try {
       final careRequests = await _carePlanService.getPatientCareRequests(int.parse(patientId));
-      
-      // ✅ Include the currently assigned care request even if it has a care plan
-      if (_selectedCareRequestId != null && 
-          !careRequests.any((cr) => cr['id'].toString() == _selectedCareRequestId)) {
-        careRequests.insert(0, {
-          'id': int.parse(_selectedCareRequestId!),
-          'display_text': 'Request #$_selectedCareRequestId (Current)',
-          'service_type': 'Current Care Request',
-          'status': 'assigned',
-        });
-      }
-      
+
       if (mounted) {
         setState(() {
           _careRequests = careRequests;
           _loadingCareRequests = false;
         });
-        
+
         debugPrint('✅ Loaded ${_careRequests.length} care requests for patient $patientId');
       }
     } catch (e) {
@@ -244,60 +147,11 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
     }
   }
 
-  void _loadDropdownDataFromExistingCarePlans() {
-    final seenPatientIds = <int>{};
-    final seenDoctorIds = <int>{};
-    final patients = <Map<String, dynamic>>[];
-    final doctors = <Map<String, dynamic>>[];
-
-    for (var carePlan in widget.existingCarePlans) {
-      if (carePlan.patientId != null && 
-          carePlan.patient.isNotEmpty && 
-          !seenPatientIds.contains(carePlan.patientId)) {
-        seenPatientIds.add(carePlan.patientId!);
-        patients.add({
-          'id': carePlan.patientId!,
-          'name': carePlan.patient,
-        });
-      }
-
-      if (carePlan.doctorId != null && 
-          carePlan.doctor.isNotEmpty && 
-          !seenDoctorIds.contains(carePlan.doctorId)) {
-        seenDoctorIds.add(carePlan.doctorId!);
-        doctors.add({
-          'id': carePlan.doctorId!,
-          'name': carePlan.doctor,
-        });
-      }
-    }
-
-    patients.sort((a, b) {
-      final nameA = a['name']?.toString() ?? '';
-      final nameB = b['name']?.toString() ?? '';
-      return nameA.compareTo(nameB);
-    });
-    
-    doctors.sort((a, b) {
-      final nameA = a['name']?.toString() ?? '';
-      final nameB = b['name']?.toString() ?? '';
-      return nameA.compareTo(nameB);
-    });
-
-    if (mounted) {
-      setState(() {
-        _patients = patients;
-        _doctors = doctors;
-      });
-      debugPrint('⚠️ Using fallback data: ${_doctors.length} doctors, ${_patients.length} patients');
-    }
-  }
-
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: isStartDate ? _startDate : (_endDate ?? DateTime.now()),
-      firstDate: DateTime(2020),
+      initialDate: isStartDate ? _startDate : (_endDate ?? _startDate.add(const Duration(days: 30))),
+      firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
       builder: (context, child) {
         return Theme(
@@ -310,7 +164,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         );
       },
     );
-    
+
     if (picked != null) {
       setState(() {
         if (isStartDate) {
@@ -329,7 +183,41 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  Future<void> _updateCarePlan() async {
+  String _transformCareTypeToBackend(String uiValue) {
+    if (uiValue.isEmpty) return '';
+    return uiValue.toLowerCase().replaceAll(' ', '_').replaceAll('-', '_');
+  }
+
+  String _transformPriorityToBackend(String uiValue) {
+    if (uiValue.isEmpty) return '';
+    return uiValue.toLowerCase();
+  }
+
+  String _transformFrequencyToBackend(String uiValue) {
+    if (uiValue.isEmpty) return '';
+
+    final normalized = uiValue.toLowerCase().trim();
+
+    switch (normalized) {
+      case 'daily':
+        return 'once_daily';
+      case 'twice weekly':
+      case 'bi-weekly':
+      case 'bi weekly':
+      case 'biweekly':
+        return 'twice_weekly';
+      case 'as needed':
+        return 'as_needed';
+      case 'weekly':
+        return 'weekly';
+      case 'monthly':
+        return 'monthly';
+      default:
+        return normalized.replaceAll(' ', '_').replaceAll('-', '_');
+    }
+  }
+
+  Future<void> _createCarePlan() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedPatientId == null) {
         _showErrorSnackBar('Please select a patient');
@@ -358,14 +246,13 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         final priorityBackend = _transformPriorityToBackend(_selectedPriority!);
         final frequencyBackend = _transformFrequencyToBackend(_selectedFrequency!);
 
-        debugPrint('📤 Updating care plan - Transforming values:');
+        debugPrint('📤 Creating care plan - Transforming values:');
         debugPrint('   Care Type: "$_selectedCareType" → "$careTypeBackend"');
         debugPrint('   Priority: "$_selectedPriority" → "$priorityBackend"');
         debugPrint('   Frequency: "$_selectedFrequency" → "$frequencyBackend"');
         debugPrint('   Care Request ID: $_selectedCareRequestId');
 
-        final response = await _carePlanService.updateCarePlan(
-          carePlanId: widget.carePlan.id,
+        await _carePlanService.createCarePlan(
           patientId: int.parse(_selectedPatientId!),
           doctorId: _selectedDoctorId != null ? int.parse(_selectedDoctorId!) : null,
           careRequestId: _selectedCareRequestId != null ? int.parse(_selectedCareRequestId!) : null,
@@ -381,14 +268,14 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
 
         if (mounted) {
           setState(() => _isSaving = false);
-          _showSuccessSnackBar('Care plan updated successfully!');
+          _showSuccessSnackBar('Care plan created successfully!');
           Navigator.pop(context);
           widget.onSuccess();
         }
       } on CarePlanException catch (e) {
         if (mounted) {
           setState(() => _isSaving = false);
-          
+
           String errorMessage = e.message;
           if (e.errors != null && e.errors!.isNotEmpty) {
             final firstError = e.errors!.values.first;
@@ -398,7 +285,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
               errorMessage = firstError.toString();
             }
           }
-          
+
           _showErrorSnackBar(errorMessage);
         }
       } catch (e) {
@@ -480,28 +367,34 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           children: [
             _buildHeader(),
             Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSectionTitle('Basic Information'),
-                      const SizedBox(height: 16),
-                      _buildBasicInformation(),
-                      const SizedBox(height: 24),
-                      
-                      _buildSectionTitle('Care Details'),
-                      const SizedBox(height: 16),
-                      _buildCareDetails(),
-                      const SizedBox(height: 24),
-                      
-                      const SizedBox(height: 100),
-                    ],
-                  ),
-                ),
-              ),
+              child: _loadingDropdowns
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+                      ),
+                    )
+                  : Form(
+                      key: _formKey,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionTitle('Basic Information'),
+                            const SizedBox(height: 16),
+                            _buildBasicInformation(),
+                            const SizedBox(height: 24),
+
+                            _buildSectionTitle('Care Details'),
+                            const SizedBox(height: 16),
+                            _buildCareDetails(),
+                            const SizedBox(height: 24),
+
+                            const SizedBox(height: 100),
+                          ],
+                        ),
+                      ),
+                    ),
             ),
             _buildFooterButtons(),
           ],
@@ -542,15 +435,15 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                   ),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.edit_outlined, color: Colors.white, size: 24),
+                child: const Icon(Icons.add_circle_outline, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 12),
-              Expanded(
+              const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Edit Care Plan',
+                    Text(
+                      'Create Care Plan',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -558,10 +451,10 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                       ),
                     ),
                     Text(
-                      'ID: #${widget.carePlan.id}',
+                      'Add a new care plan for a patient',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.grey.shade600,
+                        color: Colors.grey,
                       ),
                     ),
                   ],
@@ -627,7 +520,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
             const SizedBox(width: 16),
             Expanded(
               child: SearchableDropdown(
-                label: 'Doctor',
+                label: 'Doctor (Optional)',
                 value: _selectedDoctorId,
                 items: _doctors.map((d) {
                   final id = d['id'];
@@ -645,8 +538,8 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           ],
         ),
         const SizedBox(height: 16),
-        
-        // ✅ CARE REQUEST DROPDOWN
+
+        // Care Request Dropdown
         _buildDropdownField(
           label: 'Care Request (Optional)',
           value: _selectedCareRequestId,
@@ -661,13 +554,13 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           onChanged: (value) => setState(() => _selectedCareRequestId = value),
           isLoading: _loadingCareRequests,
           disabled: _selectedPatientId == null || _isSaving,
-          helperText: _selectedPatientId == null 
-              ? 'Select a patient first' 
+          helperText: _selectedPatientId == null
+              ? 'Select a patient first'
               : _careRequests.isEmpty && !_loadingCareRequests
                   ? 'No available care requests for this patient'
                   : null,
         ),
-        
+
         const SizedBox(height: 16),
         _buildTextField(
           label: 'Care Plan Title *',
@@ -740,7 +633,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
             const SizedBox(width: 16),
             Expanded(
               child: _buildDateField(
-                label: 'End Date',
+                label: 'End Date (Optional)',
                 date: _endDate,
                 onTap: () => _selectDate(context, false),
               ),
@@ -945,7 +838,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  date != null 
+                  date != null
                       ? '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}'
                       : 'Select Date',
                   style: TextStyle(
@@ -1003,7 +896,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: _isSaving 
+                  colors: _isSaving
                       ? [Colors.grey.shade400, Colors.grey.shade400]
                       : [AppColors.primaryGreen, const Color(0xFF25B5A8)],
                 ),
@@ -1017,7 +910,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                 ],
               ),
               child: ElevatedButton(
-                onPressed: _isSaving ? null : _updateCarePlan,
+                onPressed: _isSaving ? null : _createCarePlan,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
@@ -1035,7 +928,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                         ),
                       )
                     : const Text(
-                        'Update Care Plan',
+                        'Create Care Plan',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -1048,58 +941,5 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         ],
       ),
     );
-  }
-
-  // ==================== TRANSFORMATION METHODS ====================
-  
-  String _transformCareTypeFromBackend(String backendValue) {
-    if (backendValue.isEmpty) return '';
-    
-    final normalized = backendValue.toLowerCase().trim();
-    if (normalized == 'post_surgery_care' || normalized == 'post-surgery-care') {
-      return 'Post-Surgery Care';
-    }
-    
-    return backendValue
-        .split('_')
-        .map((word) => word.isEmpty ? '' : word[0].toUpperCase() + word.substring(1))
-        .join(' ');
-  }
-
-  String _transformPriorityFromBackend(String backendValue) {
-    if (backendValue.isEmpty) return '';
-    
-    return backendValue[0].toUpperCase() + backendValue.substring(1).toLowerCase();
-  }
-
-  String _transformFrequencyFromBackend(String backendValue) {
-    if (backendValue.isEmpty) return '';
-    
-    final normalized = backendValue.toLowerCase().trim();
-    
-    switch (normalized) {
-      case 'once_daily':
-      case 'daily':
-        return 'Daily';
-        
-      case 'twice_weekly':
-      case 'bi-weekly':
-      case 'bi_weekly':
-      case 'biweekly':
-        return 'Bi-weekly';
-        
-      case 'as_needed':
-      case 'as-needed':
-        return 'As Needed';
-        
-      case 'weekly':
-        return 'Weekly';
-        
-      case 'monthly':
-        return 'Monthly';
-        
-      default:
-        return normalized[0].toUpperCase() + normalized.substring(1);
-    }
   }
 }

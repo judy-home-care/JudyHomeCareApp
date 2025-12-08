@@ -30,10 +30,6 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photo library to upload document images</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to take photos of your documents</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
@@ -41,12 +37,16 @@
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to take photos of your documents</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>We need Face ID to secure your account with biometric authentication</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>This app needs your location to track your time and verify your presence during patient visits.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs your location to track your time and verify your presence during patient visits.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to upload document images</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

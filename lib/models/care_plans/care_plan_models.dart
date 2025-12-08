@@ -10,6 +10,10 @@ class CarePlanEntry {
   final String? entryTime;
   final String? entryTimeFormatted;
   final String? notes;
+  final String? nursingDiagnosis;
+  final String? goalsExpectedOutcomes;
+  final String? nursingOrders;
+  final String? rationales;
   final CarePlanEntryNurse? nurse;
   final String? createdAt;
 
@@ -24,6 +28,10 @@ class CarePlanEntry {
     this.entryTime,
     this.entryTimeFormatted,
     this.notes,
+    this.nursingDiagnosis,
+    this.goalsExpectedOutcomes,
+    this.nursingOrders,
+    this.rationales,
     this.nurse,
     this.createdAt,
   });
@@ -40,6 +48,10 @@ class CarePlanEntry {
       entryTime: json['entry_time'] as String?,
       entryTimeFormatted: json['entry_time_formatted'] as String?,
       notes: json['notes'] as String?,
+      nursingDiagnosis: json['nursing_diagnosis'] as String?,
+      goalsExpectedOutcomes: json['goals_expected_outcomes'] as String?,
+      nursingOrders: json['nursing_orders'] as String?,
+      rationales: json['rationales'] as String?,
       nurse: json['nurse'] != null
           ? CarePlanEntryNurse.fromJson(json['nurse'] as Map<String, dynamic>)
           : null,
@@ -54,6 +66,10 @@ class CarePlanEntry {
     };
     if (id != null) map['id'] = id;
     if (carePlanId != null) map['care_plan_id'] = carePlanId;
+    if (nursingDiagnosis != null) map['nursing_diagnosis'] = nursingDiagnosis;
+    if (goalsExpectedOutcomes != null) map['goals_expected_outcomes'] = goalsExpectedOutcomes;
+    if (nursingOrders != null) map['nursing_orders'] = nursingOrders;
+    if (rationales != null) map['rationales'] = rationales;
     return map;
   }
 
@@ -62,6 +78,13 @@ class CarePlanEntry {
 
   /// Check if this is an evaluation entry
   bool get isEvaluation => type == 'evaluation';
+
+  /// Check if any of the 4 column fields have content
+  bool get hasColumnContent =>
+      (nursingDiagnosis != null && nursingDiagnosis!.isNotEmpty) ||
+      (goalsExpectedOutcomes != null && goalsExpectedOutcomes!.isNotEmpty) ||
+      (nursingOrders != null && nursingOrders!.isNotEmpty) ||
+      (rationales != null && rationales!.isNotEmpty);
 }
 
 // Nurse info for care plan entry
@@ -171,21 +194,91 @@ class CarePlan {
   }) : completedTasks = completedTasks ?? [],
        carePlanEntries = carePlanEntries ?? [];
 
+  /// Parse care_tasks from JSON - handles both 'care_tasks' and 'care_plan_entries' as strings
+  static List<String> _parseCareTasks(Map<String, dynamic> json) {
+    // First try care_tasks
+    final careTasks = json['care_tasks'] as List<dynamic>?;
+    if (careTasks != null && careTasks.isNotEmpty) {
+      return careTasks.map((e) => e.toString()).toList();
+    }
+
+    // Fall back to care_plan_entries if they are strings
+    final entries = json['care_plan_entries'] as List<dynamic>?;
+    if (entries != null && entries.isNotEmpty) {
+      // Check if entries are strings (simple task descriptions)
+      if (entries.first is String) {
+        return entries.map((e) => e.toString()).toList();
+      }
+    }
+
+    return [];
+  }
+
+  /// Parse care_plan_entries from JSON - handles both Map objects and strings
+  static List<CarePlanEntry> _parseCarePlanEntries(Map<String, dynamic> json) {
+    final entries = json['care_plan_entries'] as List<dynamic>?;
+    if (entries == null || entries.isEmpty) {
+      return [];
+    }
+
+    // Check if entries are Map objects (full CarePlanEntry objects)
+    if (entries.first is Map<String, dynamic>) {
+      return entries
+          .map((e) => CarePlanEntry.fromJson(e as Map<String, dynamic>))
+          .toList();
+    }
+
+    // If entries are strings, they're simple task descriptions - return empty list
+    // (the strings will be handled by _parseCareTasks)
+    return [];
+  }
+
   factory CarePlan.fromJson(Map<String, dynamic> json) {
     try {
+      // Handle nurse - can be a string or an object with 'name' field
+      String primaryNurse = 'Unassigned';
+      String nurseExperience = '';
+      final nurseData = json['nurse'] ?? json['primary_nurse'];
+      if (nurseData is String) {
+        primaryNurse = nurseData;
+      } else if (nurseData is Map<String, dynamic>) {
+        primaryNurse = nurseData['name'] as String? ?? 'Unassigned';
+        nurseExperience = nurseData['experience'] as String? ?? '';
+      } else if (json['primary_nurse'] is String) {
+        primaryNurse = json['primary_nurse'] as String;
+      }
+
+      // Handle doctor - can be a string or an object with 'name' field
+      String doctor = 'Not Assigned';
+      String doctorSpecialty = '';
+      final doctorData = json['doctor'];
+      if (doctorData is String) {
+        doctor = doctorData;
+      } else if (doctorData is Map<String, dynamic>) {
+        doctor = doctorData['name'] as String? ?? 'Not Assigned';
+        doctorSpecialty = doctorData['specialty'] as String? ?? '';
+      } else if (doctorData == null) {
+        doctor = 'Not Assigned';
+      }
+
+      // Handle title/care_plan field - API might return 'title' or 'care_plan'
+      String carePlanTitle = json['title'] as String? ??
+                             json['care_plan'] as String? ??
+                             'Untitled Care Plan';
+
       return CarePlan(
         // Required fields with safe casting and defaults
         id: json['id'] as int? ?? 0,
         patient: json['patient'] as String? ?? 'Unknown Patient',
         patientId: json['patient_id'] as int?,
-        carePlan: json['care_plan'] as String? ?? 'Untitled Care Plan',
+        carePlan: carePlanTitle,
         description: json['description'] as String? ?? '',
-        doctor: json['doctor'] as String? ?? 'Unknown Doctor',
+        doctor: doctor,
         doctorId: json['doctor_id'] as int?,
         careRequestId: json['care_request_id'] as int?,
-        doctorSpecialty: json['doctor_specialty'] as String? ?? 'General Practice',
-        primaryNurse: json['primary_nurse'] as String? ?? 'Unassigned',
-        nurseExperience: json['nurse_experience'] as String? ?? '',
+        doctorSpecialty: json['doctor_specialty'] as String? ?? doctorSpecialty,
+        primaryNurse: primaryNurse,
+        nurseExperience: json['nurse_experience'] as String? ?? nurseExperience,
         careType: json['care_type'] as String? ?? 'General Care',
         status: json['status'] as String? ?? 'Active',
         priority: json['priority'] as String? ?? 'Medium',
@@ -196,18 +289,12 @@ class CarePlan {
         endDate: json['end_date'] as String?,
         medications: json['medications'] as List<dynamic>? ?? [],
         specialInstructions: json['special_instructions'] as List<dynamic>? ?? [],
-        careTasks: (json['care_tasks'] as List<dynamic>?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            [],
+        careTasks: _parseCareTasks(json),
         completedTasks: (json['completed_tasks'] as List<dynamic>?)
                 ?.map((e) => e as int)
                 .toList() ??
             [],
-        carePlanEntries: (json['care_plan_entries'] as List<dynamic>?)
-                ?.map((e) => CarePlanEntry.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
+        carePlanEntries: _parseCarePlanEntries(json),
       );
     } catch (e, stackTrace) {
       print('❌ Error parsing CarePlan from JSON: $e');
@@ -454,7 +541,7 @@ class CreateCarePlanRequest {
         'start_date': startDate,
         if (endDate != null) 'end_date': endDate,
         'frequency': frequency,
-        'care_tasks': careTasks,
+        'care_plan_entries': careTasks,
       };
 }
 

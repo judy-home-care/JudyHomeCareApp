@@ -50,10 +50,13 @@ class NotificationService {
 
   /// Add a listener for notification count changes
   /// Returns a function to remove the listener
+  /// NOTE: Does NOT immediately notify - listeners should fetch their own initial value
+  /// This prevents the "flash of stale value" bug caused by race conditions
   VoidCallback addNotificationCountListener(Function(int) listener) {
     _notificationCountListeners.add(listener);
-    // Immediately notify the new listener of current count
-    listener(_currentUnreadCount);
+    // ✅ FIX: Don't immediately notify with potentially stale cached value
+    // Each screen should call _loadUnreadNotificationCount() to get the initial value
+    // The listener is for receiving UPDATES, not initial values
     debugPrint('🔔 [NotificationService] Added count listener. Total: ${_notificationCountListeners.length}');
     return () => removeNotificationCountListener(listener);
   }
@@ -150,6 +153,10 @@ class NotificationService {
   Future<void> initialize() async {
     try {
       debugPrint('🔔 [NotificationService] Initializing notification service...');
+
+      // ✅ FIX: Reset cached count at start of initialization to prevent stale values
+      // This prevents the "flash of 1" bug when the singleton retains old state
+      _currentUnreadCount = 0;
 
       // Request permission for iOS
       await _requestPermissions();
@@ -283,36 +290,21 @@ class NotificationService {
   /// Initialize FCM and register token
   Future<void> _initializeFcm() async {
     try {
-      // iOS-specific: Wait for APNS token before getting FCM token
+      // iOS-specific: Check for APNS token (don't block startup)
       if (!kIsWeb && Platform.isIOS) {
-        debugPrint('📱 [NotificationService] iOS detected - waiting for APNS token...');
-        
-        // Get APNS token first
+        debugPrint('📱 [NotificationService] iOS detected - checking for APNS token...');
+
+        // Get APNS token (non-blocking check)
         String? apnsToken = await _firebaseMessaging.getAPNSToken();
-        
-        // If APNS token is not immediately available, wait for it
-        if (apnsToken == null) {
-          debugPrint('⏳ [NotificationService] APNS token not ready, waiting...');
-          
-          // Wait up to 10 seconds for APNS token
-          int attempts = 0;
-          while (apnsToken == null && attempts < 20) {
-            await Future.delayed(const Duration(milliseconds: 500));
-            apnsToken = await _firebaseMessaging.getAPNSToken();
-            attempts++;
-            
-            if (attempts % 4 == 0) {
-              debugPrint('⏳ [NotificationService] Still waiting for APNS token... (${attempts * 0.5}s)');
-            }
-          }
-          
-          if (apnsToken != null) {
-            debugPrint('✅ [NotificationService] APNS token obtained: ${apnsToken.substring(0, 20)}...');
-          } else {
-            debugPrint('⚠️ [NotificationService] APNS token not available after waiting');
-          }
+
+        if (apnsToken != null) {
+          debugPrint('✅ [NotificationService] APNS token available: ${apnsToken.substring(0, 20)}...');
         } else {
-          debugPrint('✅ [NotificationService] APNS token immediately available: ${apnsToken.substring(0, 20)}...');
+          // Don't block - APNS token will be set when available via onTokenRefresh
+          debugPrint('⚠️ [NotificationService] APNS token not ready - will retry in background');
+
+          // Schedule background retry (non-blocking)
+          _retryApnsTokenInBackground();
         }
       }
 
@@ -337,6 +329,27 @@ class NotificationService {
     } catch (e) {
       debugPrint('💥 [NotificationService] FCM initialization error: $e');
     }
+  }
+
+  /// Retry getting APNS token in background (non-blocking)
+  void _retryApnsTokenInBackground() {
+    Future.delayed(const Duration(seconds: 2), () async {
+      try {
+        final apnsToken = await _firebaseMessaging.getAPNSToken();
+        if (apnsToken != null) {
+          debugPrint('✅ [NotificationService] APNS token obtained in background');
+          // FCM token should now be available, try to get and register it
+          _fcmToken = await _firebaseMessaging.getToken();
+          if (_fcmToken != null) {
+            await registerFcmToken(_fcmToken!);
+          }
+        } else {
+          debugPrint('⚠️ [NotificationService] APNS still not available (simulator or entitlement issue)');
+        }
+      } catch (e) {
+        debugPrint('⚠️ [NotificationService] Background APNS retry failed: $e');
+      }
+    });
   }
 
   /// Set up message handlers
@@ -417,22 +430,28 @@ class NotificationService {
   }
 
   /// Clear badge when app starts
-  /// ✅ CRITICAL FIX: This syncs the badge with actual unread count
+  /// ✅ CRITICAL FIX: This syncs the badge AND cached count with actual unread count
   Future<void> _clearBadgeOnStartup() async {
     try {
       debugPrint('🔄 [NotificationService] Syncing badge with backend count...');
-      
+
       // Get actual unread count from backend
       final response = await getUnreadCount();
-      
+      final count = response.unreadCount;
+
       // Update badge to match backend count
-      await _updateBadge(response.unreadCount);
-      
-      debugPrint('✅ [NotificationService] Badge synced: ${response.unreadCount}');
+      await _updateBadge(count);
+
+      // ✅ FIX: Also update cached count so new listeners get the correct value
+      // This prevents the "flash of stale value" bug where badge shows old count briefly
+      _currentUnreadCount = count;
+
+      debugPrint('✅ [NotificationService] Badge synced: $count');
     } catch (e) {
       debugPrint('❌ [NotificationService] Error syncing badge: $e');
-      // If sync fails, clear badge to be safe
+      // If sync fails, clear badge and cached count to be safe
       await _updateBadge(0);
+      _currentUnreadCount = 0;
     }
   }
 

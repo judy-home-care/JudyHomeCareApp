@@ -5,7 +5,12 @@
       "Bash(~/flutter/bin/flutter:*)",
       "Bash(~/development/flutter/bin/flutter --version)",
       "Bash(/opt/homebrew/bin/flutter:*)",
-      "Bash(dart analyze:*)"
+      "Bash(dart analyze:*)",
+      "Bash(~/development/flutter/bin/flutter analyze:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(whereis flutter:*)",
+      "Bash(fvm flutter analyze:*)"
     ],
     "deny": [],
     "ask": []

@@ -3,18 +3,18 @@ import 'dart:io';
 
 // Login Request Model
 class LoginRequest {
-  final String email;
+  final String phone;
   final String password;
   final bool rememberMe;
 
   LoginRequest({
-    required this.email,
+    required this.phone,
     required this.password,
     this.rememberMe = false,
   });
 
   Map<String, dynamic> toJson() => {
-        'email': email,
+        'phone': phone,
         'password': password,
         'remember_me': rememberMe,
       };

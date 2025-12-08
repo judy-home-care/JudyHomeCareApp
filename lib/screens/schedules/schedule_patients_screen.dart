@@ -2007,7 +2007,9 @@ void _showFilterOptions() {
                     children: [
                       _buildInfoRow(
                         Icons.calendar_today,
-                        DateFormat('EEEE, MMM d').format(schedule.date),
+                        schedule.isMultiDay
+                            ? schedule.dateRangeDisplay
+                            : DateFormat('EEEE, MMM d').format(schedule.date),
                       ),
                       const SizedBox(height: 8),
                       _buildInfoRow(
@@ -2196,8 +2198,15 @@ void _showFilterOptions() {
                       [
                         _buildDetailItem(
                           'Date',
-                          DateFormat('EEEE, MMMM d, yyyy').format(schedule.date),
+                          schedule.isMultiDay
+                              ? schedule.dateRangeDisplay
+                              : DateFormat('EEEE, MMMM d, yyyy').format(schedule.date),
                         ),
+                        if (schedule.isMultiDay && schedule.totalDays != null)
+                          _buildDetailItem(
+                            'Duration',
+                            '${schedule.totalDays} days',
+                          ),
                         _buildDetailItem(
                           'Time',
                           '${schedule.startTime} - ${schedule.endTime}',

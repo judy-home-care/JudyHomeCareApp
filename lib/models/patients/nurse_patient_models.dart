@@ -296,6 +296,7 @@ class PatientDetail {
   final PatientVitals? vitals;
   final List<ProgressNote> recentNotes;
   final List<Schedule> schedules;
+  final InitialAssessment? initialAssessment;
 
   PatientDetail({
     required this.id,
@@ -316,6 +317,7 @@ class PatientDetail {
     this.vitals,
     required this.recentNotes,
     required this.schedules,
+    this.initialAssessment,
   });
 
   factory PatientDetail.fromJson(Map<String, dynamic> json) {
@@ -424,6 +426,9 @@ class PatientDetail {
                 ?.map((e) => Schedule.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
+        initialAssessment: json['initial_assessment'] != null && json['initial_assessment'] is Map
+            ? InitialAssessment.fromJson(json['initial_assessment'] as Map<String, dynamic>)
+            : null,
       );
     } catch (e, stackTrace) {
       debugPrint('❌ Error parsing PatientDetail: $e');
@@ -767,5 +772,180 @@ class Schedule {
       debugPrint('JSON data: $json');
       rethrow;
     }
+  }
+}
+
+// Initial Assessment Emergency Contact
+class InitialAssessmentEmergencyContact {
+  final String? name;
+  final String? relationship;
+  final String? phone;
+
+  InitialAssessmentEmergencyContact({
+    this.name,
+    this.relationship,
+    this.phone,
+  });
+
+  factory InitialAssessmentEmergencyContact.fromJson(Map<String, dynamic> json) {
+    return InitialAssessmentEmergencyContact(
+      name: json['name']?.toString(),
+      relationship: json['relationship']?.toString(),
+      phone: json['phone']?.toString(),
+    );
+  }
+}
+
+// Initial Vitals from Assessment
+class InitialVitals {
+  final String? spo2;
+  final String? pulse;
+  final String? weight;
+  final String? temperature;
+  final String? bloodPressure;
+  final String? respiratoryRate;
+
+  InitialVitals({
+    this.spo2,
+    this.pulse,
+    this.weight,
+    this.temperature,
+    this.bloodPressure,
+    this.respiratoryRate,
+  });
+
+  factory InitialVitals.fromJson(Map<String, dynamic> json) {
+    return InitialVitals(
+      spo2: json['spo2']?.toString(),
+      pulse: json['pulse']?.toString(),
+      weight: json['weight']?.toString(),
+      temperature: json['temperature']?.toString(),
+      bloodPressure: json['blood_pressure']?.toString(),
+      respiratoryRate: json['respiratory_rate']?.toString(),
+    );
+  }
+}
+
+// Assessment Nurse
+class AssessmentNurse {
+  final int id;
+  final String name;
+
+  AssessmentNurse({
+    required this.id,
+    required this.name,
+  });
+
+  factory AssessmentNurse.fromJson(Map<String, dynamic> json) {
+    return AssessmentNurse(
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+      name: json['name']?.toString() ?? 'Unknown Nurse',
+    );
+  }
+}
+
+// Initial Assessment model
+class InitialAssessment {
+  final int id;
+  final String? physicalAddress;
+  final String? occupation;
+  final String? religion;
+  final List<InitialAssessmentEmergencyContact> emergencyContacts;
+  final String? presentingCondition;
+  final String? pastMedicalHistory;
+  final String? allergies;
+  final String? currentMedications;
+  final String? specialNeeds;
+  final String? generalCondition;
+  final String? hydrationStatus;
+  final String? nutritionStatus;
+  final String? mobilityStatus;
+  final bool hasWounds;
+  final String? woundDescription;
+  final int? painLevel;
+  final InitialVitals? initialVitals;
+  final String? initialNursingImpression;
+  final String? assessmentStatus;
+  final AssessmentNurse? nurse;
+  final String? completedAt;
+  final String? createdAt;
+
+  InitialAssessment({
+    required this.id,
+    this.physicalAddress,
+    this.occupation,
+    this.religion,
+    required this.emergencyContacts,
+    this.presentingCondition,
+    this.pastMedicalHistory,
+    this.allergies,
+    this.currentMedications,
+    this.specialNeeds,
+    this.generalCondition,
+    this.hydrationStatus,
+    this.nutritionStatus,
+    this.mobilityStatus,
+    this.hasWounds = false,
+    this.woundDescription,
+    this.painLevel,
+    this.initialVitals,
+    this.initialNursingImpression,
+    this.assessmentStatus,
+    this.nurse,
+    this.completedAt,
+    this.createdAt,
+  });
+
+  factory InitialAssessment.fromJson(Map<String, dynamic> json) {
+    try {
+      return InitialAssessment(
+        id: json['id'] is int ? json['id'] : int.tryParse(json['id'].toString()) ?? 0,
+        physicalAddress: json['physical_address']?.toString(),
+        occupation: json['occupation']?.toString(),
+        religion: json['religion']?.toString(),
+        emergencyContacts: (json['emergency_contacts'] as List<dynamic>?)
+            ?.map((e) => InitialAssessmentEmergencyContact.fromJson(e as Map<String, dynamic>))
+            .toList() ?? [],
+        presentingCondition: json['presenting_condition']?.toString(),
+        pastMedicalHistory: json['past_medical_history']?.toString(),
+        allergies: json['allergies']?.toString(),
+        currentMedications: json['current_medications']?.toString(),
+        specialNeeds: json['special_needs']?.toString(),
+        generalCondition: json['general_condition']?.toString(),
+        hydrationStatus: json['hydration_status']?.toString(),
+        nutritionStatus: json['nutrition_status']?.toString(),
+        mobilityStatus: json['mobility_status']?.toString(),
+        hasWounds: json['has_wounds'] == true,
+        woundDescription: json['wound_description']?.toString(),
+        painLevel: json['pain_level'] is int ? json['pain_level'] : int.tryParse(json['pain_level']?.toString() ?? ''),
+        initialVitals: json['initial_vitals'] != null && json['initial_vitals'] is Map
+            ? InitialVitals.fromJson(json['initial_vitals'] as Map<String, dynamic>)
+            : null,
+        initialNursingImpression: json['initial_nursing_impression']?.toString(),
+        assessmentStatus: json['assessment_status']?.toString(),
+        nurse: json['nurse'] != null && json['nurse'] is Map
+            ? AssessmentNurse.fromJson(json['nurse'] as Map<String, dynamic>)
+            : null,
+        completedAt: json['completed_at']?.toString(),
+        createdAt: json['created_at']?.toString(),
+      );
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error parsing InitialAssessment: $e');
+      debugPrint('Stack trace: $stackTrace');
+      debugPrint('JSON data: $json');
+      rethrow;
+    }
+  }
+
+  // Helper getters for display formatting
+  String get generalConditionDisplay => _capitalizeFirst(generalCondition ?? 'N/A');
+  String get hydrationStatusDisplay => _capitalizeFirst(hydrationStatus ?? 'N/A');
+  String get nutritionStatusDisplay => _capitalizeFirst(nutritionStatus ?? 'N/A');
+  String get mobilityStatusDisplay => _capitalizeFirst(mobilityStatus ?? 'N/A');
+  String get assessmentStatusDisplay => _capitalizeFirst(assessmentStatus ?? 'N/A');
+
+  String _capitalizeFirst(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1);
   }
 }

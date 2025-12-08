@@ -1995,7 +1995,9 @@ Widget _buildScheduleCard(ScheduleItem schedule) {
                   children: [
                     _buildInfoRow(
                       Icons.calendar_today,
-                      DateFormat('EEEE, MMM d').format(schedule.date),
+                      schedule.isMultiDay
+                          ? schedule.dateRangeDisplay
+                          : DateFormat('EEEE, MMM d').format(schedule.date),
                     ),
                     const SizedBox(height: 8),
                     _buildInfoRow(
@@ -2550,7 +2552,9 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       [
                         _buildDetailItem(
                           'Date',
-                          DateFormat('EEEE, MMMM d, yyyy').format(schedule.date),
+                          schedule.isMultiDay
+                              ? schedule.dateRangeDisplay
+                              : DateFormat('EEEE, MMMM d, yyyy').format(schedule.date),
                         ),
                         _buildDetailItem(
                           'Time',

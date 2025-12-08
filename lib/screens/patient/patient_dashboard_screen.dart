@@ -62,6 +62,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   // Track if notification was received while app was paused (local flag)
   bool _pendingNotificationRefresh = false;
 
+  // Tab selection for Initial Assessment / My Nurses section
+  int _nursesAssessmentTabIndex = 0; // 0 = Initial Assessment, 1 = My Nurses (default: Initial Assessment)
+
   // CRITICAL: Keep state alive when switching tabs
   @override
   bool get wantKeepAlive => true;
@@ -704,7 +707,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
               const SizedBox(height: 32),
               _buildQuickActions(),
               const SizedBox(height: 32),
-              _buildMyNurses(),
+              _buildNursesAssessmentSection(),
               const SizedBox(height: 100),
             ],
           ),
@@ -971,6 +974,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
         : visit.time;
 
     bool isCompleted = visit.status.toLowerCase() == 'completed';
+    bool isInProgress = visit.status.toLowerCase() == 'in_progress' ||
+                        visit.status.toLowerCase() == 'in-progress' ||
+                        visit.status.toLowerCase() == 'inprogress';
 
     return GestureDetector(
       onTap: () => _showScheduleDetailModal(visit),
@@ -985,7 +991,12 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                   color: const Color(0xFF199A8E).withOpacity(0.3),
                   width: 2,
                 )
-              : null,
+              : isInProgress
+                  ? Border.all(
+                      color: const Color(0xFFFF9A00).withOpacity(0.3),
+                      width: 2,
+                    )
+                  : null,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isCompleted ? 0.05 : 0.1),
@@ -1016,6 +1027,20 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                         ),
                       ),
                       const SizedBox(width: 8),
+                    ] else if (isInProgress) ...[
+                      Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFF9A00).withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_circle_filled,
+                          color: Color(0xFFFF9A00),
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                     ],
                     Text(
                       timeRange,
@@ -1023,7 +1048,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                         fontSize: 13,
                         color: isCompleted
                             ? const Color(0xFF199A8E)
-                            : Colors.white.withOpacity(0.7),
+                            : isInProgress
+                                ? const Color(0xFFFF9A00)
+                                : Colors.white.withOpacity(0.7),
                         letterSpacing: -0.2,
                       ),
                     ),
@@ -1034,14 +1061,18 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                   decoration: BoxDecoration(
                     color: isCompleted
                         ? const Color(0xFF199A8E).withOpacity(0.1)
-                        : Colors.white.withOpacity(0.1),
+                        : isInProgress
+                            ? const Color(0xFFFF9A00).withOpacity(0.1)
+                            : Colors.white.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios,
                     color: isCompleted
                         ? const Color(0xFF199A8E)
-                        : Colors.white.withOpacity(0.7),
+                        : isInProgress
+                            ? const Color(0xFFFF9A00)
+                            : Colors.white.withOpacity(0.7),
                     size: 12,
                   ),
                 ),
@@ -1087,7 +1118,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                         letterSpacing: -0.2,
                       ),
                     ),
-                    if (visit.duration.isNotEmpty && visit.duration != '0m') ...[
+                    if (visit.timeCompleted != null && visit.timeCompleted!.isNotEmpty && visit.timeCompleted != '0m') ...[
                       const SizedBox(width: 8),
                       Container(
                         width: 1,
@@ -1102,7 +1133,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        visit.durationCompleted!,
+                        visit.timeCompleted!,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1111,6 +1142,40 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                         ),
                       ),
                     ],
+                  ],
+                ),
+              ),
+            ],
+            if (isInProgress) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9A00).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: const Color(0xFFFF9A00).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(
+                      Icons.play_circle_outline,
+                      color: Color(0xFFFF9A00),
+                      size: 14,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'In Progress',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFFFF9A00),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1125,7 +1190,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                     decoration: BoxDecoration(
                       color: isCompleted
                           ? const Color(0xFF199A8E).withOpacity(0.1)
-                          : const Color(0xFFE8F5F5),
+                          : isInProgress
+                              ? const Color(0xFFFF9A00).withOpacity(0.1)
+                              : const Color(0xFFE8F5F5),
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -1136,7 +1203,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                           fontWeight: FontWeight.w600,
                           color: isCompleted
                               ? const Color(0xFF199A8E)
-                              : const Color(0xFF2D2D2D),
+                              : isInProgress
+                                  ? const Color(0xFFFF9A00)
+                                  : const Color(0xFF2D2D2D),
                         ),
                       ),
                     ),
@@ -1179,14 +1248,6 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
 
 void _showScheduleDetailModal(ScheduleVisit visit) {
   bool isCompleted = visit.status.toLowerCase() == 'completed';
-  
-  // Use completed duration if available, otherwise scheduled duration
-  String durationDisplay = visit.duration;
-  if (isCompleted && visit.durationCompleted != null && visit.durationCompleted!.isNotEmpty) {
-    durationDisplay = visit.durationCompleted!;
-  } else if (visit.duration.isEmpty || visit.duration == '0m') {
-    durationDisplay = 'Not recorded';
-  }
 
   showModalBottomSheet(
     context: context,
@@ -1363,36 +1424,58 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                   // INFO GRID
                   _buildInfoGrid([
                     _buildInfoItem(
+                      Icons.calendar_today,
+                      'Date',
+                      visit.dateRangeDisplay,
+                    ),
+                    _buildInfoItem(
                       Icons.access_time,
-                      'Scheduled Time',
-                      visit.endTime != null
-                          ? '${visit.time} - ${visit.endTime}'
-                          : visit.time,
+                      'Time',
+                      visit.timeRangeDisplay,
                     ),
                     _buildInfoItem(
                       Icons.timer_outlined,
-                      'Planned Duration',
-                      visit.duration,
+                      'Daily Duration',
+                      visit.dailyDuration.isNotEmpty ? visit.dailyDuration : 'N/A',
                     ),
-                    _buildInfoItem(
-                      Icons.location_on_outlined,
-                      'Location',
-                      visit.location,
-                    ),
+                    if (visit.isMultiDay)
+                      _buildInfoItem(
+                        Icons.date_range,
+                        'Assignment Duration',
+                        visit.assignmentDuration.isNotEmpty ? visit.assignmentDuration : 'N/A',
+                      )
+                    else
+                      _buildInfoItem(
+                        Icons.location_on_outlined,
+                        'Location',
+                        visit.location,
+                      ),
                     _buildInfoItem(
                       Icons.medical_services_outlined,
                       'Care Type',
                       StringUtils.formatCareType(visit.careType),
                     ),
+                    if (!visit.isMultiDay)
+                      _buildInfoItem(
+                        Icons.flag_outlined,
+                        'Priority',
+                        StringUtils.formatCareType(visit.priority),
+                      )
+                    else
+                      _buildInfoItem(
+                        Icons.location_on_outlined,
+                        'Location',
+                        visit.location,
+                      ),
                   ]),
                 ],
               ),
             ),
           ),
           
-          // BOTTOM SECTION - Total Completed Duration
-          if (isCompleted && visit.durationCompleted != null && 
-              visit.durationCompleted!.isNotEmpty && visit.durationCompleted != '0m')
+          // BOTTOM SECTION - Session Completed
+          if (isCompleted && visit.timeCompleted != null &&
+              visit.timeCompleted!.isNotEmpty && visit.timeCompleted != '0m')
             Container(
               padding: EdgeInsets.only(
                 left: 20,
@@ -1447,7 +1530,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Total Visit Duration',
+                                'Time Worked',
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
@@ -1456,7 +1539,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                visit.durationCompleted!,
+                                visit.timeCompleted!,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -1486,7 +1569,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                visit.durationCompleted!,
+                                visit.timeCompleted!,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -1499,7 +1582,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                       ],
                     ),
                     // Show comparison if actual differs from planned
-                    if (visit.duration != visit.durationCompleted) ...[
+                    if (visit.dailyDuration != visit.timeCompleted) ...[
                       const SizedBox(height: 12),
                       Container(
                         padding: const EdgeInsets.symmetric(
@@ -1520,7 +1603,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Planned: ${visit.duration}',
+                              'Daily Duration: ${visit.dailyDuration}',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -1809,6 +1892,770 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
         ),
       ),
     );
+  }
+
+  Widget _buildNursesAssessmentSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Tab Switcher
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              // Initial Assessment Tab (Left - Index 0)
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_nursesAssessmentTabIndex != 0) {
+                      setState(() {
+                        _nursesAssessmentTabIndex = 0;
+                      });
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _nursesAssessmentTabIndex == 0
+                          ? Colors.white
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: _nursesAssessmentTabIndex == 0
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.assignment_outlined,
+                          size: 18,
+                          color: _nursesAssessmentTabIndex == 0
+                              ? const Color(0xFF7C3AED)
+                              : Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Initial Assessment',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _nursesAssessmentTabIndex == 0
+                                ? const Color(0xFF1A1A1A)
+                                : Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // My Nurses Tab (Right - Index 1)
+              Expanded(
+                child: GestureDetector(
+                  onTap: () {
+                    if (_nursesAssessmentTabIndex != 1) {
+                      setState(() {
+                        _nursesAssessmentTabIndex = 1;
+                      });
+                    }
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _nursesAssessmentTabIndex == 1
+                          ? Colors.white
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: _nursesAssessmentTabIndex == 1
+                          ? [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.08),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.medical_services_outlined,
+                          size: 18,
+                          color: _nursesAssessmentTabIndex == 1
+                              ? const Color(0xFF199A8E)
+                              : Colors.grey.shade500,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'My Nurses',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: _nursesAssessmentTabIndex == 1
+                                ? const Color(0xFF1A1A1A)
+                                : Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Tab Content
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: _nursesAssessmentTabIndex == 0
+              ? _buildInitialAssessmentContent()
+              : _buildMyNursesContent(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMyNursesContent() {
+    final upcomingNurses = _dashboardData!.upcomingNurses.take(2).toList();
+
+    return Column(
+      key: const ValueKey('nurses'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (upcomingNurses.isEmpty)
+          _buildEmptyState('No upcoming nurse visits')
+        else
+          ...upcomingNurses.map((nurse) => _buildNurseCard(nurse)).toList(),
+      ],
+    );
+  }
+
+  Widget _buildInitialAssessmentContent() {
+    final assessment = _dashboardData!.initialAssessment;
+    debugPrint('🏥 [PatientDashboard] Building Initial Assessment Content');
+    debugPrint('🏥 [PatientDashboard] Assessment is null: ${assessment == null}');
+    if (assessment != null) {
+      debugPrint('🏥 [PatientDashboard] Assessment ID: ${assessment.id}');
+      debugPrint('🏥 [PatientDashboard] General Condition: ${assessment.generalCondition}');
+    }
+
+    if (assessment == null) {
+      return Column(
+        key: const ValueKey('assessment'),
+        children: [
+          _buildEmptyState('No initial assessment available'),
+        ],
+      );
+    }
+
+    return Container(
+      key: const ValueKey('assessment'),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFF7C3AED).withOpacity(0.08),
+            const Color(0xFF7C3AED).withOpacity(0.02),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: const Color(0xFF7C3AED).withOpacity(0.15),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF7C3AED).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.assignment_turned_in,
+                    color: Color(0xFF7C3AED),
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Initial Assessment',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A1A),
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        assessment.isCompleted ? 'Completed' : 'Pending',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: assessment.isCompleted
+                              ? const Color(0xFF199A8E)
+                              : const Color(0xFFFF9A00),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: assessment.isCompleted
+                        ? const Color(0xFF199A8E).withOpacity(0.15)
+                        : const Color(0xFFFF9A00).withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        assessment.isCompleted
+                            ? Icons.check_circle
+                            : Icons.pending,
+                        size: 14,
+                        color: assessment.isCompleted
+                            ? const Color(0xFF199A8E)
+                            : const Color(0xFFFF9A00),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        assessment.isCompleted ? 'Done' : 'In Progress',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: assessment.isCompleted
+                              ? const Color(0xFF199A8E)
+                              : const Color(0xFFFF9A00),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Status Cards Grid
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
+              childAspectRatio: 1.6,
+              children: [
+                _buildAssessmentStatusCard(
+                  'General',
+                  assessment.generalCondition ?? 'N/A',
+                  Icons.person_outline,
+                  _getConditionColor(assessment.generalCondition),
+                ),
+                _buildAssessmentStatusCard(
+                  'Hydration',
+                  assessment.hydrationStatus ?? 'N/A',
+                  Icons.water_drop_outlined,
+                  _getStatusColor(assessment.hydrationStatus),
+                ),
+                _buildAssessmentStatusCard(
+                  'Nutrition',
+                  assessment.nutritionStatus ?? 'N/A',
+                  Icons.restaurant_outlined,
+                  _getStatusColor(assessment.nutritionStatus),
+                ),
+                _buildAssessmentStatusCard(
+                  'Mobility',
+                  assessment.mobilityStatus ?? 'N/A',
+                  Icons.accessibility_new,
+                  _getMobilityColor(assessment.mobilityStatus),
+                ),
+              ],
+            ),
+          ),
+
+          // Pain Level
+          if (assessment.painLevel != null) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sentiment_dissatisfied_outlined,
+                      size: 20,
+                      color: _getPainColor(assessment.painLevel!),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Pain Level',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getPainColor(assessment.painLevel!).withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${assessment.painLevel}/10',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: _getPainColor(assessment.painLevel!),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Wounds Alert
+          if (assessment.hasWounds) ...[
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDC2626).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFDC2626).withOpacity(0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      size: 20,
+                      color: Color(0xFFDC2626),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Wounds Present',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFFDC2626),
+                            ),
+                          ),
+                          if (assessment.woundDescription != null &&
+                              assessment.woundDescription!.isNotEmpty)
+                            Text(
+                              assessment.woundDescription!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade700,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Presenting Condition
+          if (assessment.presentingCondition != null &&
+              assessment.presentingCondition!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.medical_information_outlined,
+                          size: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Presenting Condition',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      assessment.presentingCondition!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Initial Vitals
+          if (assessment.initialVitals != null) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.monitor_heart_outlined,
+                          size: 16,
+                          color: Colors.grey.shade600,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Initial Vitals',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        if (assessment.initialVitals!.bloodPressure != null)
+                          _buildMiniVital('BP', assessment.initialVitals!.bloodPressure!),
+                        if (assessment.initialVitals!.pulse != null)
+                          _buildMiniVital('Pulse', assessment.initialVitals!.pulse!),
+                        if (assessment.initialVitals!.temperature != null)
+                          _buildMiniVital('Temp', '${assessment.initialVitals!.temperature}°'),
+                        if (assessment.initialVitals!.spo2 != null)
+                          _buildMiniVital('SpO₂', '${assessment.initialVitals!.spo2}%'),
+                        if (assessment.initialVitals!.respiratoryRate != null)
+                          _buildMiniVital('RR', assessment.initialVitals!.respiratoryRate!),
+                        if (assessment.initialVitals!.weight != null)
+                          _buildMiniVital('Weight', '${assessment.initialVitals!.weight}kg'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Nursing Impression
+          if (assessment.initialNursingImpression != null &&
+              assessment.initialNursingImpression!.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF7C3AED).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.note_alt_outlined,
+                          size: 16,
+                          color: Color(0xFF7C3AED),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Nursing Impression',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF7C3AED),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      assessment.initialNursingImpression!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF1A1A1A),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+
+          // Nurse Attribution
+          if (assessment.nurse != null) ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF199A8E).withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: Color(0xFF199A8E),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Assessed by ${assessment.nurse!.name}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        if (assessment.completedAt != null)
+                          Text(
+                            _formatAssessmentDate(assessment.completedAt!),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade500,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else
+            const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAssessmentStatusCard(String label, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniVital(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF199A8E).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 11,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF199A8E),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getConditionColor(String? condition) {
+    switch (condition?.toLowerCase()) {
+      case 'good':
+        return const Color(0xFF199A8E);
+      case 'fair':
+        return const Color(0xFFFF9A00);
+      case 'poor':
+        return const Color(0xFFDC2626);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'adequate':
+      case 'good':
+        return const Color(0xFF199A8E);
+      case 'mild_dehydration':
+      case 'at_risk':
+        return const Color(0xFFFF9A00);
+      case 'dehydrated':
+      case 'malnourished':
+        return const Color(0xFFDC2626);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getMobilityColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'independent':
+        return const Color(0xFF199A8E);
+      case 'assisted':
+      case 'needs_assistance':
+        return const Color(0xFFFF9A00);
+      case 'bedridden':
+      case 'immobile':
+        return const Color(0xFFDC2626);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Color _getPainColor(int level) {
+    if (level <= 3) return const Color(0xFF199A8E);
+    if (level <= 6) return const Color(0xFFFF9A00);
+    return const Color(0xFFDC2626);
+  }
+
+  String _formatAssessmentDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final diff = now.difference(date);
+
+      if (diff.inDays == 0) {
+        return 'Today at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+      } else if (diff.inDays == 1) {
+        return 'Yesterday';
+      } else if (diff.inDays < 7) {
+        return '${diff.inDays} days ago';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return dateStr;
+    }
   }
 
   Widget _buildMyNurses() {
@@ -2254,9 +3101,9 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 color: const Color(0xFF199A8E).withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(
-                                Icons.calendar_today,
-                                color: Color(0xFF199A8E),
+                              child: Icon(
+                                nurseVisit.isMultiDay ? Icons.date_range : Icons.calendar_today,
+                                color: const Color(0xFF199A8E),
                                 size: 20,
                               ),
                             ),
@@ -2266,7 +3113,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    nurseVisit.scheduledDate,
+                                    nurseVisit.dateRangeDisplay,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -2275,7 +3122,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    '${nurseVisit.scheduledTime}${nurseVisit.endTime != null ? ' - ${nurseVisit.endTime}' : ''}',
+                                    nurseVisit.timeRangeDisplay,
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey.shade600,
@@ -2320,7 +3167,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  nurseVisit.duration,
+                                  nurseVisit.dailyDuration,
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -2331,6 +3178,54 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                             ],
                           ),
                         ),
+                        // Show assignment duration for multi-day schedules
+                        if (nurseVisit.isMultiDay && nurseVisit.assignmentDuration.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.date_range,
+                                  size: 16,
+                                  color: Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Assignment Duration',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade700,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF6C63FF).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    nurseVisit.assignmentDuration,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF6C63FF),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -2490,7 +3385,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                         child: Row(
                           children: [
                             Icon(
-                              Icons.calendar_today_outlined,
+                              schedule.isMultiDay ? Icons.date_range : Icons.calendar_today_outlined,
                               size: 16,
                               color: Colors.grey.shade600,
                             ),
@@ -2500,7 +3395,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    schedule.scheduledDate,  
+                                    schedule.dateRangeDisplay,
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -2508,7 +3403,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                     ),
                                   ),
                                   Text(
-                                    schedule.scheduledTime, 
+                                    schedule.timeRangeDisplay,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade600,
@@ -2527,7 +3422,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                schedule.duration,
+                                schedule.dailyDuration,
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,

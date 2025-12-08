@@ -3,29 +3,33 @@ import 'package:geolocator/geolocator.dart';
 import 'dart:async';
 import '../../utils/app_colors.dart';
 import '../../services/location_service.dart';
-import '../../services/care_request_service.dart';
-import '../../models/care_request/care_request_models.dart';
+import '../../services/contact_person/contact_person_service.dart';
+import '../../models/contact_person/contact_person_models.dart';
 
-class CareRequestScreen extends StatefulWidget {
-  final Map<String, dynamic> patientData;
+class ContactPersonCareRequestScreen extends StatefulWidget {
+  final ContactPersonUser contactPerson;
+  final LinkedPatient selectedPatient;
 
-  const CareRequestScreen({
+  const ContactPersonCareRequestScreen({
     Key? key,
-    required this.patientData,
+    required this.contactPerson,
+    required this.selectedPatient,
   }) : super(key: key);
 
   @override
-  State<CareRequestScreen> createState() => _CareRequestScreenState();
+  State<ContactPersonCareRequestScreen> createState() =>
+      _ContactPersonCareRequestScreenState();
 }
 
-class _CareRequestScreenState extends State<CareRequestScreen> {
+class _ContactPersonCareRequestScreenState
+    extends State<ContactPersonCareRequestScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final _specialRequirementsController = TextEditingController();
   final _addressController = TextEditingController();
   final _cityController = TextEditingController();
   final _locationService = LocationService();
-  final _careRequestService = CareRequestService();
+  final _contactPersonService = ContactPersonService();
 
   String? _selectedCareType;
   String? _selectedUrgency = 'routine';
@@ -36,7 +40,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   bool _isSearchingLocation = false;
   bool _isSubmitting = false;
   Position? _currentPosition;
-  
+
   List<PlaceSearchResult> _addressSearchResults = [];
   Timer? _debounce;
   bool _showAddressDropdown = false;
@@ -45,16 +49,38 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     {'value': 'general_care', 'label': 'General Nursing', 'icon': '🏥'},
     {'value': 'elderly_care', 'label': 'Elderly Care', 'icon': '👵'},
     {'value': 'post_surgical_care', 'label': 'Post-Surgical Care', 'icon': '🏨'},
-    {'value': 'chronic_disease_management', 'label': 'Chronic Disease Management', 'icon': '💊'},
+    {
+      'value': 'chronic_disease_management',
+      'label': 'Chronic Disease Management',
+      'icon': '💊'
+    },
     {'value': 'palliative_care', 'label': 'Palliative Care', 'icon': '🕊️'},
     {'value': 'rehabilitation_care', 'label': 'Rehabilitation', 'icon': '🦽'},
     {'value': 'wound_care', 'label': 'Wound Care', 'icon': '🩹'},
-    {'value': 'medication_management', 'label': 'Medication Management', 'icon': '💉'},
+    {
+      'value': 'medication_management',
+      'label': 'Medication Management',
+      'icon': '💉'
+    },
   ];
 
   final List<String> urgencyLevels = ['routine', 'urgent', 'emergency'];
-  final List<String> timePreferences = ['morning', 'afternoon', 'evening', 'night', 'anytime'];
-  final List<String> regions = ['Greater Accra', 'Ashanti', 'Western', 'Eastern', 'Northern', 'Central', 'Volta'];
+  final List<String> timePreferences = [
+    'morning',
+    'afternoon',
+    'evening',
+    'night',
+    'anytime'
+  ];
+  final List<String> regions = [
+    'Greater Accra',
+    'Ashanti',
+    'Western',
+    'Eastern',
+    'Northern',
+    'Central',
+    'Volta'
+  ];
 
   @override
   void initState() {
@@ -74,16 +100,15 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     super.dispose();
   }
 
-  // Get date constraints based on urgency level
   DateTime get _minStartDate => DateTime.now().add(const Duration(days: 1));
-  
+
   DateTime get _maxStartDate {
     switch (_selectedUrgency) {
       case 'emergency':
         return DateTime.now().add(const Duration(days: 4));
       case 'urgent':
         return DateTime.now().add(const Duration(days: 7));
-      default: // routine
+      default:
         return DateTime.now().add(const Duration(days: 90));
     }
   }
@@ -131,13 +156,15 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
 
   Future<void> _performLocationSearch(String query) async {
     try {
-      final results = await _locationService.searchPlaces(
+      final results = await _locationService
+          .searchPlaces(
         query,
         countryCode: 'GH',
         latitude: _currentPosition?.latitude,
         longitude: _currentPosition?.longitude,
         radius: 50000,
-      ).timeout(
+      )
+          .timeout(
         const Duration(seconds: 10),
         onTimeout: () {
           throw TimeoutException('Search took too long');
@@ -149,14 +176,16 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           _addressSearchResults = results.take(10).toList();
           _isSearchingLocation = false;
         });
-        
+
         if (results.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('No locations found. Try a different search term.'),
+              content: const Text(
+                  'No locations found. Try a different search term.'),
               backgroundColor: Colors.orange,
               behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
             ),
           );
         }
@@ -167,17 +196,18 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           _isSearchingLocation = false;
           _addressSearchResults.clear();
         });
-        
-        String errorMessage = e is TimeoutException 
-            ? 'Search timeout. Please try again.' 
+
+        String errorMessage = e is TimeoutException
+            ? 'Search timeout. Please try again.'
             : 'Error: ${e.toString()}';
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(errorMessage),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -192,26 +222,28 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     });
 
     final placeDetails = await _locationService.getPlaceDetails(result.placeId);
-    
+
     if (!mounted) return;
 
     if (placeDetails != null) {
       setState(() {
         _addressController.text = placeDetails.name;
-        
+
         final addressParts = placeDetails.formattedAddress.split(',');
         if (addressParts.length > 1) {
           _cityController.text = addressParts[addressParts.length - 2].trim();
         }
-        
+
         final matchedRegion = regions.firstWhere(
-          (region) => placeDetails.formattedAddress.toLowerCase().contains(region.toLowerCase()),
+          (region) => placeDetails.formattedAddress
+              .toLowerCase()
+              .contains(region.toLowerCase()),
           orElse: () => '',
         );
         if (matchedRegion.isNotEmpty) {
           _selectedRegion = matchedRegion;
         }
-        
+
         _addressSearchResults.clear();
         _isSearchingLocation = false;
       });
@@ -219,13 +251,14 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       _dismissKeyboard();
     } else {
       setState(() => _isSearchingLocation = false);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Failed to load location details'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -237,7 +270,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        _showLocationError('Location services are disabled. Please enable them.');
+        _showLocationError(
+            'Location services are disabled. Please enable them.');
         setState(() => _isLoadingLocation = false);
         return;
       }
@@ -265,14 +299,12 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
 
       _currentPosition = position;
 
-      // Set initial state while fetching address
       if (mounted) {
         setState(() {
           _addressController.text = 'Current Location';
         });
       }
 
-      // Use Google Maps Geocoding API via LocationService (same as transport screen)
       final address = await _locationService.getAddressFromCoordinates(
         position.latitude,
         position.longitude,
@@ -281,25 +313,18 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       if (!mounted) return;
 
       if (address != null && address.isNotEmpty) {
-        // Parse the formatted address from Google Maps API
         final addressParts = address.split(',');
 
         setState(() {
-          // Use the first part as the street address (usually most specific)
-          _addressController.text = addressParts.isNotEmpty
-              ? addressParts[0].trim()
-              : address;
+          _addressController.text =
+              addressParts.isNotEmpty ? addressParts[0].trim() : address;
 
-          // Try to extract city from address parts
           if (addressParts.length > 1) {
-            // Usually the city is the second-to-last part before the country
-            final cityIndex = addressParts.length >= 3
-                ? addressParts.length - 2
-                : 1;
+            final cityIndex =
+                addressParts.length >= 3 ? addressParts.length - 2 : 1;
             _cityController.text = addressParts[cityIndex].trim();
           }
 
-          // Try to match region from the full address
           final matchedRegion = regions.firstWhere(
             (region) => address.toLowerCase().contains(region.toLowerCase()),
             orElse: () => '',
@@ -322,7 +347,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             ),
             backgroundColor: const Color(0xFF199A8E),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -331,10 +357,12 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           _addressController.text = 'Address not found';
           _isLoadingLocation = false;
         });
-        _showLocationError('Could not determine your address. Please enter it manually.');
+        _showLocationError(
+            'Could not determine your address. Please enter it manually.');
       }
     } catch (e) {
-      _showLocationError('Could not get your location. You can enter it manually.');
+      _showLocationError(
+          'Could not get your location. You can enter it manually.');
       setState(() => _isLoadingLocation = false);
     }
   }
@@ -352,19 +380,18 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           ),
           backgroundColor: const Color(0xFFFF9A00),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           duration: const Duration(seconds: 3),
         ),
       );
     }
   }
 
-  // Handle urgency change - reset date if out of new range
   void _onUrgencyChanged(String? urgency) {
     setState(() {
       _selectedUrgency = urgency;
-      
-      // Reset date if current selection is outside new constraints
+
       if (_preferredStartDate != null) {
         final newMax = _maxStartDate;
         if (_preferredStartDate!.isAfter(newMax)) {
@@ -376,7 +403,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
 
   Future<void> _submitRequest() async {
     _dismissKeyboard();
-    
+
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedCareType == null) {
@@ -384,10 +411,10 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       return;
     }
 
-    // Validate date for urgent/emergency
     if (_selectedUrgency == 'urgent' || _selectedUrgency == 'emergency') {
       if (_preferredStartDate == null) {
-        _showError('Please select a preferred start date for ${_selectedUrgency} requests');
+        _showError(
+            'Please select a preferred start date for $_selectedUrgency requests');
         return;
       }
     }
@@ -395,38 +422,32 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final response = await _careRequestService.createCareRequest(
-        CreateCareRequestRequest(
-          careType: _selectedCareType!,
-          urgencyLevel: _selectedUrgency ?? 'routine',
-          description: _descriptionController.text,
-          specialRequirements: _specialRequirementsController.text.isNotEmpty
-              ? _specialRequirementsController.text
-              : null,
-          serviceAddress: _addressController.text,
-          city: _cityController.text,
-          region: _selectedRegion,
-          preferredStartDate: _preferredStartDate?.toIso8601String().split('T')[0],
-          preferredTime: _selectedTime,
-        ),
-      );
+      await _contactPersonService.createCareRequest({
+        'care_type': _selectedCareType!,
+        'urgency_level': _selectedUrgency ?? 'routine',
+        'description': _descriptionController.text,
+        'special_requirements': _specialRequirementsController.text.isNotEmpty
+            ? _specialRequirementsController.text
+            : null,
+        'service_address': _addressController.text,
+        'city': _cityController.text,
+        'region': _selectedRegion,
+        'preferred_start_date':
+            _preferredStartDate?.toIso8601String().split('T')[0],
+        'preferred_time': _selectedTime,
+      });
 
       if (!mounted) return;
 
       setState(() => _isSubmitting = false);
 
-      if (response.success) {
-        _showSuccess('Care request submitted successfully!');
-        
-        // Return true to trigger refresh in list screen
-        Future.delayed(const Duration(milliseconds: 1500), () {
-          if (mounted) {
-            Navigator.of(context).pop(true);
-          }
-        });
-      } else {
-        _showError(response.message);
-      }
+      _showSuccess('Care request submitted successfully!');
+
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      });
     } catch (e) {
       setState(() => _isSubmitting = false);
       _showError('Failed to submit request: $e');
@@ -485,13 +506,26 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            'Request Home Care',
-            style: TextStyle(
-              color: Color(0xFF1A1A1A),
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Request Home Care',
+                style: TextStyle(
+                  color: Color(0xFF1A1A1A),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'For ${widget.selectedPatient.name}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  fontWeight: FontWeight.normal,
+                ),
+              ),
+            ],
           ),
         ),
         body: SingleChildScrollView(
@@ -554,7 +588,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               color: const Color(0xFF199A8E).withOpacity(0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.info_outline, color: Color(0xFF199A8E), size: 24),
+            child: const Icon(Icons.info_outline,
+                color: Color(0xFF199A8E), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -562,12 +597,15 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'About Care Requests',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+                  'Request Care for Patient',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A)),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tell us about your care needs and we\'ll match you with a qualified nurse',
+                  'You are requesting care for ${widget.selectedPatient.name}',
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
@@ -585,7 +623,10 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
+          style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A)),
         ),
       ],
     );
@@ -617,7 +658,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               color: isSelected ? const Color(0xFF199A8E) : Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: isSelected ? const Color(0xFF199A8E) : Colors.grey.shade300,
+                color:
+                    isSelected ? const Color(0xFF199A8E) : Colors.grey.shade300,
                 width: isSelected ? 2 : 1,
               ),
             ),
@@ -631,7 +673,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isSelected ? Colors.white : const Color(0xFF1A1A1A),
+                      color:
+                          isSelected ? Colors.white : const Color(0xFF1A1A1A),
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -692,10 +735,11 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   ),
                   child: Column(
                     children: [
-                      Icon(icon, color: isSelected ? Colors.white : color, size: 24),
+                      Icon(icon,
+                          color: isSelected ? Colors.white : color, size: 24),
                       const SizedBox(height: 4),
                       Text(
-                        level.capitalize(),
+                        level[0].toUpperCase() + level.substring(1),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -709,16 +753,16 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             );
           }).toList(),
         ),
-        // Show date constraint hint
         if (_selectedUrgency == 'urgent' || _selectedUrgency == 'emergency')
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (_selectedUrgency == 'emergency' 
-                    ? const Color(0xFFFF4757) 
-                    : const Color(0xFFFF9A00)).withOpacity(0.1),
+                color: (_selectedUrgency == 'emergency'
+                        ? const Color(0xFFFF4757)
+                        : const Color(0xFFFF9A00))
+                    .withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -726,8 +770,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   Icon(
                     Icons.info_outline,
                     size: 16,
-                    color: _selectedUrgency == 'emergency' 
-                        ? const Color(0xFFFF4757) 
+                    color: _selectedUrgency == 'emergency'
+                        ? const Color(0xFFFF4757)
                         : const Color(0xFFFF9A00),
                   ),
                   const SizedBox(width: 8),
@@ -738,8 +782,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                           : 'Urgent requests must start within 7 days',
                       style: TextStyle(
                         fontSize: 12,
-                        color: _selectedUrgency == 'emergency' 
-                            ? const Color(0xFFFF4757) 
+                        color: _selectedUrgency == 'emergency'
+                            ? const Color(0xFFFF4757)
                             : const Color(0xFFFF9A00),
                       ),
                     ),
@@ -777,8 +821,12 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             ),
           ),
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Please describe your care needs';
-            if (value.length < 20) return 'Please provide at least 20 characters';
+            if (value == null || value.isEmpty) {
+              return 'Please describe your care needs';
+            }
+            if (value.length < 20) {
+              return 'Please provide at least 20 characters';
+            }
             return null;
           },
         ),
@@ -820,12 +868,14 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               textInputAction: TextInputAction.next,
               onChanged: _onAddressSearchChanged,
               onTap: () {
-                if (_addressController.text.isNotEmpty && _addressSearchResults.isNotEmpty) {
+                if (_addressController.text.isNotEmpty &&
+                    _addressSearchResults.isNotEmpty) {
                   setState(() => _showAddressDropdown = true);
                 }
               },
               decoration: InputDecoration(
-                hintText: _isLoadingLocation ? 'Detecting location...' : 'Street address',
+                hintText:
+                    _isLoadingLocation ? 'Detecting location...' : 'Street address',
                 prefixIcon: _isLoadingLocation
                     ? const Padding(
                         padding: EdgeInsets.all(12),
@@ -834,7 +884,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF199A8E)),
                           ),
                         ),
                       )
@@ -850,7 +901,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(0xFF199A8E)),
                           ),
                         ),
                       ),
@@ -867,7 +919,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                         },
                       ),
                     IconButton(
-                      icon: const Icon(Icons.my_location, color: Color(0xFF199A8E)),
+                      icon: const Icon(Icons.my_location,
+                          color: Color(0xFF199A8E)),
                       onPressed: _isLoadingLocation ? null : _getCurrentLocation,
                       tooltip: 'Use current location',
                     ),
@@ -885,15 +938,17 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF199A8E), width: 2),
+                  borderSide:
+                      const BorderSide(color: Color(0xFF199A8E), width: 2),
                 ),
               ),
               validator: (value) {
-                if (value == null || value.isEmpty) return 'Service address is required';
+                if (value == null || value.isEmpty) {
+                  return 'Service address is required';
+                }
                 return null;
               },
             ),
-            
             if (_showAddressDropdown)
               Container(
                 margin: const EdgeInsets.only(top: 8),
@@ -901,7 +956,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.3)),
+                  border: Border.all(
+                      color: const Color(0xFF199A8E).withOpacity(0.3)),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.1),
@@ -918,7 +974,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF199A8E)),
                               ),
                               SizedBox(height: 12),
                               Text('Searching locations...'),
@@ -932,11 +989,18 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.location_off, size: 48, color: Colors.grey.shade400),
+                                Icon(Icons.location_off,
+                                    size: 48, color: Colors.grey.shade400),
                                 const SizedBox(height: 12),
-                                Text('No locations found', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                                Text('No locations found',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey.shade600)),
                                 const SizedBox(height: 4),
-                                Text('Try a different search term', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                                Text('Try a different search term',
+                                    style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade500)),
                               ],
                             ),
                           )
@@ -945,13 +1009,13 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                             padding: EdgeInsets.zero,
                             itemCount: _addressSearchResults.length,
                             itemBuilder: (context, index) {
-                              return _buildAddressSearchResultItem(_addressSearchResults[index]);
+                              return _buildAddressSearchResultItem(
+                                  _addressSearchResults[index]);
                             },
                           ),
               ),
           ],
         ),
-        
         const SizedBox(height: 12),
         Row(
           children: [
@@ -974,7 +1038,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF199A8E), width: 2),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF199A8E), width: 2),
                   ),
                 ),
               ),
@@ -997,13 +1062,15 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFF199A8E), width: 2),
+                    borderSide:
+                        const BorderSide(color: Color(0xFF199A8E), width: 2),
                   ),
                 ),
                 items: regions
                     .map((region) => DropdownMenuItem(
                           value: region,
-                          child: Text(region, style: const TextStyle(fontSize: 14)),
+                          child: Text(region,
+                              style: const TextStyle(fontSize: 14)),
                         ))
                     .toList(),
                 onChanged: (value) {
@@ -1033,7 +1100,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
+            border:
+                Border(bottom: BorderSide(color: Colors.grey.shade200, width: 1)),
           ),
           child: Row(
             children: [
@@ -1053,13 +1121,17 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   children: [
                     Text(
                       result.mainText,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A)),
                     ),
                     if (result.secondaryText.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
                         result.secondaryText,
-                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        style: TextStyle(
+                            fontSize: 12, color: Colors.grey.shade600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -1067,7 +1139,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   ],
                 ),
               ),
-              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
+              Icon(Icons.arrow_forward_ios,
+                  size: 14, color: Colors.grey.shade400),
             ],
           ),
         ),
@@ -1076,8 +1149,9 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
   }
 
   Widget _buildPreferencesFields() {
-    final bool isUrgentOrEmergency = _selectedUrgency == 'urgent' || _selectedUrgency == 'emergency';
-    
+    final bool isUrgentOrEmergency =
+        _selectedUrgency == 'urgent' || _selectedUrgency == 'emergency';
+
     return Column(
       children: [
         GestureDetector(
@@ -1091,7 +1165,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               builder: (context, child) {
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    colorScheme: const ColorScheme.light(primary: Color(0xFF199A8E)),
+                    colorScheme:
+                        const ColorScheme.light(primary: Color(0xFF199A8E)),
                   ),
                   child: child!,
                 );
@@ -1115,9 +1190,11 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             child: Row(
               children: [
                 Icon(
-                  Icons.calendar_today, 
-                  color: isUrgentOrEmergency 
-                      ? (_selectedUrgency == 'emergency' ? const Color(0xFFFF4757) : const Color(0xFFFF9A00))
+                  Icons.calendar_today,
+                  color: isUrgentOrEmergency
+                      ? (_selectedUrgency == 'emergency'
+                          ? const Color(0xFFFF4757)
+                          : const Color(0xFFFF9A00))
                       : const Color(0xFF199A8E),
                 ),
                 const SizedBox(width: 12),
@@ -1130,14 +1207,17 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                             ? _dateHintText
                             : 'Start: ${_preferredStartDate!.day}/${_preferredStartDate!.month}/${_preferredStartDate!.year}',
                         style: TextStyle(
-                          color: _preferredStartDate == null ? Colors.grey.shade600 : const Color(0xFF1A1A1A),
+                          color: _preferredStartDate == null
+                              ? Colors.grey.shade600
+                              : const Color(0xFF1A1A1A),
                           fontSize: 14,
                         ),
                       ),
                       if (isUrgentOrEmergency && _preferredStartDate == null)
                         Text(
-                          'Required for ${_selectedUrgency} requests',
-                          style: TextStyle(fontSize: 11, color: Colors.red.shade400),
+                          'Required for $_selectedUrgency requests',
+                          style:
+                              TextStyle(fontSize: 11, color: Colors.red.shade400),
                         ),
                     ],
                   ),
@@ -1176,7 +1256,9 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             ),
           ),
           items: timePreferences
-              .map((time) => DropdownMenuItem(value: time, child: Text(time.capitalize())))
+              .map((time) => DropdownMenuItem(
+                  value: time,
+                  child: Text(time[0].toUpperCase() + time.substring(1))))
               .toList(),
           onChanged: (value) {
             _dismissKeyboard();
@@ -1196,7 +1278,8 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF199A8E),
           disabledBackgroundColor: const Color(0xFF199A8E).withOpacity(0.6),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
         child: _isSubmitting
@@ -1210,15 +1293,12 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               )
             : const Text(
                 'Submit Request',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
               ),
       ),
     );
-  }
-}
-
-extension StringExtension on String {
-  String capitalize() {
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

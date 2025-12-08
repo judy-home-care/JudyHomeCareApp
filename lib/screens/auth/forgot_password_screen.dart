@@ -23,12 +23,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   static const Color _backgroundGrey = Color(0xFFF8FAFB);
   
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   // Service
   final _forgotPasswordService = ForgotPasswordService();
 
@@ -42,7 +41,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _isVerifying = false;
   bool _isOtpVerified = false;
   bool _isResetting = false;
-  String _contactMethod = 'email';
   int _resendCountdown = 0;
   bool _isResetComplete = false;
   bool _isNewPasswordVisible = false;
@@ -73,19 +71,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   void dispose() {
-    _emailController.dispose();
     _phoneController.dispose();
     _otpController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
-    
+
     for (var controller in _otpBoxControllers) {
       controller.dispose();
     }
     for (var node in _otpFocusNodes) {
       node.dispose();
     }
-    
+
     super.dispose();
   }
 
@@ -126,20 +123,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               children: [
                 const _WelcomeSection(),
                 const SizedBox(height: 30),
-                _ContactMethodToggle(
-                  contactMethod: _contactMethod,
-                  onMethodChanged: (method) => setState(() => _contactMethod = method),
+                _PhoneField(
+                  controller: _phoneController,
+                  selectedCountryCode: _selectedCountryCode,
+                  selectedCountryFlag: _selectedCountryFlag,
+                  onCountryTap: _showCountryPicker,
                 ),
-                const SizedBox(height: 25),
-                if (_contactMethod == 'email')
-                  _EmailField(controller: _emailController)
-                else
-                  _PhoneField(
-                    controller: _phoneController,
-                    selectedCountryCode: _selectedCountryCode,
-                    selectedCountryFlag: _selectedCountryFlag,
-                    onCountryTap: _showCountryPicker,
-                  ),
                 const SizedBox(height: 30),
                 _SimplifiedButton(
                   label: 'Send Code',
@@ -169,10 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             child: Column(
               children: [
                 _OtpHeader(
-                  contactMethod: _contactMethod,
-                  contact: _contactMethod == 'email' 
-                      ? _emailController.text 
-                      : '$_selectedCountryCode${_phoneController.text}',
+                  phone: '$_selectedCountryCode${_phoneController.text}',
                 ),
                 const SizedBox(height: 40),
                 _OtpInputBoxes(
@@ -351,26 +337,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  // API HANDLERS (keeping all the same logic)
+  // API HANDLERS
   void _handleSendCode() async {
-    if (_contactMethod == 'email') {
-      if (_emailController.text.trim().isEmpty) {
-        _showErrorMessage('Please enter your email address');
-        return;
-      }
-      if (!_forgotPasswordService.isValidEmail(_emailController.text.trim())) {
-        _showErrorMessage('Please enter a valid email address');
-        return;
-      }
-    } else {
-      if (_phoneController.text.trim().isEmpty) {
-        _showErrorMessage('Please enter your phone number');
-        return;
-      }
-      if (!_forgotPasswordService.isValidPhone(_phoneController.text.trim())) {
-        _showErrorMessage('Please enter a valid phone number');
-        return;
-      }
+    if (_phoneController.text.trim().isEmpty) {
+      _showErrorMessage('Please enter your phone number');
+      return;
+    }
+    if (!_forgotPasswordService.isValidPhone(_phoneController.text.trim())) {
+      _showErrorMessage('Please enter a valid phone number');
+      return;
     }
 
     setState(() {
@@ -378,21 +353,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      String contact;
-      if (_contactMethod == 'email') {
-        contact = _emailController.text.trim();
-      } else {
-        contact = _forgotPasswordService.formatPhoneNumber(
-          _phoneController.text.trim(),
-          _selectedCountryCode,
-        );
-      }
-
-      final request = ForgotPasswordRequest(
-        contact: contact,
-        contactType: _contactMethod,
+      final phone = _forgotPasswordService.formatPhoneNumber(
+        _phoneController.text.trim(),
+        _selectedCountryCode,
       );
 
+      final request = ForgotPasswordRequest(phone: phone);
       final response = await _forgotPasswordService.sendResetCode(request);
 
       if (!mounted) return;
@@ -430,19 +396,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     });
 
     try {
-      String contact;
-      if (_contactMethod == 'email') {
-        contact = _emailController.text.trim();
-      } else {
-        contact = _forgotPasswordService.formatPhoneNumber(
-          _phoneController.text.trim(),
-          _selectedCountryCode,
-        );
-      }
+      final phone = _forgotPasswordService.formatPhoneNumber(
+        _phoneController.text.trim(),
+        _selectedCountryCode,
+      );
 
       final request = VerifyOtpRequest(
-        contact: contact,
-        contactType: _contactMethod,
+        phone: phone,
         otp: _otpController.text,
       );
 
@@ -452,7 +412,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
       if (response.success && response.data != null) {
         _resetToken = response.data!.resetToken;
-        
+
         setState(() {
           _isOtpVerified = true;
         });
@@ -482,28 +442,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   void _handleResendCode() async {
     try {
-      String contact;
-      if (_contactMethod == 'email') {
-        contact = _emailController.text.trim();
-      } else {
-        contact = _forgotPasswordService.formatPhoneNumber(
-          _phoneController.text.trim(),
-          _selectedCountryCode,
-        );
-      }
-
-      final request = ResendOtpRequest(
-        contact: contact,
-        contactType: _contactMethod,
+      final phone = _forgotPasswordService.formatPhoneNumber(
+        _phoneController.text.trim(),
+        _selectedCountryCode,
       );
-      
+
+      final request = ResendOtpRequest(phone: phone);
       final response = await _forgotPasswordService.resendOtp(request);
 
       if (mounted) {
         if (response.success) {
           _showSuccessMessage(response.message);
           _startResendCountdown();
-          
+
           for (var controller in _otpBoxControllers) {
             controller.clear();
           }
@@ -529,16 +480,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       });
 
       try {
-        String contact;
-        
-        if (_contactMethod == 'email') {
-          contact = _emailController.text.trim();
-        } else {
-          contact = _forgotPasswordService.formatPhoneNumber(
-            _phoneController.text.trim(),
-            _selectedCountryCode,
-          );
-        }
+        final phone = _forgotPasswordService.formatPhoneNumber(
+          _phoneController.text.trim(),
+          _selectedCountryCode,
+        );
 
         if (_resetToken == null || _resetToken!.isEmpty) {
           _showErrorMessage('Session expired. Please verify code again.');
@@ -550,9 +495,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         }
 
         final request = ResetPasswordRequest(
+          phone: phone,
           token: _resetToken!,
-          contact: contact,
-          contactType: _contactMethod,
           password: _newPasswordController.text,
           passwordConfirmation: _confirmPasswordController.text,
         );
@@ -732,7 +676,7 @@ class _WelcomeSection extends StatelessWidget {
         ),
         SizedBox(height: 8),
         Text(
-          'Enter your registered email or phone to receive a verification code',
+          'Enter your registered phone number to receive a verification code via SMS',
           style: TextStyle(
             fontSize: 15,
             color: _ForgotPasswordScreenState._textGrey,
@@ -983,9 +927,11 @@ class _PhoneField extends StatelessWidget {
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+                _NoLeadingZeroFormatter(),
               ],
               decoration: InputDecoration(
-                hintText: 'Phone number',
+                hintText: '24 XXX XXXX',
                 hintStyle: const TextStyle(
                   color: Color(0xFF9E9E9E),
                   fontSize: 14,
@@ -1149,13 +1095,9 @@ class _PasswordField extends StatelessWidget {
 }
 
 class _OtpHeader extends StatelessWidget {
-  final String contactMethod;
-  final String contact;
+  final String phone;
 
-  const _OtpHeader({
-    required this.contactMethod,
-    required this.contact,
-  });
+  const _OtpHeader({required this.phone});
 
   @override
   Widget build(BuildContext context) {
@@ -1168,13 +1110,12 @@ class _OtpHeader extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Icon(
-            Icons.mark_email_read_rounded,
+            Icons.sms_rounded,
             size: 40,
             color: _ForgotPasswordScreenState._primaryColor,
           ),
         ),
         const SizedBox(height: 20),
-        // FittedBox ensures text stays on one line
         FittedBox(
           fit: BoxFit.scaleDown,
           child: const Text(
@@ -1183,14 +1124,14 @@ class _OtpHeader extends StatelessWidget {
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: _ForgotPasswordScreenState._textDark,
-              letterSpacing: -0.5, // Tighter spacing to save space
+              letterSpacing: -0.5,
             ),
             maxLines: 1,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          'We sent a 6-digit code to\n$contact',
+          'We sent a 6-digit code via SMS to\n$phone',
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14,
@@ -1640,5 +1581,20 @@ class _CountryPicker extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Custom TextInputFormatter that prevents "0" as the first character
+class _NoLeadingZeroFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    // If the new value starts with "0", reject the change
+    if (newValue.text.isNotEmpty && newValue.text.startsWith('0')) {
+      return oldValue;
+    }
+    return newValue;
   }
 }

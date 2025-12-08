@@ -1710,6 +1710,24 @@ String _formatTimeAgo(DateTime? dateTime) {
   }
 
 void _showPatientDetailsModal(PatientDetail patientDetail) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => PatientDetailsScreen(
+        patientDetail: patientDetail,
+        expandedNotes: _expandedNotes,
+        onEditProgressNote: _editProgressNote,
+        buildDetailsTab: _buildDetailsTab,
+        buildCarePlanTab: _buildCarePlanTab,
+        buildHistoryTab: _buildHistoryTab,
+        onToggleTask: _toggleTaskCompletion,
+      ),
+    ),
+  );
+}
+
+// DEPRECATED: Old modal code - keeping for reference
+void _showPatientDetailsModalOld(PatientDetail patientDetail) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -1909,13 +1927,7 @@ void _showPatientDetailsModal(PatientDetail patientDetail) {
 
 
 void _editProgressNote(ProgressNote note, PatientDetail patientDetail) async {
-  // Close the patient details modal first
-  Navigator.pop(context);
-  
-  // Small delay to ensure modal is closed
-  await Future.delayed(const Duration(milliseconds: 300));
-  
-  // Show edit form
+  // Show edit form as modal on top of the patient details screen
   final result = await showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -2009,7 +2021,12 @@ Future<void> _refreshPatientList() async {
             _buildProminentVitals(patientDetail.vitals!),
             const SizedBox(height: 20),
           ],
-          
+
+          if (patientDetail.initialAssessment != null) ...[
+            _buildInitialAssessment(patientDetail.initialAssessment!),
+            const SizedBox(height: 20),
+          ],
+
           _buildDetailSection(
             'Medical Information',
             [
@@ -2402,14 +2419,341 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
     );
   }
 
-  Widget _buildVitalCard({
+  Widget _buildInitialAssessment(InitialAssessment assessment) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF6C63FF).withOpacity(0.1),
+            const Color(0xFF6C63FF).withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFF6C63FF).withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6C63FF).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.assignment_outlined,
+                  color: Color(0xFF6C63FF),
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Initial Assessment',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: assessment.assessmentStatus?.toLowerCase() == 'completed'
+                      ? AppColors.primaryGreen.withOpacity(0.15)
+                      : const Color(0xFFFF9A00).withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  assessment.assessmentStatusDisplay,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: assessment.assessmentStatus?.toLowerCase() == 'completed'
+                        ? AppColors.primaryGreen
+                        : const Color(0xFFFF9A00),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Status Grid (General Condition, Hydration, Nutrition, Mobility)
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: 2.3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 10,
+            children: [
+              _buildAssessmentStatusCard(
+                icon: Icons.health_and_safety,
+                label: 'General Condition',
+                value: assessment.generalConditionDisplay,
+                color: _getConditionColor(assessment.generalCondition),
+              ),
+              _buildAssessmentStatusCard(
+                icon: Icons.water_drop,
+                label: 'Hydration',
+                value: assessment.hydrationStatusDisplay,
+                color: _getStatusColor(assessment.hydrationStatus),
+              ),
+              _buildAssessmentStatusCard(
+                icon: Icons.restaurant,
+                label: 'Nutrition',
+                value: assessment.nutritionStatusDisplay,
+                color: _getStatusColor(assessment.nutritionStatus),
+              ),
+              _buildAssessmentStatusCard(
+                icon: Icons.accessibility_new,
+                label: 'Mobility',
+                value: assessment.mobilityStatusDisplay,
+                color: _getMobilityColor(assessment.mobilityStatus),
+              ),
+            ],
+          ),
+
+          // Pain Level
+          if (assessment.painLevel != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _getPainColor(assessment.painLevel!).withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.sentiment_dissatisfied,
+                    color: _getPainColor(assessment.painLevel!),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Pain Level',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: _getPainColor(assessment.painLevel!).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${assessment.painLevel}/10',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: _getPainColor(assessment.painLevel!),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Wounds Info
+          if (assessment.hasWounds) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4757).withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFF4757).withOpacity(0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Color(0xFFFF4757),
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Has Wounds',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFFF4757),
+                          ),
+                        ),
+                        if (assessment.woundDescription != null && assessment.woundDescription!.isNotEmpty)
+                          Text(
+                            assessment.woundDescription!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Initial Vitals from Assessment
+          if (assessment.initialVitals != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.favorite_rounded, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Initial Vitals',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 8,
+                    children: [
+                      if (assessment.initialVitals!.bloodPressure != null)
+                        _buildMiniVital('BP', assessment.initialVitals!.bloodPressure!, const Color(0xFFFF4757)),
+                      if (assessment.initialVitals!.pulse != null)
+                        _buildMiniVital('Pulse', '${assessment.initialVitals!.pulse} bpm', const Color(0xFFFF6B9D)),
+                      if (assessment.initialVitals!.temperature != null)
+                        _buildMiniVital('Temp', '${assessment.initialVitals!.temperature}°C', const Color(0xFFFF9A00)),
+                      if (assessment.initialVitals!.spo2 != null)
+                        _buildMiniVital('SpO₂', '${assessment.initialVitals!.spo2}%', AppColors.primaryGreen),
+                      if (assessment.initialVitals!.respiratoryRate != null)
+                        _buildMiniVital('Resp', '${assessment.initialVitals!.respiratoryRate}/min', const Color(0xFF2196F3)),
+                      if (assessment.initialVitals!.weight != null)
+                        _buildMiniVital('Weight', '${assessment.initialVitals!.weight} kg', const Color(0xFF6C63FF)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Nursing Impression
+          if (assessment.initialNursingImpression != null && assessment.initialNursingImpression!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.note_outlined, size: 14, color: Colors.grey[600]),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Nursing Impression',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    assessment.initialNursingImpression!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF1A1A1A),
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Assessed by Nurse
+          if (assessment.nurse != null) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Icon(Icons.person_outline, size: 12, color: Colors.grey[500]),
+                const SizedBox(width: 4),
+                Text(
+                  'Assessed by ${assessment.nurse!.name}',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[500],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                if (assessment.completedAt != null) ...[
+                  const SizedBox(width: 8),
+                  Icon(Icons.access_time, size: 10, color: Colors.grey[400]),
+                  const SizedBox(width: 2),
+                  Text(
+                    _formatAssessmentDate(assessment.completedAt!),
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey[400],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAssessmentStatusCard({
     required IconData icon,
     required String label,
     required String value,
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8), 
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -2418,7 +2762,160 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min, 
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 14, color: color),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                    height: 1.0,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: color,
+              height: 1.0,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniVital(String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getConditionColor(String? condition) {
+    switch (condition?.toLowerCase()) {
+      case 'stable':
+        return AppColors.primaryGreen;
+      case 'improving':
+        return const Color(0xFF2196F3);
+      case 'critical':
+      case 'unstable':
+        return const Color(0xFFFF4757);
+      default:
+        return const Color(0xFFFF9A00);
+    }
+  }
+
+  Color _getStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case 'adequate':
+      case 'good':
+        return AppColors.primaryGreen;
+      case 'inadequate':
+      case 'poor':
+        return const Color(0xFFFF4757);
+      default:
+        return const Color(0xFFFF9A00);
+    }
+  }
+
+  Color _getMobilityColor(String? mobility) {
+    switch (mobility?.toLowerCase()) {
+      case 'independent':
+        return AppColors.primaryGreen;
+      case 'assisted':
+      case 'partial':
+        return const Color(0xFFFF9A00);
+      case 'dependent':
+      case 'bedridden':
+        return const Color(0xFFFF4757);
+      default:
+        return const Color(0xFF6C63FF);
+    }
+  }
+
+  Color _getPainColor(int painLevel) {
+    if (painLevel <= 3) return AppColors.primaryGreen;
+    if (painLevel <= 6) return const Color(0xFFFF9A00);
+    return const Color(0xFFFF4757);
+  }
+
+  String _formatAssessmentDate(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      final now = DateTime.now();
+      final difference = now.difference(date);
+
+      if (difference.inDays == 0) {
+        return 'Today';
+      } else if (difference.inDays == 1) {
+        return 'Yesterday';
+      } else if (difference.inDays < 7) {
+        return '${difference.inDays} days ago';
+      } else {
+        return '${date.day}/${date.month}/${date.year}';
+      }
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  Widget _buildVitalCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
@@ -3856,7 +4353,12 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                   itemCount: widget.carePlans.length,
                   itemBuilder: (context, index) {
                     return SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: EdgeInsets.only(
+                        left: 20,
+                        right: 20,
+                        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+                      ),
                       child: CarePlanCard(
                         carePlan: widget.carePlans[index],
                         patientDetail: widget.patientDetail,
@@ -4047,6 +4549,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onTap: () => FocusScope.of(context).unfocus(),
       child: Container(
         decoration: BoxDecoration(
@@ -4065,6 +4568,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
           ],
         ),
         child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Care Plan Header
@@ -6834,51 +7338,55 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // Sub-tab bar
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: TabBar(
-            controller: _subTabController,
-            indicator: BoxDecoration(
-              color: AppColors.primaryGreen,
-              borderRadius: BorderRadius.circular(10),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      behavior: HitTestBehavior.translucent,
+      child: Column(
+        children: [
+          // Sub-tab bar
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
             ),
-            indicatorSize: TabBarIndicatorSize.tab,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.grey[600],
-            labelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+            child: TabBar(
+              controller: _subTabController,
+              indicator: BoxDecoration(
+                color: AppColors.primaryGreen,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              indicatorSize: TabBarIndicatorSize.tab,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.grey[600],
+              labelStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              padding: const EdgeInsets.all(4),
+              tabs: const [
+                Tab(text: 'Progress Notes'),
+                Tab(text: 'Care Plan Entries'),
+              ],
             ),
-            unselectedLabelStyle: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+          ),
+          const SizedBox(height: 8),
+          // Sub-tab content
+          Expanded(
+            child: TabBarView(
+              controller: _subTabController,
+              children: [
+                _buildProgressNotesContent(),
+                _buildCarePlanEntriesContent(),
+              ],
             ),
-            padding: const EdgeInsets.all(4),
-            tabs: const [
-              Tab(text: 'Progress Notes'),
-              Tab(text: 'Care Plan Entries'),
-            ],
           ),
-        ),
-        const SizedBox(height: 8),
-        // Sub-tab content
-        Expanded(
-          child: TabBarView(
-            controller: _subTabController,
-            children: [
-              _buildProgressNotesContent(),
-              _buildCarePlanEntriesContent(),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -7013,10 +7521,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
           ),
           const SizedBox(height: 16),
           if (_carePlanEntries.isNotEmpty)
-            ..._carePlanEntries.map((entry) => _CollapsibleCarePlanEntryCard(
-              entry: entry,
-              formatDate: _formatDate,
-            )).toList()
+            ..._buildGroupedEntryCards()
           else
             _buildEmptyState(
               icon: Icons.assignment_outlined,
@@ -7028,6 +7533,45 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
     );
   }
 
+  /// Group entries by carePlanId and entryDate to show intervention & evaluation together
+  List<Widget> _buildGroupedEntryCards() {
+    // Group entries by carePlanId + entryDate (or createdAt date)
+    final Map<String, List<CarePlanEntry>> groupedEntries = {};
+
+    for (final entry in _carePlanEntries) {
+      // Create a grouping key using carePlanId and entry date
+      final dateKey = entry.entryDate ??
+          (entry.createdAt != null ? entry.createdAt!.split('T')[0] : 'unknown');
+      final groupKey = '${entry.carePlanId ?? 0}_$dateKey';
+
+      if (!groupedEntries.containsKey(groupKey)) {
+        groupedEntries[groupKey] = [];
+      }
+      groupedEntries[groupKey]!.add(entry);
+    }
+
+    // Sort groups by most recent first
+    final sortedGroups = groupedEntries.entries.toList()
+      ..sort((a, b) {
+        final aDate = a.value.first.createdAt ?? '';
+        final bDate = b.value.first.createdAt ?? '';
+        return bDate.compareTo(aDate);
+      });
+
+    return sortedGroups.map((group) {
+      final entries = group.value;
+      // Find intervention and evaluation entries
+      final intervention = entries.where((e) => e.type == 'intervention').toList();
+      final evaluation = entries.where((e) => e.type == 'evaluation').toList();
+
+      return _CollapsibleCarePlanEntryCard(
+        entries: entries,
+        interventionEntry: intervention.isNotEmpty ? intervention.first : null,
+        evaluationEntry: evaluation.isNotEmpty ? evaluation.first : null,
+        formatDate: _formatDate,
+      );
+    }).toList();
+  }
 
   Widget _buildEmptyState({
     required IconData icon,
@@ -7096,11 +7640,15 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
 
 // Collapsible Care Plan Entry Card Widget
 class _CollapsibleCarePlanEntryCard extends StatefulWidget {
-  final CarePlanEntry entry;
+  final List<CarePlanEntry> entries;
+  final CarePlanEntry? interventionEntry;
+  final CarePlanEntry? evaluationEntry;
   final String Function(String) formatDate;
 
   const _CollapsibleCarePlanEntryCard({
-    required this.entry,
+    required this.entries,
+    required this.interventionEntry,
+    required this.evaluationEntry,
     required this.formatDate,
   });
 
@@ -7146,16 +7694,18 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
 
   @override
   Widget build(BuildContext context) {
-    final entry = widget.entry;
+    // Use the first entry for header info
+    final firstEntry = widget.entries.first;
+    final intervention = widget.interventionEntry;
+    final evaluation = widget.evaluationEntry;
 
     // Use formatted date from API or fallback to parsing created_at
-    final formattedDate = entry.entryDateFormatted ??
-        (entry.createdAt != null ? widget.formatDate(entry.createdAt!) : 'Unknown date');
+    final formattedDate = firstEntry.entryDateFormatted ??
+        (firstEntry.createdAt != null ? widget.formatDate(firstEntry.createdAt!) : 'Unknown date');
 
-    // Determine color based on entry type
-    final isIntervention = entry.type == 'intervention';
-    final typeColor = isIntervention ? AppColors.primaryGreen : const Color(0xFFFF9A00);
-    final typeIcon = isIntervention ? Icons.medical_services_outlined : Icons.assessment_outlined;
+    // Use a unified color for care plan entries
+    const typeColor = AppColors.primaryGreen;
+    const typeIcon = Icons.assignment_outlined;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -7207,7 +7757,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                       color: typeColor.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       typeIcon,
                       color: typeColor,
                       size: 20,
@@ -7218,37 +7768,15 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                entry.carePlanTitle ?? 'Care Plan Entry',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1A1A1A),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            // Type badge
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: typeColor.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                entry.typeLabel ?? (isIntervention ? 'Intervention' : 'Evaluation'),
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: typeColor,
-                                ),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          firstEntry.carePlanTitle ?? 'Care Plan Entry',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 4),
                         Row(
@@ -7262,12 +7790,12 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                                 color: Colors.grey[600],
                               ),
                             ),
-                            if (entry.entryTimeFormatted != null) ...[
+                            if (firstEntry.entryTimeFormatted != null) ...[
                               const SizedBox(width: 8),
                               Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
                               const SizedBox(width: 4),
                               Text(
-                                entry.entryTimeFormatted!,
+                                firstEntry.entryTimeFormatted!,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -7294,44 +7822,53 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
               ),
             ),
           ),
-          // Content - Notes (Collapsible)
+          // Content - Intervention & Evaluation (Collapsible)
           SizeTransition(
             sizeFactor: _expandAnimation,
-            child: Column(
-              children: [
-                if (entry.notes != null && entry.notes!.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Intervention Section
+                  if (intervention != null) ...[
+                    _buildEntrySection(
+                      'Nurse Intervention',
+                      intervention.notes,
+                      Icons.medical_services_outlined,
+                      AppColors.primaryGreen,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  // Evaluation Section
+                  if (evaluation != null) ...[
+                    _buildEntrySection(
+                      'Evaluation',
+                      evaluation.notes,
+                      Icons.assessment_outlined,
+                      const Color(0xFFFF9A00),
+                    ),
+                  ],
+                  // Show nurse info if available
+                  if (firstEntry.nurse != null) ...[
+                    const SizedBox(height: 12),
+                    Row(
                       children: [
-                        _buildEntryField(
-                          isIntervention ? 'Nurse Intervention' : 'Evaluation',
-                          entry.notes!,
-                          color: typeColor,
-                        ),
-                        // Show nurse info if available
-                        if (entry.nurse != null) ...[
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
-                              const SizedBox(width: 6),
-                              Text(
-                                'By ${entry.nurse!.name}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.grey[600],
-                                  fontStyle: FontStyle.italic,
-                                ),
-                              ),
-                            ],
+                        Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
+                        const SizedBox(width: 6),
+                        Text(
+                          'By ${firstEntry.nurse!.name}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
                           ),
-                        ],
+                        ),
                       ],
                     ),
-                  ),
-              ],
+                  ],
+                ],
+              ),
             ),
           ),
         ],
@@ -7339,54 +7876,298 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
     );
   }
 
-  Widget _buildEntryField(String label, String value, {Color? color}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+  Widget _buildEntrySection(String title, String? content, IconData icon, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              if (color != null)
-                Container(
-                  width: 4,
-                  height: 14,
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 8),
               Text(
-                label,
+                title,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: color ?? Colors.grey[500],
+                  color: color,
                   letterSpacing: 0.3,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: (color ?? Colors.grey[500])!.withOpacity(0.05),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: (color ?? Colors.grey[300])!.withOpacity(0.2),
-              ),
+          const SizedBox(height: 8),
+          Text(
+            content?.isNotEmpty == true ? content! : '-',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[800],
+              height: 1.5,
             ),
-            child: Text(
-              value,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[700],
-                height: 1.4,
+          ),
+        ],
+      ),
+    );
+  }
+
+}
+
+// ==================== PATIENT DETAILS SCREEN ====================
+class PatientDetailsScreen extends StatefulWidget {
+  final PatientDetail patientDetail;
+  final Set<int> expandedNotes;
+  final void Function(ProgressNote note, PatientDetail patientDetail) onEditProgressNote;
+  final Widget Function(PatientDetail patientDetail) buildDetailsTab;
+  final Widget Function(PatientDetail patientDetail, StateSetter setModalState) buildCarePlanTab;
+  final Widget Function(PatientDetail patientDetail) buildHistoryTab;
+  final Future<void> Function(int carePlanId, int taskIndex, bool isCompleted, PatientDetail patientDetail, StateSetter modalSetState) onToggleTask;
+
+  const PatientDetailsScreen({
+    Key? key,
+    required this.patientDetail,
+    required this.expandedNotes,
+    required this.onEditProgressNote,
+    required this.buildDetailsTab,
+    required this.buildCarePlanTab,
+    required this.buildHistoryTab,
+    required this.onToggleTask,
+  }) : super(key: key);
+
+  @override
+  State<PatientDetailsScreen> createState() => _PatientDetailsScreenState();
+}
+
+class _PatientDetailsScreenState extends State<PatientDetailsScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  PatientDetail get patientDetail => widget.patientDetail;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority.toLowerCase()) {
+      case 'critical':
+        return const Color(0xFFDC2626);
+      case 'high':
+        return const Color(0xFFFF4757);
+      case 'medium':
+        return const Color(0xFFFF9A00);
+      case 'low':
+        return const Color(0xFF199A8E);
+      default:
+        return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              _buildHeader(),
+              // Tab Bar
+              _buildTabBar(),
+              // Tab Content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    widget.buildDetailsTab(patientDetail),
+                    DailyProgressNoteForm(patientDetail: patientDetail),
+                    StatefulBuilder(
+                      builder: (context, setModalState) {
+                        return widget.buildCarePlanTab(patientDetail, setModalState);
+                      },
+                    ),
+                    widget.buildHistoryTab(patientDetail),
+                  ],
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primaryGreen.withOpacity(0.05),
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // Back button
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back_ios),
+                color: Colors.grey[800],
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 12),
+              // Patient Avatar
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: CachedNetworkImage(
+                  imageUrl: patientDetail.avatar,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    width: 60,
+                    height: 60,
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.primaryGreen,
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) {
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Center(
+                        child: Text(
+                          patientDetail.name.isNotEmpty
+                              ? patientDetail.name.substring(0, 1)
+                              : '?',
+                          style: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryGreen,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      patientDetail.name,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${patientDetail.age ?? 'N/A'} years old • ${patientDetail.gender ?? 'N/A'}',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF666666),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(patientDetail.carePlan.priority),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${patientDetail.carePlan.priority} Priority',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[200]!, width: 1),
+        ),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        indicatorColor: AppColors.primaryGreen,
+        indicatorWeight: 3,
+        labelColor: AppColors.primaryGreen,
+        unselectedLabelColor: Colors.grey,
+        labelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.2,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+        tabs: const [
+          Tab(
+            icon: Icon(Icons.info_outline, size: 20),
+            text: 'Details',
+          ),
+          Tab(
+            icon: Icon(Icons.note_add_outlined, size: 20),
+            text: 'Daily Note',
+          ),
+          Tab(
+            icon: Icon(Icons.assignment_outlined, size: 20),
+            text: 'Care Plan',
+          ),
+          Tab(
+            icon: Icon(Icons.history, size: 20),
+            text: 'History',
           ),
         ],
       ),

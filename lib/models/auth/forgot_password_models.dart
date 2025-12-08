@@ -1,74 +1,54 @@
-// Forgot Password Request
+// Forgot Password Request (Mobile - SMS based)
 class ForgotPasswordRequest {
-  final String contact; // email or phone
-  final String contactType; // 'email' or 'phone'
+  final String phone;
 
-  ForgotPasswordRequest({
-    required this.contact,
-    required this.contactType,
-  });
+  ForgotPasswordRequest({required this.phone});
 
-  Map<String, dynamic> toJson() => {
-        'contact': contact,
-        'contact_type': contactType,
-      };
+  Map<String, dynamic> toJson() => {'phone': phone};
 }
 
-// Verify OTP Request - UPDATED to support both email and phone
+// Verify OTP Request
 class VerifyOtpRequest {
-  final String contact; // email or phone
-  final String contactType; // 'email' or 'phone'
+  final String phone;
   final String otp;
 
   VerifyOtpRequest({
-    required this.contact,
-    required this.contactType,
+    required this.phone,
     required this.otp,
   });
 
   Map<String, dynamic> toJson() => {
-        'contact': contact,
-        'contact_type': contactType,
+        'phone': phone,
         'otp': otp,
       };
 }
 
-// Resend OTP Request - UPDATED to support both email and phone
+// Resend OTP Request
 class ResendOtpRequest {
-  final String contact; // email or phone
-  final String contactType; // 'email' or 'phone'
+  final String phone;
 
-  ResendOtpRequest({
-    required this.contact,
-    required this.contactType,
-  });
+  ResendOtpRequest({required this.phone});
 
-  Map<String, dynamic> toJson() => {
-        'contact': contact,
-        'contact_type': contactType,
-      };
+  Map<String, dynamic> toJson() => {'phone': phone};
 }
 
 // Reset Password Request
 class ResetPasswordRequest {
+  final String phone;
   final String token;
-  final String contact; // email or phone
-  final String contactType; // 'email' or 'phone'
   final String password;
   final String passwordConfirmation;
 
   ResetPasswordRequest({
+    required this.phone,
     required this.token,
-    required this.contact,
-    required this.contactType,
     required this.password,
     required this.passwordConfirmation,
   });
 
   Map<String, dynamic> toJson() => {
+        'phone': phone,
         'token': token,
-        'contact': contact,
-        'contact_type': contactType,
         'password': password,
         'password_confirmation': passwordConfirmation,
       };
@@ -99,15 +79,11 @@ class ForgotPasswordResponse {
 
 // Forgot Password Data
 class ForgotPasswordData {
-  final String contactType;
-  final String? email; // masked email
   final String? phone; // masked phone number
   final bool requiresVerification;
   final int expiresIn; // minutes
 
   ForgotPasswordData({
-    required this.contactType,
-    this.email,
     this.phone,
     required this.requiresVerification,
     required this.expiresIn,
@@ -115,11 +91,9 @@ class ForgotPasswordData {
 
   factory ForgotPasswordData.fromJson(Map<String, dynamic> json) {
     return ForgotPasswordData(
-      contactType: json['contact_type'] as String,
-      email: json['email'] as String?,
       phone: json['phone'] as String?,
       requiresVerification: json['requires_verification'] as bool? ?? true,
-      expiresIn: json['expires_in'] as int,
+      expiresIn: json['expires_in'] as int? ?? 10,
     );
   }
 }
@@ -150,23 +124,20 @@ class VerifyOtpResponse {
 // Verify OTP Data
 class VerifyOtpData {
   final String resetToken;
-  final String contact;
-  final String contactType;
+  final String phone;
   final int expiresIn;
 
   VerifyOtpData({
     required this.resetToken,
-    required this.contact,
-    required this.contactType,
+    required this.phone,
     required this.expiresIn,
   });
 
   factory VerifyOtpData.fromJson(Map<String, dynamic> json) {
     return VerifyOtpData(
-      resetToken: json['reset_token'] as String,
-      contact: json['contact'] as String,
-      contactType: json['contact_type'] as String,
-      expiresIn: json['expires_in'] as int,
+      resetToken: json['reset_token'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      expiresIn: json['expires_in'] as int? ?? 10,
     );
   }
 }

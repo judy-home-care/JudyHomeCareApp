@@ -62,9 +62,15 @@ class ScheduleVisit {
   final int id;
   final String date;
   final String dateDisplay;
+  final String startDate;
+  final String endDate;
+  final String startDateDisplay;
+  final String endDateDisplay;
   final String time;
   final String? endTime;
-  final String duration;
+  final String dailyDuration;
+  final String assignmentDuration;
+  final String? timeCompleted;
   final String status;
   final String carePlanTitle;
   final String careType;
@@ -76,9 +82,15 @@ class ScheduleVisit {
     required this.id,
     required this.date,
     required this.dateDisplay,
+    required this.startDate,
+    required this.endDate,
+    required this.startDateDisplay,
+    required this.endDateDisplay,
     required this.time,
     this.endTime,
-    required this.duration,
+    required this.dailyDuration,
+    required this.assignmentDuration,
+    this.timeCompleted,
     required this.status,
     required this.carePlanTitle,
     required this.careType,
@@ -87,20 +99,45 @@ class ScheduleVisit {
     this.patient,
   });
 
+  /// Check if this is a multi-day assignment
+  bool get isMultiDay => startDate != endDate;
+
+  /// Get formatted date range display
+  String get dateRangeDisplay {
+    if (isMultiDay) {
+      return '$startDateDisplay - $endDateDisplay';
+    }
+    return startDateDisplay;
+  }
+
+  /// Get formatted time range display
+  String get timeRangeDisplay {
+    if (endTime != null && endTime!.isNotEmpty) {
+      return '$time - $endTime';
+    }
+    return time;
+  }
+
   factory ScheduleVisit.fromJson(Map<String, dynamic> json) {
     return ScheduleVisit(
       id: json['id'] as int,
-      date: json['date'] as String,
-      dateDisplay: json['dateDisplay'] as String,
-      time: json['time'] as String,
+      date: json['date'] as String? ?? '',
+      dateDisplay: json['dateDisplay'] as String? ?? '',
+      startDate: json['startDate'] as String? ?? json['date'] as String? ?? '',
+      endDate: json['endDate'] as String? ?? json['date'] as String? ?? '',
+      startDateDisplay: json['startDateDisplay'] as String? ?? json['dateDisplay'] as String? ?? '',
+      endDateDisplay: json['endDateDisplay'] as String? ?? json['dateDisplay'] as String? ?? '',
+      time: json['time'] as String? ?? '',
       endTime: json['endTime'] as String?,
-      duration: json['duration'] as String,
-      status: json['status'] as String,
+      dailyDuration: json['dailyDuration'] as String? ?? json['duration'] as String? ?? '',
+      assignmentDuration: json['assignmentDuration'] as String? ?? '',
+      timeCompleted: json['timeCompleted'] as String?,
+      status: json['status'] as String? ?? 'scheduled',
       carePlanTitle: json['carePlanTitle'] as String? ?? 'Care Plan Visit',
-      careType: json['careType'] as String,
-      priority: json['priority'] as String,
-      location: json['location'] as String,
-      patient: json['patient'] != null 
+      careType: json['careType'] as String? ?? 'general_care',
+      priority: json['priority'] as String? ?? 'medium',
+      location: json['location'] as String? ?? '',
+      patient: json['patient'] != null
           ? PatientInfo.fromJson(json['patient'] as Map<String, dynamic>)
           : null,
     );
@@ -134,13 +171,18 @@ class UpcomingPatient {
   final int scheduleId;
   final String scheduledTime;
   final String scheduledDate;
+  final String startDate;
+  final String endDate;
+  final String startDateDisplay;
+  final String endDateDisplay;
   final String timeUntil;
   final bool isToday;
   final String? endTime;
   final String careType;
   final String priority;
   final String location;
-  final String duration;
+  final String dailyDuration;
+  final String assignmentDuration;
   final List<ScheduleInfo> upcomingSchedules;
   final int totalSchedules;
   final UpcomingPatientDetails? patient;
@@ -149,35 +191,64 @@ class UpcomingPatient {
     required this.scheduleId,
     required this.scheduledTime,
     required this.scheduledDate,
+    required this.startDate,
+    required this.endDate,
+    required this.startDateDisplay,
+    required this.endDateDisplay,
     required this.timeUntil,
-    this.endTime, 
+    this.endTime,
     required this.isToday,
     required this.careType,
     required this.priority,
     required this.location,
-    required this.duration,
+    required this.dailyDuration,
+    required this.assignmentDuration,
     required this.upcomingSchedules,
     required this.totalSchedules,
     this.patient,
   });
 
+  /// Check if this is a multi-day assignment
+  bool get isMultiDay => startDate != endDate;
+
+  /// Get formatted date range display
+  String get dateRangeDisplay {
+    if (isMultiDay) {
+      return '$startDateDisplay - $endDateDisplay';
+    }
+    return startDateDisplay;
+  }
+
+  /// Get formatted time range display
+  String get timeRangeDisplay {
+    if (endTime != null && endTime!.isNotEmpty) {
+      return '$scheduledTime - $endTime';
+    }
+    return scheduledTime;
+  }
+
   factory UpcomingPatient.fromJson(Map<String, dynamic> json) {
     return UpcomingPatient(
       scheduleId: json['scheduleId'] as int,
-      scheduledTime: json['scheduledTime'] as String,
-      scheduledDate: json['scheduledDate'] as String,
-      timeUntil: json['timeUntil'] as String,
+      scheduledTime: json['scheduledTime'] as String? ?? '',
+      scheduledDate: json['scheduledDate'] as String? ?? '',
+      startDate: json['startDate'] as String? ?? json['scheduledDate'] as String? ?? '',
+      endDate: json['endDate'] as String? ?? json['scheduledDate'] as String? ?? '',
+      startDateDisplay: json['startDateDisplay'] as String? ?? json['scheduledDate'] as String? ?? '',
+      endDateDisplay: json['endDateDisplay'] as String? ?? json['scheduledDate'] as String? ?? '',
+      timeUntil: json['timeUntil'] as String? ?? '',
       endTime: json['endTime'] as String?,
-      isToday: json['isToday'] as bool,
-      careType: json['careType'] as String,
-      priority: json['priority'] as String,
-      location: json['location'] as String,
-      duration: json['duration'] as String,
+      isToday: json['isToday'] as bool? ?? false,
+      careType: json['careType'] as String? ?? 'general_care',
+      priority: json['priority'] as String? ?? 'medium',
+      location: json['location'] as String? ?? '',
+      dailyDuration: json['dailyDuration'] as String? ?? json['duration'] as String? ?? '',
+      assignmentDuration: json['assignmentDuration'] as String? ?? '',
       upcomingSchedules: (json['upcomingSchedules'] as List<dynamic>?)
           ?.map((e) => ScheduleInfo.fromJson(e as Map<String, dynamic>))
           .toList() ?? [],
       totalSchedules: json['totalSchedules'] as int? ?? 1,
-      patient: json['patient'] != null 
+      patient: json['patient'] != null
           ? UpcomingPatientDetails.fromJson(json['patient'] as Map<String, dynamic>)
           : null,
     );
@@ -224,36 +295,70 @@ class ScheduleInfo {
   final int scheduleId;
   final String scheduledTime;
   final String scheduledDate;
+  final String startDate;
+  final String endDate;
+  final String startDateDisplay;
+  final String endDateDisplay;
   final String? endTime;
   final String timeUntil;
   final bool isToday;
   final String careType;
   final String location;
-  final String duration;
+  final String dailyDuration;
+  final String assignmentDuration;
 
   ScheduleInfo({
     required this.scheduleId,
     required this.scheduledTime,
     required this.scheduledDate,
+    required this.startDate,
+    required this.endDate,
+    required this.startDateDisplay,
+    required this.endDateDisplay,
     this.endTime,
     required this.timeUntil,
     required this.isToday,
     required this.careType,
     required this.location,
-    required this.duration,
+    required this.dailyDuration,
+    required this.assignmentDuration,
   });
+
+  /// Check if this is a multi-day assignment
+  bool get isMultiDay => startDate != endDate;
+
+  /// Get formatted date range display
+  String get dateRangeDisplay {
+    if (isMultiDay) {
+      return '$startDateDisplay - $endDateDisplay';
+    }
+    return startDateDisplay;
+  }
+
+  /// Get formatted time range display
+  String get timeRangeDisplay {
+    if (endTime != null && endTime!.isNotEmpty) {
+      return '$scheduledTime - $endTime';
+    }
+    return scheduledTime;
+  }
 
   factory ScheduleInfo.fromJson(Map<String, dynamic> json) {
     return ScheduleInfo(
       scheduleId: json['scheduleId'] as int,
-      scheduledTime: json['scheduledTime'] as String,
-      scheduledDate: json['scheduledDate'] as String,
-      timeUntil: json['timeUntil'] as String,
+      scheduledTime: json['scheduledTime'] as String? ?? '',
+      scheduledDate: json['scheduledDate'] as String? ?? '',
+      startDate: json['startDate'] as String? ?? json['scheduledDate'] as String? ?? '',
+      endDate: json['endDate'] as String? ?? json['scheduledDate'] as String? ?? '',
+      startDateDisplay: json['startDateDisplay'] as String? ?? json['scheduledDate'] as String? ?? '',
+      endDateDisplay: json['endDateDisplay'] as String? ?? json['scheduledDate'] as String? ?? '',
+      timeUntil: json['timeUntil'] as String? ?? '',
       endTime: json['endTime'] as String?,
-      isToday: json['isToday'] as bool,
-      careType: json['careType'] as String,
-      location: json['location'] as String,
-      duration: json['duration'] as String,
+      isToday: json['isToday'] as bool? ?? false,
+      careType: json['careType'] as String? ?? 'general_care',
+      location: json['location'] as String? ?? '',
+      dailyDuration: json['dailyDuration'] as String? ?? json['duration'] as String? ?? '',
+      assignmentDuration: json['assignmentDuration'] as String? ?? '',
     );
   }
 }
