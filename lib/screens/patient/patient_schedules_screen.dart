@@ -2894,6 +2894,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
     final reasonController = TextEditingController();
     final notesController = TextEditingController();
     DateTime? preferredDate;
+    DateTime? preferredEndDate;
     String? preferredTime;
     bool isSubmitting = false;
 
@@ -2921,16 +2922,22 @@ void _showScheduleDetails(ScheduleItem schedule) {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) => Container(
-          height: MediaQuery.of(context).size.height * 0.85,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
+        builder: (context, setModalState) => GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
-          ),
-          child: Column(
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
             children: [
               // Header
               Container(
@@ -3185,9 +3192,9 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       const SizedBox(height: 24),
 
                       // Preferred Date
-                      const Text(
-                        'Preferred New Date (Optional)',
-                        style: TextStyle(
+                      Text(
+                        schedule.isMultiDay ? 'Preferred Start Date (Optional)' : 'Preferred New Date (Optional)',
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF1A1A1A),
@@ -3215,6 +3222,10 @@ void _showScheduleDetails(ScheduleItem schedule) {
                           if (date != null) {
                             setModalState(() {
                               preferredDate = date;
+                              // Reset end date if it's before the new start date
+                              if (preferredEndDate != null && preferredEndDate!.isBefore(date)) {
+                                preferredEndDate = null;
+                              }
                             });
                           }
                         },
@@ -3239,7 +3250,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                 child: Text(
                                   preferredDate != null
                                       ? DateFormat('EEEE, MMMM d, yyyy').format(preferredDate!)
-                                      : 'Select preferred date',
+                                      : schedule.isMultiDay ? 'Select preferred start date' : 'Select preferred date',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: preferredDate != null
@@ -3253,6 +3264,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                   onTap: () {
                                     setModalState(() {
                                       preferredDate = null;
+                                      preferredEndDate = null;
                                     });
                                   },
                                   child: Icon(
@@ -3265,6 +3277,93 @@ void _showScheduleDetails(ScheduleItem schedule) {
                           ),
                         ),
                       ),
+
+                      // Preferred End Date (only for multi-day schedules)
+                      if (schedule.isMultiDay) ...[
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Preferred End Date (Optional)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: () async {
+                            // End date must be on or after start date
+                            final minDate = preferredDate ?? DateTime.now().add(const Duration(days: 1));
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: preferredEndDate ?? minDate,
+                              firstDate: minDate,
+                              lastDate: DateTime.now().add(const Duration(days: 90)),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: const ColorScheme.light(
+                                      primary: AppColors.primaryGreen,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (date != null) {
+                              setModalState(() {
+                                preferredEndDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.event,
+                                  size: 20,
+                                  color: preferredEndDate != null
+                                      ? AppColors.primaryGreen
+                                      : Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    preferredEndDate != null
+                                        ? DateFormat('EEEE, MMMM d, yyyy').format(preferredEndDate!)
+                                        : 'Select preferred end date',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: preferredEndDate != null
+                                          ? const Color(0xFF1A1A1A)
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ),
+                                if (preferredEndDate != null)
+                                  GestureDetector(
+                                    onTap: () {
+                                      setModalState(() {
+                                        preferredEndDate = null;
+                                      });
+                                    },
+                                    child: Icon(
+                                      Icons.clear,
+                                      size: 18,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
 
                       const SizedBox(height: 24),
 
@@ -3454,6 +3553,9 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                 preferredDate: preferredDate != null
                                     ? DateFormat('yyyy-MM-dd').format(preferredDate!)
                                     : null,
+                                preferredEndDate: preferredEndDate != null
+                                    ? DateFormat('yyyy-MM-dd').format(preferredEndDate!)
+                                    : null,
                                 preferredTime: preferredTime,
                                 additionalNotes: notesController.text.trim(),
                               );
@@ -3578,10 +3680,12 @@ void _showScheduleDetails(ScheduleItem schedule) {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
-    Color _getStatusColor(String status) {
+  Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'completed':
         return Colors.green;

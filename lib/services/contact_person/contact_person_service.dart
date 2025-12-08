@@ -166,23 +166,42 @@ class ContactPersonService {
   }
 
   /// Request reschedule
+  ///
+  /// API Body format:
+  /// - Single period: {"reason": "...", "preferred_date": "2025-12-15", "preferred_time": "Morning", "additional_notes": "..."}
+  /// - Multi-period: adds "preferred_end_date": "2025-12-20" (must be >= preferred_date)
   Future<Map<String, dynamic>> requestReschedule({
     required int scheduleId,
-    required String requestedDate,
-    required String requestedTime,
     required String reason,
+    String? preferredDate,
+    String? preferredEndDate,
+    String? preferredTime,
+    String? additionalNotes,
   }) async {
     try {
       final patientId = await _getPatientId();
       debugPrint('[ContactPersonService] Requesting reschedule for schedule $scheduleId...');
 
+      final body = <String, dynamic>{
+        'reason': reason,
+      };
+
+      if (preferredDate != null) {
+        body['preferred_date'] = preferredDate;
+      }
+      if (preferredEndDate != null) {
+        body['preferred_end_date'] = preferredEndDate;
+      }
+      if (preferredTime != null) {
+        body['preferred_time'] = preferredTime;
+      }
+      if (additionalNotes != null && additionalNotes.isNotEmpty) {
+        body['additional_notes'] = additionalNotes;
+      }
+
       final response = await _apiClient.post(
         ApiConfig.contactPersonRequestRescheduleEndpoint(patientId, scheduleId),
-        body: {
-          'requested_date': requestedDate,
-          'requested_time': requestedTime,
-          'reason': reason,
-        },
+        body: body,
         requiresAuth: true,
       );
 

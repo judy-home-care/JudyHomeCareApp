@@ -5457,53 +5457,8 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
       );
     }
     
-    // Stage 2 Hypertension: Systolic ≥140 OR Diastolic ≥90
-    if (systolic >= 140 || diastolic >= 90) {
-      return const VitalValidationResult(
-        status: VitalStatus.high,
-        message: 'Stage 2 Hypertension (≥140/≥90)',
-        color: Color(0xFFFF4757),
-        icon: Icons.arrow_upward,
-      );
-    }
-    
-    // Stage 1 Hypertension: Systolic 130-139
-    if (systolic >= 130) {
-      return const VitalValidationResult(
-        status: VitalStatus.high,
-        message: 'Stage 1 Hypertension (130-139)',
-        color: Color(0xFFFF9A00),
-        icon: Icons.trending_up,
-      );
-    }
-    
-    // Elevated: Systolic 120-129
-    if (systolic >= 120) {
-      return const VitalValidationResult(
-        status: VitalStatus.high,
-        message: 'Elevated (120-129)',
-        color: Color(0xFFFFB347),
-        icon: Icons.trending_up,
-      );
-    }
-    
-    // Low Blood Pressure: Systolic <90 OR Diastolic <60
-    if (systolic < 90 || diastolic < 60) {
-      return const VitalValidationResult(
-        status: VitalStatus.low,
-        message: 'Low Blood Pressure (Hypotension)',
-        color: Color(0xFF2196F3),
-        icon: Icons.arrow_downward,
-      );
-    }
-    
-    // Normal: Systolic <120
-    return const VitalValidationResult(
-      status: VitalStatus.normal,
-      message: 'Normal (<120)',
-      color: Color(0xFF199A8E),
-      icon: Icons.check_circle,
-    );
+    // Valid blood pressure format
+    return null;
   }
 
   VitalValidationResult? _validateVital(String vitalType, String value) {

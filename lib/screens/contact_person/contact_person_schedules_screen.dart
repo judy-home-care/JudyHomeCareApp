@@ -1640,6 +1640,68 @@ class ContactPersonSchedulesScreenState
                       ),
                     ],
                     const SizedBox(height: 32),
+
+                    // Request Reschedule button (only for non-completed/cancelled schedules)
+                    if (!schedule.isCompleted &&
+                        schedule.status != 'cancelled' &&
+                        schedule.status != 'in_progress' &&
+                        !schedule.hasPendingRescheduleRequest) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showRescheduleRequestSheet(schedule);
+                          },
+                          icon: const Icon(Icons.schedule_send, size: 20),
+                          label: const Text('Request Reschedule'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: const Color(0xFFFF9A00),
+                            side: const BorderSide(
+                              color: Color(0xFFFF9A00),
+                              width: 2,
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+
+                    // Pending reschedule notice
+                    if (schedule.hasPendingRescheduleRequest) ...[
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF9E6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFFFE082)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.hourglass_top,
+                              color: Color(0xFFFF9A00),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'A reschedule request is pending review',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ],
                 ),
               ),
@@ -2037,5 +2099,776 @@ class ContactPersonSchedulesScreenState
         ),
       ),
     );
+  }
+
+  // ==================== RESCHEDULE REQUEST ====================
+
+  void _showRescheduleRequestSheet(ScheduleItem schedule) {
+    final reasonController = TextEditingController();
+    final notesController = TextEditingController();
+    DateTime? preferredDate;
+    DateTime? preferredEndDate;
+    String? preferredTime;
+    bool isSubmitting = false;
+
+    final List<String> timePreferences = [
+      'Morning (8AM - 12PM)',
+      'Afternoon (12PM - 4PM)',
+      'Evening (4PM - 8PM)',
+      'Same time as original',
+      'Any time',
+    ];
+
+    final List<String> commonReasons = [
+      'Schedule conflict',
+      'Medical appointment',
+      'Travel/Out of town',
+      'Family emergency',
+      'Work commitment',
+      'Other',
+    ];
+
+    String? selectedReason;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Container(
+              height: MediaQuery.of(context).size.height * 0.85,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+              ),
+              child: Column(
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFB),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(24),
+                        topRight: Radius.circular(24),
+                      ),
+                    ),
+                child: Column(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade300,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9A00).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.schedule_send,
+                            color: Color(0xFFFF9A00),
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Request Reschedule',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Visit on ${DateFormat('MMM d, yyyy').format(schedule.date)}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Form Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Current Schedule Info
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _primaryColor.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: _primaryColor.withOpacity(0.2),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.event,
+                                  size: 16,
+                                  color: _primaryColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'Current Schedule',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: _primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        DateFormat('EEEE, MMMM d').format(schedule.date),
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF1A1A1A),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${schedule.startTime} - ${schedule.endTime}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    schedule.shiftType,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF1A1A1A),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Reason Selection
+                      const Text(
+                        'Reason for Reschedule *',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: commonReasons.map((reason) {
+                          final isSelected = selectedReason == reason;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                selectedReason = reason;
+                                if (reason != 'Other') {
+                                  reasonController.text = reason;
+                                } else {
+                                  reasonController.clear();
+                                }
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? _primaryColor
+                                    : Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? _primaryColor
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                              child: Text(
+                                reason,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF636E72),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      if (selectedReason == 'Other') ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: reasonController,
+                          maxLines: 2,
+                          decoration: InputDecoration(
+                            hintText: 'Please specify your reason...',
+                            filled: true,
+                            fillColor: Colors.grey.shade50,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade300),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: _primaryColor,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Preferred Date
+                      Text(
+                        schedule.isMultiDay ? 'Preferred Start Date (Optional)' : 'Preferred New Date (Optional)',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: schedule.date.add(const Duration(days: 1)),
+                            firstDate: DateTime.now().add(const Duration(days: 1)),
+                            lastDate: DateTime.now().add(const Duration(days: 90)),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: const ColorScheme.light(
+                                    primary: _primaryColor,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (date != null) {
+                            setModalState(() {
+                              preferredDate = date;
+                              // Reset end date if it's before the new start date
+                              if (preferredEndDate != null && preferredEndDate!.isBefore(date)) {
+                                preferredEndDate = null;
+                              }
+                            });
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                size: 20,
+                                color: preferredDate != null
+                                    ? _primaryColor
+                                    : Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  preferredDate != null
+                                      ? DateFormat('EEEE, MMMM d, yyyy').format(preferredDate!)
+                                      : schedule.isMultiDay ? 'Select preferred start date' : 'Select preferred date',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: preferredDate != null
+                                        ? const Color(0xFF1A1A1A)
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                              if (preferredDate != null)
+                                GestureDetector(
+                                  onTap: () {
+                                    setModalState(() {
+                                      preferredDate = null;
+                                      preferredEndDate = null;
+                                    });
+                                  },
+                                  child: Icon(
+                                    Icons.clear,
+                                    size: 18,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      // Preferred End Date (only for multi-day schedules)
+                      if (schedule.isMultiDay) ...[
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Preferred End Date (Optional)',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF1A1A1A),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        GestureDetector(
+                          onTap: () async {
+                            // End date must be on or after start date
+                            final minDate = preferredDate ?? DateTime.now().add(const Duration(days: 1));
+                            final date = await showDatePicker(
+                              context: context,
+                              initialDate: preferredEndDate ?? minDate,
+                              firstDate: minDate,
+                              lastDate: DateTime.now().add(const Duration(days: 90)),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: Theme.of(context).copyWith(
+                                    colorScheme: const ColorScheme.light(
+                                      primary: _primaryColor,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (date != null) {
+                              setModalState(() {
+                                preferredEndDate = date;
+                              });
+                            }
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.event,
+                                  size: 20,
+                                  color: preferredEndDate != null
+                                      ? _primaryColor
+                                      : Colors.grey.shade600,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    preferredEndDate != null
+                                        ? DateFormat('EEEE, MMMM d, yyyy').format(preferredEndDate!)
+                                        : 'Select preferred end date',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: preferredEndDate != null
+                                          ? const Color(0xFF1A1A1A)
+                                          : Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ),
+                                if (preferredEndDate != null)
+                                  GestureDetector(
+                                    onTap: () {
+                                      setModalState(() {
+                                        preferredEndDate = null;
+                                      });
+                                    },
+                                    child: Icon(
+                                      Icons.clear,
+                                      size: 18,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 24),
+
+                      // Preferred Time
+                      const Text(
+                        'Preferred Time (Optional)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: timePreferences.map((time) {
+                          final isSelected = preferredTime == time;
+                          return GestureDetector(
+                            onTap: () {
+                              setModalState(() {
+                                preferredTime = isSelected ? null : time;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? _primaryColor.withOpacity(0.1)
+                                    : Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? _primaryColor
+                                      : Colors.grey.shade300,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                              ),
+                              child: Text(
+                                time,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                  color: isSelected
+                                      ? _primaryColor
+                                      : const Color(0xFF636E72),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Additional Notes
+                      const Text(
+                        'Additional Notes (Optional)',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: notesController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Any additional information...',
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: _primaryColor,
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Info notice
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF9E6),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFFFE082),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              size: 18,
+                              color: Color(0xFFF57C00),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Your request will be reviewed by our care team. We\'ll contact you to confirm the new schedule.',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade700,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+
+              // Submit Button
+              Container(
+                padding: EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  top: 16,
+                  bottom: MediaQuery.of(context).padding.bottom + 16,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: isSubmitting || selectedReason == null
+                        ? null
+                        : () async {
+                            // Validate
+                            final reason = selectedReason == 'Other'
+                                ? reasonController.text.trim()
+                                : selectedReason!;
+
+                            if (reason.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Please provide a reason for reschedule'),
+                                  backgroundColor: Colors.red,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            setModalState(() {
+                              isSubmitting = true;
+                            });
+
+                            try {
+                              final response = await _contactPersonService.requestReschedule(
+                                scheduleId: int.parse(schedule.id),
+                                reason: reason,
+                                preferredDate: preferredDate != null
+                                    ? DateFormat('yyyy-MM-dd').format(preferredDate!)
+                                    : null,
+                                preferredEndDate: preferredEndDate != null
+                                    ? DateFormat('yyyy-MM-dd').format(preferredEndDate!)
+                                    : null,
+                                preferredTime: preferredTime,
+                                additionalNotes: notesController.text.trim(),
+                              );
+
+                              if (mounted) {
+                                Navigator.pop(context);
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.check_circle,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            response['message']?.toString() ??
+                                                'Reschedule request submitted successfully!',
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor: _primaryColor,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
+
+                                // Refresh schedules
+                                _loadSchedules(forceRefresh: true);
+                              }
+                            } catch (e) {
+                              setModalState(() {
+                                isSubmitting = false;
+                              });
+
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.error_outline,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(child: Text(e.toString())),
+                                      ],
+                                    ),
+                                    backgroundColor: Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _primaryColor,
+                      disabledBackgroundColor: _primaryColor.withOpacity(0.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: isSubmitting
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'Submit Request',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  ),
+);
   }
 }
