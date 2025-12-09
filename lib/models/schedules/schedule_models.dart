@@ -220,15 +220,20 @@ class ScheduleItem {
   factory ScheduleItem.fromJson(Map<String, dynamic> json) {
     // Handle both nurse view (patientName) and patient view (nurseName)
     String displayName = 'Unknown';
-    
+
     // For patients: backend sends nurseName
     if (json['nurseName'] != null) {
       displayName = json['nurseName'].toString();
-    } 
+    }
     // For nurses: backend sends patientName
     else if (json['patientName'] != null) {
       displayName = json['patientName'].toString();
     }
+
+    // Determine isCompleted from API response
+    final computedIsCompleted = json['isCompleted'] == true ||
+                                json['isCompleted'] == 'true' ||
+                                json['status']?.toString().toLowerCase() == 'completed';
 
     return ScheduleItem(
       id: json['id']?.toString() ?? '',
@@ -253,9 +258,7 @@ class ScheduleItem {
       careType: json['careType']?.toString() ?? 'General Care',
       status: json['status']?.toString() ?? 'scheduled',
       notes: json['notes']?.toString() ?? '',
-      isCompleted: json['isCompleted'] == true ||
-                   json['isCompleted'] == 'true' ||
-                   json['status']?.toString().toLowerCase() == 'completed',
+      isCompleted: computedIsCompleted,
       priority: json['priority']?.toString() ?? 'medium',
       carePlanId: json['carePlanId']?.toString(),
       carePlanTitle: json['carePlanTitle']?.toString(),

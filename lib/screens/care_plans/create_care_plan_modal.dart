@@ -24,6 +24,7 @@ class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
   // Form Controllers
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _customFrequencyController = TextEditingController();
 
   // Dropdown Values
   String? _selectedPatientId;
@@ -54,7 +55,7 @@ class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
     'Rehabilitation Care',
   ];
   final List<String> _priorities = ['Low', 'Medium', 'High'];
-  final List<String> _frequencies = ['Daily', 'Weekly', 'Twice Weekly', 'Monthly', 'As Needed'];
+  final List<String> _frequencies = ['Daily', 'Weekly', 'Twice Weekly', 'Monthly', 'As Needed', 'Custom'];
 
   @override
   void initState() {
@@ -66,6 +67,7 @@ class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _customFrequencyController.dispose();
     super.dispose();
   }
 
@@ -212,6 +214,10 @@ class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
         return 'weekly';
       case 'monthly':
         return 'monthly';
+      case 'custom':
+        // Return the custom frequency value entered by user
+        final customValue = _customFrequencyController.text.trim();
+        return customValue.isNotEmpty ? customValue : 'custom';
       default:
         return normalized.replaceAll(' ', '_').replaceAll('-', '_');
     }
@@ -233,6 +239,10 @@ class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
       }
       if (_selectedFrequency == null) {
         _showErrorSnackBar('Please select a frequency');
+        return;
+      }
+      if (_selectedFrequency == 'Custom' && _customFrequencyController.text.trim().isEmpty) {
+        _showErrorSnackBar('Please enter a custom frequency');
         return;
       }
 
@@ -648,8 +658,27 @@ class _CreateCarePlanModalState extends State<CreateCarePlanModal> {
             'value': freq,
             'label': freq,
           }).toList(),
-          onChanged: (value) => setState(() => _selectedFrequency = value),
+          onChanged: (value) => setState(() {
+            _selectedFrequency = value;
+            if (value != 'Custom') {
+              _customFrequencyController.clear();
+            }
+          }),
         ),
+        if (_selectedFrequency == 'Custom') ...[
+          const SizedBox(height: 16),
+          _buildTextField(
+            label: 'Custom Frequency *',
+            controller: _customFrequencyController,
+            hint: 'Enter custom frequency (e.g., Every 3 days)',
+            validator: (value) {
+              if (_selectedFrequency == 'Custom' && (value == null || value.isEmpty)) {
+                return 'Please enter custom frequency';
+              }
+              return null;
+            },
+          ),
+        ],
       ],
     );
   }

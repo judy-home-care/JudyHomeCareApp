@@ -552,22 +552,19 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
   List<ScheduleItem> get _filteredSchedules {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     final filtered = _schedules.where((schedule) {
-      final scheduleDate = DateTime(schedule.date.year, schedule.date.month, schedule.date.day);
-      
       // First, filter by selected tab (upcoming/completed/all)
       bool matchesTab = true;
       if (_selectedTab == 'upcoming') {
-        // Upcoming: not completed AND (today or future)
-        matchesTab = !schedule.isCompleted && 
-                    (scheduleDate.isAfter(today) || scheduleDate.isAtSameMomentAs(today));
+        // Upcoming: not completed AND schedule is still active (today or future)
+        matchesTab = !schedule.isCompleted && _isScheduleActiveOrFuture(schedule, today);
       } else if (_selectedTab == 'completed') {
         // Completed: only completed schedules
         matchesTab = schedule.isCompleted;
       }
       // 'all' tab shows everything, so no filter needed
-      
+
       // Then, filter by confirmation status
       bool matchesStatus = true;
       if (_selectedStatusFilter == 'In Progress Only') {
@@ -575,21 +572,35 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
       } else if (_selectedStatusFilter == 'Pending Only') {
         matchesStatus = schedule.status == 'scheduled';
       }
-      
+
       return matchesTab && matchesStatus;
     }).toList();
-    
+
     debugPrint('🔍 Filtering: ${_schedules.length} total → ${filtered.length} after filters (tab: $_selectedTab, status: $_selectedStatusFilter)');
-    
+
     return filtered;
   }
-  
+
+  /// Check if a schedule is still active (today or future)
+  /// For multi-day schedules, checks if endDate >= today
+  /// For single-day schedules, checks if date >= today
+  bool _isScheduleActiveOrFuture(ScheduleItem schedule, DateTime today) {
+    if (schedule.isMultiDay && schedule.endDate != null) {
+      // For multi-day schedules, check if endDate is today or future
+      final endDate = DateTime(schedule.endDate!.year, schedule.endDate!.month, schedule.endDate!.day);
+      return endDate.isAfter(today) || endDate.isAtSameMomentAs(today);
+    } else {
+      // For single-day schedules, check if date is today or future
+      final scheduleDate = DateTime(schedule.date.year, schedule.date.month, schedule.date.day);
+      return scheduleDate.isAfter(today) || scheduleDate.isAtSameMomentAs(today);
+    }
+  }
+
   int get _upcomingCount {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return _schedules.where((s) {
-      final scheduleDate = DateTime(s.date.year, s.date.month, s.date.day);
-      return !s.isCompleted && (scheduleDate.isAfter(today) || scheduleDate.isAtSameMomentAs(today));
+      return !s.isCompleted && _isScheduleActiveOrFuture(s, today);
     }).length;
   }
   

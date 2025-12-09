@@ -1484,25 +1484,6 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: plan.progress,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
-                    minHeight: 6,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${(plan.progress * 100).toInt()}% Complete',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
               ],
             ),
           ),

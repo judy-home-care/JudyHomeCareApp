@@ -30,14 +30,14 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
       'badge': null,
       'route': 'call',
     },
-    {
-      'icon': Icons.bug_report_outlined,
-      'title': 'Report Issue',
-      'subtitle': 'Technical problems',
-      'color': const Color(0xFFFF9800),
-      'badge': null,
-      'route': 'report',
-    },
+    // {
+    //   'icon': Icons.bug_report_outlined,
+    //   'title': 'Report Issue',
+    //   'subtitle': 'Technical problems',
+    //   'color': const Color(0xFFFF9800),
+    //   'badge': null,
+    //   'route': 'report',
+    // },
   ];
 
   final List<Map<String, dynamic>> _helpCategories = [
