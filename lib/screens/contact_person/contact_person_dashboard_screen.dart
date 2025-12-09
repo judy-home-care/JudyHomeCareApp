@@ -57,6 +57,9 @@ class ContactPersonDashboardScreenState
   bool _isScreenVisible = true;
   bool _pendingNotificationRefresh = false;
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -227,6 +230,12 @@ class ContactPersonDashboardScreenState
     bool forceRefresh = false,
     bool silent = false,
   }) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     if (!forceRefresh && _lastRefreshAttempt != null) {
       final timeSinceLastAttempt =
           DateTime.now().difference(_lastRefreshAttempt!);
@@ -275,6 +284,7 @@ class ContactPersonDashboardScreenState
     }
 
     _lastRefreshAttempt = DateTime.now();
+    _isRefreshing = true;
 
     try {
       final data = await _contactPersonService.getPatientDashboard(
@@ -299,12 +309,16 @@ class ContactPersonDashboardScreenState
           _isLoading = false;
         });
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
   void _showDataUpdatedNotification() {
     if (!mounted) return;
 
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

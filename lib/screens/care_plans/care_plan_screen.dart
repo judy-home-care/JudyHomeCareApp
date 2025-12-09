@@ -79,6 +79,9 @@ class _CarePlansScreenState extends State<CarePlansScreen>
   // Track if notification was received while app was paused (local flag)
   bool _pendingNotificationRefresh = false;
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   // Multi-listener cleanup callbacks
   VoidCallback? _removeCountListener;
   VoidCallback? _removeReceivedListener;
@@ -341,11 +344,17 @@ class _CarePlansScreenState extends State<CarePlansScreen>
   }
 
   // ==================== DATA LOADING ====================
-  
+
   Future<void> _loadCarePlans({
-    bool forceRefresh = false, 
+    bool forceRefresh = false,
     bool silent = false
   }) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     if (!forceRefresh && _lastRefreshAttempt != null) {
       final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
       if (timeSinceLastAttempt < _minRefreshInterval) {
@@ -388,6 +397,8 @@ class _CarePlansScreenState extends State<CarePlansScreen>
     }
     
     _lastRefreshAttempt = DateTime.now();
+    _isRefreshing = true;
+
     debugPrint('🌐 Fetching care plans from API (page $_currentPage)...');
 
     try {
@@ -439,9 +450,11 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         });
         debugPrint('❌ Unexpected error: $e');
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
-  
+
   /// Load more care plans (pagination) - NEW
   Future<void> _loadMoreCarePlans() async {
     if (_isLoadingMore || !_hasMorePages || !_canLoadMore) {
@@ -509,7 +522,9 @@ class _CarePlansScreenState extends State<CarePlansScreen>
   
   void _showDataUpdatedNotification(int planCount) {
     if (!mounted) return;
-    
+
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

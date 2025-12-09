@@ -62,6 +62,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   // Track if notification was received while app was paused (local flag)
   bool _pendingNotificationRefresh = false;
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   // Tab selection for Initial Assessment / My Nurses section
   int _nursesAssessmentTabIndex = 0; // 0 = Initial Assessment, 1 = My Nurses (default: Initial Assessment)
 
@@ -338,6 +341,12 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     bool forceRefresh = false,
     bool silent = false,
   }) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     // Rate limiting check
     if (!forceRefresh && _lastRefreshAttempt != null) {
       final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
@@ -390,6 +399,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     }
 
     _lastRefreshAttempt = DateTime.now();
+    _isRefreshing = true;
 
     debugPrint('🌐 Fetching patient dashboard from API...');
 
@@ -418,6 +428,8 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
         });
         debugPrint('❌ Dashboard load error: $e');
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
@@ -425,6 +437,8 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   void _showDataUpdatedNotification() {
     if (!mounted) return;
 
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

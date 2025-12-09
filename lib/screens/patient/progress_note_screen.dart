@@ -56,6 +56,9 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
   VoidCallback? _removeCountListener;
   VoidCallback? _removeReceivedListener;
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   // ✅ CHANGE 5: Keep state alive when switching tabs
   @override
   bool get wantKeepAlive => true;
@@ -294,6 +297,12 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
     bool forceRefresh = false,
     bool silent = false,
   }) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     // Rate limiting check
     if (!forceRefresh && _lastRefreshAttempt != null) {
       final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
@@ -353,6 +362,8 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
     }
 
     _lastRefreshAttempt = DateTime.now();
+    _isRefreshing = true;
+
     debugPrint('🌐 Fetching progress notes from API...');
 
     try {
@@ -392,6 +403,8 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
         });
         debugPrint('❌ Progress notes load error: ${e.message}');
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
@@ -399,6 +412,8 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
   void _showDataUpdatedNotification() {
     if (!mounted) return;
 
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

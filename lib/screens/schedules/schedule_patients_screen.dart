@@ -207,6 +207,9 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
   VoidCallback? _removeCountListener;
   VoidCallback? _removeReceivedListener;
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   // ==================== SMART CACHE METHODS ====================
 
   /// Check if cached data is expired
@@ -333,8 +336,14 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
   // ==================== DATA LOADING ====================
 
   Future<void> _loadSchedules({bool forceRefresh = false, bool silent = false}) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     final cacheKey = _getCacheKey();
-    
+
     // Rate limiting check - ONLY for the SAME data
     // Allow free browsing between different dates/filters
     if (!forceRefresh && _lastRefreshAttempt != null && _lastCacheKeyFetched == cacheKey) {
@@ -393,7 +402,8 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
 
     _lastRefreshAttempt = DateTime.now();
     _lastCacheKeyFetched = cacheKey; // Track which data we're fetching
-    
+    _isRefreshing = true;
+
     debugPrint('🌐 Fetching schedules from API for: $cacheKey (forceRefresh: $forceRefresh, silent: $silent)');
 
     try {
@@ -466,13 +476,17 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
         _stopShimmer();
         debugPrint('❌ Schedule load error: $e');
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
   /// Show notification when data updates in background
   void _showDataUpdatedNotification() {
     if (!mounted) return;
-    
+
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

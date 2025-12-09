@@ -42,6 +42,9 @@ class ContactPersonCarePlansScreenState
   static const Duration _cacheValidityDuration = Duration(minutes: 5);
   static const Duration _minRefreshInterval = Duration(seconds: 30);
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -120,6 +123,12 @@ class ContactPersonCarePlansScreenState
     bool forceRefresh = false,
     bool silent = false,
   }) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     // Rate limiting check
     if (!forceRefresh && _lastRefreshAttempt != null) {
       final timeSinceLastAttempt =
@@ -177,6 +186,7 @@ class ContactPersonCarePlansScreenState
     }
 
     _lastRefreshAttempt = DateTime.now();
+    _isRefreshing = true;
 
     try {
       final carePlans = await _contactPersonService.getCarePlans(
@@ -203,6 +213,8 @@ class ContactPersonCarePlansScreenState
           _isLoading = false;
         });
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
@@ -244,6 +256,8 @@ class ContactPersonCarePlansScreenState
   void _showDataUpdatedNotification() {
     if (!mounted) return;
 
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

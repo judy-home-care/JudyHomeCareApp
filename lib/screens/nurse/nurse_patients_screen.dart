@@ -103,6 +103,9 @@ class _NursePatientsScreenState extends State<NursePatientsScreen>
   // Track if notification was received while app was paused (local flag)
   bool _pendingNotificationRefresh = false;
 
+  // Prevent concurrent refresh calls (race condition fix)
+  bool _isRefreshing = false;
+
   // Multi-listener cleanup callbacks
   VoidCallback? _removeCountListener;
   VoidCallback? _removeReceivedListener;
@@ -574,9 +577,15 @@ void _showErrorSnackBar(String message) {
   
   /// Load patients with smart caching and rate limiting
   Future<void> _loadPatients({
-    bool forceRefresh = false, 
+    bool forceRefresh = false,
     bool silent = false
   }) async {
+    // Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     // Rate limiting check
     if (!forceRefresh && _lastRefreshAttempt != null) {
       final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
@@ -629,7 +638,8 @@ void _showErrorSnackBar(String message) {
     }
     
     _lastRefreshAttempt = DateTime.now();
-    
+    _isRefreshing = true;
+
     debugPrint('🌐 Fetching patients from API (page $_currentPage)...');
 
     try {
@@ -694,9 +704,11 @@ void _showErrorSnackBar(String message) {
         });
         debugPrint('❌ Unexpected error: $e');
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
-  
+
   /// Load more patients (pagination)
   Future<void> _loadMorePatients() async {
     if (_isLoadingMore || !_hasMorePages || !_canLoadMore) {
@@ -763,7 +775,9 @@ void _showErrorSnackBar(String message) {
   /// Show notification when data updates in background
   void _showDataUpdatedNotification(int patientCount) {
     if (!mounted) return;
-    
+
+    // Clear any existing queued snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

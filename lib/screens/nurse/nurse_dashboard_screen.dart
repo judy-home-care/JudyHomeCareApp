@@ -61,6 +61,9 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   DateTime? _lastNotificationShownTime;
   static const Duration _minNotificationInterval = Duration(seconds: 5);
 
+  // 🆕 Prevent concurrent refresh calls
+  bool _isRefreshing = false;
+
   // Screen visibility tracking for battery optimization
   bool _isScreenVisible = true;
 
@@ -1171,6 +1174,12 @@ String _getRemainingCacheTime() {
     bool forceRefresh = false,
     bool silent = false,
   }) async {
+    // 🆕 Prevent concurrent refresh calls (race condition fix)
+    if (_isRefreshing) {
+      debugPrint('⏭️ Refresh already in progress - skipping duplicate call');
+      return;
+    }
+
     // Rate limiting check - applies to ALL refreshes (including silent ones)
     if (_lastRefreshAttempt != null) {
       final timeSinceLastAttempt = DateTime.now().difference(_lastRefreshAttempt!);
@@ -1232,7 +1241,8 @@ String _getRemainingCacheTime() {
     }
 
     _lastRefreshAttempt = DateTime.now();
-    
+    _isRefreshing = true;
+
     debugPrint('🌐 Fetching dashboard from API...');
 
     try {
@@ -1262,6 +1272,8 @@ String _getRemainingCacheTime() {
         });
         debugPrint('❌ Dashboard load error: $e');
       }
+    } finally {
+      _isRefreshing = false;
     }
   }
 
@@ -1281,6 +1293,8 @@ String _getRemainingCacheTime() {
 
     _lastNotificationShownTime = now;
 
+    // Clear any existing queued "Dashboard updated" snackbars to prevent stacking
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
