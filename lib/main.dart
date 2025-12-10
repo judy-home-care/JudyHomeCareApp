@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'firebase_options.dart';
 import 'utils/app_colors.dart';
 import 'services/auth/auth_service.dart';
@@ -13,8 +14,9 @@ import 'screens/nurse/nurse_main_screen.dart';
 import 'screens/patient/patient_main_screen.dart';
 
 void main() async {
-  // Ensure Flutter bindings are initialized
-  WidgetsFlutterBinding.ensureInitialized();
+  // Ensure Flutter bindings are initialized and preserve splash
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   // 🔒 LOCK TO PORTRAIT MODE ONLY - Prevent screen rotation
   await SystemChrome.setPreferredOrientations([
@@ -209,6 +211,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
 
   void _navigateToOnboarding() {
     print('📍 Navigating to onboarding screen');
+    FlutterNativeSplash.remove();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const OnboardingScreen()),
     );
@@ -278,6 +281,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         return;
     }
 
+    FlutterNativeSplash.remove();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => dashboardScreen),
     );
@@ -285,6 +289,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
 
   void _navigateToLogin() {
     print('📍 Navigating to login screen');
+    FlutterNativeSplash.remove();
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => LoginScreen()),
     );
