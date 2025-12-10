@@ -10,6 +10,10 @@ import '../patient/patient_dashboard_screen.dart';
 import 'sign_up_screen.dart';
 import '../nurse/nurse_main_screen.dart';
 import '../patient/patient_main_screen.dart';
+import '../contact_person/contact_person_main_screen.dart';
+import '../contact_person/patient_selector_screen.dart';
+import '../../models/contact_person/contact_person_models.dart';
+import '../../services/contact_person/contact_person_auth_service.dart';
 import 'two_factor_login_screen.dart';
 import '../onboarding/login_signup_screen.dart';
 import '../onboarding/get_started_screen.dart';
@@ -340,6 +344,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         break;
 
+      case 'contact_person':
+        _handleContactPersonLogin(user);
+        break;
+
       case 'doctor':
         _showInfoMessage('Doctor dashboard coming soon!');
         break;
@@ -351,6 +359,74 @@ class _LoginScreenState extends State<LoginScreen> {
 
       default:
         _showErrorMessage('Invalid user role.');
+    }
+  }
+
+  Future<void> _handleContactPersonLogin(User user) async {
+    try {
+      // Get linked patients using ContactPersonAuthService
+      final contactPersonService = ContactPersonAuthService();
+      final response = await contactPersonService.login(user.phone ?? '');
+
+      if (!mounted) return;
+
+      if (response.success && response.user != null) {
+        // Navigate to PatientSelectorScreen with linked patients
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => PatientSelectorScreen(
+              contactPerson: response.user!,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      } else {
+        // Fallback: Create ContactPersonUser from login data and navigate
+        final contactPerson = ContactPersonUser(
+          id: user.id,
+          name: user.fullName,
+          phone: user.phone ?? '',
+          email: user.email,
+          avatar: user.avatarUrl,
+          linkedPatients: [],
+        );
+
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => PatientSelectorScreen(
+              contactPerson: contactPerson,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Error fetching contact person data: $e');
+      }
+      // Fallback: Create ContactPersonUser from login data and navigate
+      final contactPerson = ContactPersonUser(
+        id: user.id,
+        name: user.fullName,
+        phone: user.phone ?? '',
+        email: user.email,
+        avatar: user.avatarUrl,
+        linkedPatients: [],
+      );
+
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => PatientSelectorScreen(
+              contactPerson: contactPerson,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
+      }
     }
   }
 

@@ -5,8 +5,8 @@ import '../../services/messages/message_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../messages/conversations_screen.dart';
-import 'contact_person_login_screen.dart';
 import 'patient_selector_screen.dart';
+import '../auth/login_screen.dart';
 
 class ContactPersonAccountScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -931,7 +931,7 @@ class _ContactPersonAccountScreenState
       // Close loading dialog and navigate
       navigator.pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const ContactPersonLoginScreen(),
+          builder: (context) => const LoginScreen(),
         ),
         (route) => false,
       );

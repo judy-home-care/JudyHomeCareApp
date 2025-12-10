@@ -983,10 +983,6 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   }
 
   Widget _buildScheduleCard(ScheduleVisit visit) {
-    String timeRange = visit.endTime != null
-        ? '${visit.time} - ${visit.endTime}'
-        : visit.time;
-
     bool isCompleted = visit.status.toLowerCase() == 'completed';
     bool isInProgress = visit.status.toLowerCase() == 'in_progress' ||
                         visit.status.toLowerCase() == 'in-progress' ||
@@ -1025,50 +1021,73 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    if (isCompleted) ...[
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF199A8E).withOpacity(0.1),
-                          shape: BoxShape.circle,
+                Expanded(
+                  child: Row(
+                    children: [
+                      if (isCompleted) ...[
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF199A8E).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check_circle,
+                            color: Color(0xFF199A8E),
+                            size: 16,
+                          ),
                         ),
-                        child: const Icon(
-                          Icons.check_circle,
-                          color: Color(0xFF199A8E),
-                          size: 16,
+                        const SizedBox(width: 8),
+                      ] else if (isInProgress) ...[
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFF9A00).withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.play_circle_filled,
+                            color: Color(0xFFFF9A00),
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              visit.dateRangeDisplay,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: isCompleted
+                                    ? const Color(0xFF199A8E)
+                                    : isInProgress
+                                        ? const Color(0xFFFF9A00)
+                                        : Colors.white.withOpacity(0.9),
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              visit.timeRangeDisplay,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isCompleted
+                                    ? const Color(0xFF199A8E).withOpacity(0.7)
+                                    : isInProgress
+                                        ? const Color(0xFFFF9A00).withOpacity(0.7)
+                                        : Colors.white.withOpacity(0.6),
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                    ] else if (isInProgress) ...[
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF9A00).withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_circle_filled,
-                          color: Color(0xFFFF9A00),
-                          size: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
                     ],
-                    Text(
-                      timeRange,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: isCompleted
-                            ? const Color(0xFF199A8E)
-                            : isInProgress
-                                ? const Color(0xFFFF9A00)
-                                : Colors.white.withOpacity(0.7),
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
                 Container(
                   padding: const EdgeInsets.all(6),

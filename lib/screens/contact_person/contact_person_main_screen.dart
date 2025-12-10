@@ -8,14 +8,12 @@ import 'contact_person_account_screen.dart';
 import 'contact_person_bottom_navigation.dart';
 
 class ContactPersonMainScreen extends StatefulWidget {
-  final ContactPersonUser contactPerson;
-  final LinkedPatient selectedPatient;
+  final Map<String, dynamic> contactPersonData;
   final int initialIndex;
 
   const ContactPersonMainScreen({
     Key? key,
-    required this.contactPerson,
-    required this.selectedPatient,
+    required this.contactPersonData,
     this.initialIndex = 0,
   }) : super(key: key);
 
@@ -119,6 +117,33 @@ class _ContactPersonMainScreenState extends State<ContactPersonMainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Reconstruct linked patients from passed data
+    final linkedPatientsData = widget.contactPersonData['linkedPatients'] as List<dynamic>? ?? [];
+    final linkedPatients = linkedPatientsData
+        .map((p) => LinkedPatient.fromJson(p as Map<String, dynamic>))
+        .toList();
+
+    // Build model objects from contact person data
+    final contactPerson = ContactPersonUser(
+      id: int.tryParse(widget.contactPersonData['id'].toString()) ?? 0,
+      name: widget.contactPersonData['name'] ?? '',
+      phone: widget.contactPersonData['phone'] ?? '',
+      email: widget.contactPersonData['email'],
+      avatar: widget.contactPersonData['avatar'],
+      linkedPatients: linkedPatients,
+    );
+
+    // Create selected patient from the passed data
+    final selectedPatient = LinkedPatient(
+      id: int.tryParse(widget.contactPersonData['selectedPatientId']?.toString() ?? '0') ?? 0,
+      name: widget.contactPersonData['selectedPatientName'] ?? '',
+      age: int.tryParse(widget.contactPersonData['selectedPatientAge']?.toString() ?? '0') ?? 0,
+      phone: widget.contactPersonData['selectedPatientPhone'],
+      avatar: widget.contactPersonData['selectedPatientAvatar'],
+      relationship: widget.contactPersonData['selectedPatientRelationship'] ?? 'Contact',
+      isPrimary: widget.contactPersonData['selectedPatientIsPrimary'] == true,
+    );
+
     return WillPopScope(
       onWillPop: () async {
         // Prevent back button from going back to login
@@ -137,33 +162,33 @@ class _ContactPersonMainScreenState extends State<ContactPersonMainScreen> {
             // Home - Dashboard (index 0)
             ContactPersonDashboardScreen(
               key: _dashboardKey,
-              contactPerson: widget.contactPerson,
-              selectedPatient: widget.selectedPatient,
+              contactPerson: contactPerson,
+              selectedPatient: selectedPatient,
               onTabChange: _onTabTapped,
             ),
 
             // Progress Notes (index 1)
             ContactPersonProgressNotesScreen(
               key: _progressNotesKey,
-              patientId: widget.selectedPatient.id,
+              patientId: selectedPatient.id,
             ),
 
             // Schedules (index 2)
             ContactPersonSchedulesScreen(
               key: _schedulesKey,
-              patientId: widget.selectedPatient.id,
+              patientId: selectedPatient.id,
             ),
 
             // Care Plans (index 3)
             ContactPersonCarePlansScreen(
               key: _carePlansKey,
-              patientId: widget.selectedPatient.id,
+              patientId: selectedPatient.id,
             ),
 
             // Account (index 4)
             ContactPersonAccountScreen(
-              contactPerson: widget.contactPerson,
-              selectedPatient: widget.selectedPatient,
+              contactPerson: contactPerson,
+              selectedPatient: selectedPatient,
             ),
           ],
         ),

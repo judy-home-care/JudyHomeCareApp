@@ -3,8 +3,8 @@ import '../../models/contact_person/contact_person_models.dart';
 import '../../services/contact_person/contact_person_auth_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
-import 'contact_person_login_screen.dart';
 import 'contact_person_main_screen.dart';
+import '../auth/login_screen.dart';
 
 class PatientSelectorScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -48,8 +48,24 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
     navigator.pushReplacement(
       MaterialPageRoute(
         builder: (context) => ContactPersonMainScreen(
-          contactPerson: widget.contactPerson,
-          selectedPatient: patient,
+          contactPersonData: {
+            'id': widget.contactPerson.id.toString(),
+            'name': widget.contactPerson.name,
+            'phone': widget.contactPerson.phone,
+            'email': widget.contactPerson.email,
+            'avatar': widget.contactPerson.avatar,
+            'role': 'contact_person',
+            'selectedPatientId': patient.id.toString(),
+            'selectedPatientName': patient.name,
+            'selectedPatientAge': patient.age,
+            'selectedPatientPhone': patient.phone,
+            'selectedPatientAvatar': patient.avatar,
+            'selectedPatientRelationship': patient.relationship,
+            'selectedPatientIsPrimary': patient.isPrimary,
+            'linkedPatients': widget.contactPerson.linkedPatients
+                .map((p) => p.toJson())
+                .toList(),
+          },
         ),
       ),
     );
@@ -384,7 +400,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
 
       navigator.pushAndRemoveUntil(
         MaterialPageRoute(
-          builder: (context) => const ContactPersonLoginScreen(),
+          builder: (context) => const LoginScreen(),
         ),
         (route) => false,
       );
