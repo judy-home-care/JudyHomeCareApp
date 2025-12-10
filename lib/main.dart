@@ -87,8 +87,6 @@ class AppInitializer extends StatefulWidget {
 class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObserver {
   final _authService = AuthService();
   final _preferencesService = PreferencesService();
-  
-  bool _isInitializing = true;
 
   @override
   void initState() {
@@ -139,7 +137,6 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       if (!hasSeenOnboarding) {
         print('➡️ Navigating to onboarding');
         if (mounted) {
-          setState(() => _isInitializing = false);
           _navigateToOnboarding();
         }
         return;
@@ -153,7 +150,6 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
         print('➡️ User is logged in, navigating to dashboard');
         // User has valid local token, navigate to dashboard immediately
         if (mounted) {
-          setState(() => _isInitializing = false);
           await _navigateToDashboardDirectly();
         }
         return;
@@ -162,7 +158,6 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       // Not logged in - go to login screen
       print('➡️ User not logged in, navigating to login');
       if (mounted) {
-        setState(() => _isInitializing = false);
         _navigateToLogin();
       }
       
@@ -173,7 +168,6 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       print('❌ App initialization error: $e');
       print('Stack trace: $stackTrace');
       if (mounted) {
-        setState(() => _isInitializing = false);
         _navigateToLogin();
       }
     }
@@ -362,15 +356,8 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    if (_isInitializing) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-    
+    // Show empty white screen during initialization
+    // The native splash will cover this until navigation happens
     return const Scaffold(
       backgroundColor: Colors.white,
       body: SizedBox.shrink(),
