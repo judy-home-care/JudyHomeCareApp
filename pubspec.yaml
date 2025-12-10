@@ -73,6 +73,8 @@ flutter_native_splash:
     color: "#ffffff"
     image: assets/images/splash_logo.png
 
+  # iOS specific settings - center at original size without scaling
+  ios_content_mode: center
 
 
 
