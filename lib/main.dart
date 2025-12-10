@@ -128,10 +128,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       
       // Debug: Print all stored preferences
       await _preferencesService.debugPrintAll();
-      
-      // Add small delay to ensure storage is ready
-      await Future.delayed(const Duration(milliseconds: 100));
-      
+
       // Check if user has seen onboarding
       final hasSeenOnboarding = await _preferencesService.hasSeenOnboarding();
       print('📱 Has seen onboarding: $hasSeenOnboarding');
@@ -212,14 +209,11 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
   void _navigateToOnboarding() {
     print('📍 Navigating to onboarding screen');
     FlutterNativeSplash.remove();
-    // Small delay to ensure smooth transition after splash removal
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-        );
-      }
-    });
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+      );
+    }
   }
 
   void _navigateToDashboard(User user) {
@@ -249,7 +243,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           initialIndex: 0,
         );
         break;
-        
+
       case 'patient':
         print('📍 Navigating to patient main screen');
         dashboardScreen = PatientMainScreen(
@@ -268,18 +262,18 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
           initialIndex: 0,
         );
         break;
-        
+
       case 'doctor':
         print('📍 Navigating to doctor dashboard (coming soon)');
         dashboardScreen = _buildComingSoonScreen('Doctor Dashboard', user);
         break;
-        
+
       case 'admin':
       case 'superadmin':
         print('📍 Navigating to admin dashboard (coming soon)');
         dashboardScreen = _buildComingSoonScreen('Admin Dashboard', user);
         break;
-        
+
       default:
         print('❌ Unknown role: ${user.role}');
         _navigateToLogin();
@@ -287,27 +281,21 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
     }
 
     FlutterNativeSplash.remove();
-    // Small delay to ensure smooth transition after splash removal
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => dashboardScreen),
-        );
-      }
-    });
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => dashboardScreen),
+      );
+    }
   }
 
   void _navigateToLogin() {
     print('📍 Navigating to login screen');
     FlutterNativeSplash.remove();
-    // Small delay to ensure smooth transition after splash removal
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => LoginScreen()),
-        );
-      }
-    });
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => LoginScreen()),
+      );
+    }
   }
 
   Widget _buildComingSoonScreen(String title, User user) {

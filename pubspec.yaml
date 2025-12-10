@@ -66,18 +66,13 @@ flutter_native_splash:
   color: "#ffffff"
   image: assets/images/splash_logo.png
   android: true
+  ios: true
   web: false
-  
+
   # Android 12+ specific settings
   android_12:
     color: "#ffffff"
     image: assets/images/splash_logo.png
-  
-  # iOS specific settings
-  ios:
-    image: assets/images/splash_logo.png
-    color: "#ffffff"
-    ios_content_mode: center
 
 flutter:
   uses-material-design: true
