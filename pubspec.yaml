@@ -33,15 +33,15 @@ dependencies:
   url_launcher: ^6.2.2
   provider: ^6.1.1
   local_auth: ^2.1.7
-  # paystack_flutter_sdk: ^0.0.1-alpha.2
-  # pay_with_paystack: ^1.0.14
   flutter_inappwebview: ^6.1.5
+  
+  # Firebase
   firebase_core: ^2.24.2
   firebase_messaging: ^14.7.9
-  # flutter_local_notifications: ^16.3.0
   flutter_local_notifications: ^19.5.0
-  image_picker: ^1.2.1
   
+  # Media
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -54,37 +54,32 @@ dependency_overrides:
   intl: ^0.20.2
   http: ^1.1.0
 
-flutter_icons:
-  android: true
-  ios: true
-  image_path: "assets/images/splash_logo.png"
-
-flutter_native_splash:
-  color: "#ffffff"
-  image: assets/images/splash_logo.png
-  android: true
-  ios: true
-
-  # Prevent auto-dismiss until we explicitly remove it
-  web: false
-
-  # Android 12+ specific settings
-  android_12:
-    color: "#ffffff"
-    image: assets/images/splash_logo.png
-
-  # iOS specific settings - center at original size without scaling
-  ios_content_mode: center
-
-
-
-flutter:
-  uses-material-design: true
-  assets:
-    - assets/images/
-
+# App Icons Configuration
 flutter_launcher_icons:
   android: true
   ios: true
   image_path: "assets/icon/app_icon.png"
   remove_alpha_channel_ios: true
+
+# Splash Screen Configuration
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/splash_logo.png
+  android: true
+  web: false
+  
+  # Android 12+ specific settings
+  android_12:
+    color: "#ffffff"
+    image: assets/images/splash_logo.png
+  
+  # iOS specific settings
+  ios:
+    image: assets/images/splash_logo.png
+    color: "#ffffff"
+    ios_content_mode: center
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
