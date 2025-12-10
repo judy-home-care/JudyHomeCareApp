@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import '../../models/schedules/schedule_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 
 class ContactPersonSchedulesScreen extends StatefulWidget {
   final int patientId;
@@ -19,7 +21,7 @@ class ContactPersonSchedulesScreen extends StatefulWidget {
 
 class ContactPersonSchedulesScreenState
     extends State<ContactPersonSchedulesScreen>
-    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
+    with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin, WidgetsBindingObserver {
   static const Color _primaryColor = Color(0xFF199A8E);
 
   final _contactPersonService = ContactPersonService();
@@ -64,25 +66,113 @@ class ContactPersonSchedulesScreenState
     'Pending Only',
   ];
 
+  // Notification-related
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+  bool _isScreenVisible = true;
+
+  // Listener cleanup functions
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _shimmerController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
     _isControllerInitialized = true;
     _loadSchedules();
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _shimmerController.dispose();
     _debounceTimer?.cancel();
+
+    // Clean up FCM listeners (multi-listener pattern)
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
+  }
+
+  // ==================== APP LIFECYCLE ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _isScreenVisible = true;
+      debugPrint('🔄 [Contact Person Schedules] App resumed - checking for background notifications');
+
+      // Check if notification was received while in background
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+      if (hasBackgroundNotification) {
+        debugPrint('📱 [Contact Person Schedules] Notification received while away - forcing refresh');
+        _notificationService.clearBackgroundNotificationFlag();
+        _loadSchedules(forceRefresh: true, silent: true);
+      }
+
+      // Refresh notification count
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+      debugPrint('⏸️ [Contact Person Schedules] App paused');
+    }
+  }
+
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  /// Set up FCM callback for real-time notification count updates
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [Contact Person Schedules] Setting up FCM real-time notification updates');
+
+    // Update notification badge count
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+        debugPrint('🔔 [Contact Person Schedules] Notification count updated: $newCount');
+      }
+    });
+
+    // Refresh data when notification received (foreground)
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted && _isScreenVisible) {
+        debugPrint('🔄 [Contact Person Schedules] Notification received - triggering silent refresh');
+        _loadSchedules(forceRefresh: true, silent: true);
+      }
+    });
+  }
+
+  /// Load unread notification count
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+      debugPrint('📊 [Contact Person Schedules] Badge refreshed');
+    } catch (e) {
+      debugPrint('❌ [Contact Person Schedules] Error refreshing badge: $e');
+    }
+  }
+
+  /// Open notifications sheet
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
+    debugPrint('🔔 [Contact Person Schedules] Badge refreshed after closing notifications');
   }
 
   // ==================== HELPER METHODS ====================
@@ -707,6 +797,44 @@ class ContactPersonSchedulesScreenState
                 ),
               ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: const Icon(Icons.calendar_today, color: Color(0xFF1A1A1A)),
             onPressed: _showDatePicker,

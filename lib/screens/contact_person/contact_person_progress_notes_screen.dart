@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/progress_notes/progress_note_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
+import '../../services/notification_service.dart';
+import '../modern_notifications_sheet.dart';
 
 class ContactPersonProgressNotesScreen extends StatefulWidget {
   final int patientId;
@@ -19,7 +21,7 @@ class ContactPersonProgressNotesScreen extends StatefulWidget {
 
 class ContactPersonProgressNotesScreenState
     extends State<ContactPersonProgressNotesScreen>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   final _contactPersonService = ContactPersonService();
   final ScrollController _scrollController = ScrollController();
 
@@ -37,19 +39,95 @@ class ContactPersonProgressNotesScreenState
   DateTime? _lastFetchTime;
   static const Duration _cacheValidityDuration = Duration(minutes: 5);
 
+  // Notification-related
+  final NotificationService _notificationService = NotificationService();
+  int _unreadNotificationCount = 0;
+  bool _isScreenVisible = true;
+
+  // Listener cleanup functions
+  VoidCallback? _removeCountListener;
+  VoidCallback? _removeReceivedListener;
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadProgressNotes();
+
+    // Set up FCM notification updates
+    _setupFcmNotificationUpdates();
+    _loadUnreadNotificationCount();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.dispose();
+
+    // Clean up FCM listeners
+    _removeCountListener?.call();
+    _removeReceivedListener?.call();
+
     super.dispose();
+  }
+
+  // ==================== APP LIFECYCLE ====================
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      _isScreenVisible = true;
+      debugPrint('🔄 [Contact Person Progress Notes] App resumed');
+
+      final hasBackgroundNotification = _notificationService.hasNotificationWhileBackground;
+      if (hasBackgroundNotification) {
+        debugPrint('📱 [Contact Person Progress Notes] Notification received while away - forcing refresh');
+        _notificationService.clearBackgroundNotificationFlag();
+        _loadProgressNotes(silent: true);
+      }
+
+      _notificationService.refreshBadge();
+    } else if (state == AppLifecycleState.paused) {
+      _isScreenVisible = false;
+    }
+  }
+
+  // ==================== FCM NOTIFICATION UPDATES ====================
+
+  void _setupFcmNotificationUpdates() {
+    debugPrint('⚡ [Contact Person Progress Notes] Setting up FCM real-time notification updates');
+
+    _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = newCount;
+        });
+      }
+    });
+
+    _removeReceivedListener = _notificationService.addNotificationReceivedListener(() {
+      if (mounted && _isScreenVisible) {
+        _loadProgressNotes(silent: true);
+      }
+    });
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      await _notificationService.refreshBadge();
+    } catch (e) {
+      debugPrint('❌ [Contact Person Progress Notes] Error refreshing badge: $e');
+    }
+  }
+
+  void _openNotificationsSheet() async {
+    await showNotificationsSheet(context);
+    await _notificationService.refreshBadge();
   }
 
   void onTabVisible() {
@@ -468,6 +546,44 @@ class ContactPersonProgressNotesScreenState
                 ),
               ),
         actions: [
+          // Notification bell with badge
+          Stack(
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_outlined,
+                  color: Color(0xFF1A1A1A),
+                ),
+                onPressed: _openNotificationsSheet,
+                tooltip: 'Notifications',
+              ),
+              if (_unreadNotificationCount > 0)
+                Positioned(
+                  right: 8,
+                  top: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 16,
+                    ),
+                    child: Text(
+                      _unreadNotificationCount > 99 ? '99+' : '$_unreadNotificationCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           IconButton(
             icon: _isLoading && !_isCacheExpired
                 ? const SizedBox(
