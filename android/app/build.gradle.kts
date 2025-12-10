@@ -76,16 +76,19 @@ flutter {
 dependencies {
     // Import the Firebase BoM (Bill of Materials)
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
-    
+
     // Firebase Cloud Messaging
     implementation("com.google.firebase:firebase-messaging-ktx")
-    
+
     // Firebase Analytics (optional but recommended)
     implementation("com.google.firebase:firebase-analytics-ktx")
-    
+
     // MultiDex support
     implementation("androidx.multidex:multidex:2.0.1")
-    
+
+    // AndroidX Activity for Edge-to-Edge support (Android 15+)
+    implementation("androidx.activity:activity-ktx:1.9.3")
+
     // Core library desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

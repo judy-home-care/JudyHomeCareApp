@@ -1,5 +1,5 @@
 name: Judy_Home_HealthCare
-description: "A new Flutter project."
+description: "Home HealthCare Service"
 publish_to: 'none'
 version: 1.0.0+6
 
@@ -61,9 +61,11 @@ flutter_icons:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/images/splash_logo.png
+  image: assets/images/splash_logo_big.png  
   android: true
   ios: true
+
+
 
 flutter:
   uses-material-design: true

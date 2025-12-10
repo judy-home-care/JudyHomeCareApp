@@ -22,12 +22,10 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
   
-  // Set system UI overlay style
+  // Set system UI style (edge-to-edge handled natively in MainActivity.kt for Android 15+)
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
       statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: Colors.white,
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
