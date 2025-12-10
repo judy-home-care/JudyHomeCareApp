@@ -1,7 +1,7 @@
 name: Judy_Home_HealthCare
 description: "Home HealthCare Service"
 publish_to: 'none'
-version: 1.0.0+6
+version: 1.0.0+7
 
 environment:
   sdk: ^3.9.0
@@ -61,7 +61,7 @@ flutter_icons:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/images/splash_logo_big.png  
+  image: assets/images/splash_logo.png  
   android: true
   ios: true
 
