@@ -64,7 +64,7 @@ flutter_launcher_icons:
 # Splash Screen Configuration
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/images/splash_logo.png
+  image: assets/images/splash_mains_logo.png
   android: true
   ios: true
   web: false
@@ -72,7 +72,7 @@ flutter_native_splash:
   # Android 12+ specific settings
   android_12:
     color: "#ffffff"
-    image: assets/images/splash_logo.png
+    image: assets/images/splash_mains_logo.png
 
 flutter:
   uses-material-design: true
