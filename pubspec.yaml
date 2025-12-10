@@ -73,8 +73,6 @@ flutter_native_splash:
     color: "#ffffff"
     image: assets/images/splash_logo.png
 
-  # iOS specific settings to prevent auto-dismiss
-  ios_content_mode: scaleToFill
 
 
 
