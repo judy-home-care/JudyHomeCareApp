@@ -212,9 +212,14 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
   void _navigateToOnboarding() {
     print('📍 Navigating to onboarding screen');
     FlutterNativeSplash.remove();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-    );
+    // Small delay to ensure smooth transition after splash removal
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
+      }
+    });
   }
 
   void _navigateToDashboard(User user) {
@@ -282,17 +287,27 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
     }
 
     FlutterNativeSplash.remove();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => dashboardScreen),
-    );
+    // Small delay to ensure smooth transition after splash removal
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => dashboardScreen),
+        );
+      }
+    });
   }
 
   void _navigateToLogin() {
     print('📍 Navigating to login screen');
     FlutterNativeSplash.remove();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
+    // Small delay to ensure smooth transition after splash removal
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginScreen()),
+        );
+      }
+    });
   }
 
   Widget _buildComingSoonScreen(String title, User user) {
@@ -361,11 +376,13 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    // Show empty white screen during initialization
-    // The native splash will cover this until navigation happens
+    // Keep showing splash screen while initializing
+    // Don't render anything that would trigger auto-dismiss
     return const Scaffold(
       backgroundColor: Colors.white,
-      body: SizedBox.shrink(),
+      body: Center(
+        child: SizedBox.shrink(),
+      ),
     );
   }
 }
