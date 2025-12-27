@@ -76,20 +76,32 @@ class AppVersionService {
 
   /// Check if an update is required based on version requirements
   bool needsUpdate(VersionRequirement requirement) {
-    if (!requirement.forceUpdate) return false;
+    debugPrint('[AppVersionService] Checking update requirement:');
+    debugPrint('  Current: $currentVersion ($currentBuildNumber)');
+    debugPrint('  Required: ${requirement.minVersion} (${requirement.minBuildNumber})');
+    debugPrint('  Force update enabled: ${requirement.forceUpdate}');
+
+    if (!requirement.forceUpdate) {
+      debugPrint('  Result: No update needed (force_update is false)');
+      return false;
+    }
 
     final versionComparison =
         _compareVersions(currentVersion, requirement.minVersion);
 
     if (versionComparison < 0) {
       // Current version is lower than minimum required
+      debugPrint('  Result: Update required (version is lower)');
       return true;
     } else if (versionComparison == 0) {
       // Versions are equal, check build number
-      return currentBuildNumber < requirement.minBuildNumber;
+      final needsBuildUpdate = currentBuildNumber < requirement.minBuildNumber;
+      debugPrint('  Result: ${needsBuildUpdate ? "Update required (build is lower)" : "No update needed (build is equal or higher)"}');
+      return needsBuildUpdate;
     }
 
     // Current version is higher than minimum required
+    debugPrint('  Result: No update needed (version is higher)');
     return false;
   }
 

@@ -71,6 +71,9 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   // Track if notification was received while app was paused (local flag)
   bool _pendingNotificationRefresh = false;
 
+  // Flag to ignore listener updates while loading count directly (prevents flash)
+  bool _isLoadingNotificationCount = false;
+
   // Notification management
   final NotificationService _notificationService = NotificationService();
   int _unreadNotificationCount = 0;
@@ -112,12 +115,14 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _isTabVisible = true;
+    _lastVisibleTime = DateTime.now();
     _loadDashboardData(forceRefresh: false);
     _checkForActiveSession();
-    
+
     // ⚡ NEW: Set up real-time FCM notification updates
     _setupFcmNotificationUpdates();
-    
+
     // Load initial notification count once (no polling!)
     _loadUnreadNotificationCount();
   }
@@ -201,7 +206,8 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
 
     // Update notification badge count - using multi-listener pattern
     _removeCountListener = _notificationService.addNotificationCountListener((newCount) {
-      if (mounted) {
+      // Ignore listener updates while directly loading count (prevents flash on resume)
+      if (mounted && !_isLoadingNotificationCount) {
         setState(() {
           _unreadNotificationCount = newCount;
         });
@@ -230,6 +236,9 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
 
   /// Load unread notification count (only called once on init and resume)
   Future<void> _loadUnreadNotificationCount() async {
+    // Set flag to prevent listener from overwriting during load
+    _isLoadingNotificationCount = true;
+
     try {
       final response = await _notificationService.getUnreadCount();
       if (mounted) {
@@ -240,6 +249,9 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
       }
     } catch (e) {
       debugPrint('❌ [Nurse Dashboard] Error loading unread count: $e');
+    } finally {
+      // Re-enable listener updates after loading completes
+      _isLoadingNotificationCount = false;
     }
   }
 
