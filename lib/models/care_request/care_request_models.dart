@@ -519,9 +519,14 @@ class PaymentInitiation {
   });
 
   factory PaymentInitiation.fromJson(Map<String, dynamic> json) {
+    // Handle both 'payment_url' and 'authorization_url' field names
+    final paymentUrl = json['payment_url'] ??
+                       json['authorization_url'] ??
+                       json['checkout_url'] ??
+                       '';
     return PaymentInitiation(
       reference: json['reference'] ?? '',
-      paymentUrl: json['payment_url'] ?? '',
+      paymentUrl: paymentUrl,
       amount: (json['amount'] ?? 0).toDouble(),
       currency: json['currency'] ?? 'GHS',
       status: json['status'] ?? 'pending',
@@ -588,6 +593,443 @@ class PaginationMeta {
       lastPage: json['last_page'] ?? 1,
       from: json['from'] ?? 0,
       to: json['to'] ?? 0,
+    );
+  }
+}
+
+// ============================================================================
+// INSTALLMENT MODELS
+// ============================================================================
+
+/// Response model for getting installments
+class InstallmentsResponse {
+  final bool success;
+  final String message;
+  final InstallmentsData? data;
+
+  InstallmentsResponse({
+    required this.success,
+    required this.message,
+    this.data,
+  });
+
+  factory InstallmentsResponse.fromJson(Map<String, dynamic> json) {
+    return InstallmentsResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'] != null
+          ? InstallmentsData.fromJson(json['data'])
+          : null,
+    );
+  }
+}
+
+/// Installments data containing all installment information
+class InstallmentsData {
+  final bool hasInstallments;
+  final bool firstPaymentCompleted;
+  final List<Installment> installments;
+  final List<Installment> completedPayments;
+  final InstallmentSummary? summary;
+  final InstallmentPaymentConfig? paymentConfig;
+
+  InstallmentsData({
+    required this.hasInstallments,
+    required this.firstPaymentCompleted,
+    required this.installments,
+    required this.completedPayments,
+    this.summary,
+    this.paymentConfig,
+  });
+
+  factory InstallmentsData.fromJson(Map<String, dynamic> json) {
+    return InstallmentsData(
+      hasInstallments: json['has_installments'] ?? false,
+      firstPaymentCompleted: json['first_payment_completed'] ?? false,
+      installments: (json['installments'] as List<dynamic>?)
+              ?.map((item) => Installment.fromJson(item))
+              .toList() ??
+          [],
+      completedPayments: (json['completed_payments'] as List<dynamic>?)
+              ?.map((item) => Installment.fromJson(item))
+              .toList() ??
+          [],
+      summary: json['summary'] != null
+          ? InstallmentSummary.fromJson(json['summary'])
+          : null,
+      paymentConfig: json['payment_config'] != null
+          ? InstallmentPaymentConfig.fromJson(json['payment_config'])
+          : null,
+    );
+  }
+
+  /// Check if there are pending installments
+  bool get hasPendingInstallments => installments.isNotEmpty;
+
+  /// Get the next payable installment
+  Installment? get nextPayableInstallment {
+    try {
+      return installments.firstWhere((i) => i.canPay);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Get overdue installments
+  List<Installment> get overdueInstallments {
+    return installments.where((i) => i.isOverdue).toList();
+  }
+}
+
+/// Individual installment
+class Installment {
+  final int id;
+  final int installmentNumber;
+  final int totalInstallments;
+  final String label;
+  final double amount;
+  final String currency;
+  final String status;
+  final String? statusLabel;
+  final String? dueDate;
+  final String? dueDateFormatted;
+  final bool isOverdue;
+  final int? daysUntilDue;
+  final bool canPay;
+  final DateTime? paidAt;
+  final String? paidAtFormatted;
+  final bool isCompleted;
+  final bool isPendingStatus;
+  final bool isProcessing;
+  final bool isFailed;
+  // New due status fields from API
+  final String? dueStatus; // "overdue|due_today|due_soon|upcoming|paid|no_due_date"
+  final String? dueStatusLabel; // "Overdue by 3 days" | "Due Today" | "Due in 5 days" | etc.
+  final bool isDueToday;
+  final bool isDueSoon; // Within 7 days
+
+  Installment({
+    required this.id,
+    required this.installmentNumber,
+    required this.totalInstallments,
+    required this.label,
+    required this.amount,
+    required this.currency,
+    required this.status,
+    this.statusLabel,
+    this.dueDate,
+    this.dueDateFormatted,
+    required this.isOverdue,
+    this.daysUntilDue,
+    required this.canPay,
+    this.paidAt,
+    this.paidAtFormatted,
+    this.isCompleted = false,
+    this.isPendingStatus = false,
+    this.isProcessing = false,
+    this.isFailed = false,
+    this.dueStatus,
+    this.dueStatusLabel,
+    this.isDueToday = false,
+    this.isDueSoon = false,
+  });
+
+  factory Installment.fromJson(Map<String, dynamic> json) {
+    return Installment(
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      installmentNumber: _parseInt(json['installment_number']) ?? 1,
+      totalInstallments: _parseInt(json['total_installments']) ?? 1,
+      label: json['label'] ?? '',
+      amount: _parseDouble(json['amount']),
+      currency: json['currency'] ?? 'GHS',
+      status: json['status'] ?? 'pending',
+      statusLabel: json['status_label'],
+      dueDate: json['due_date'],
+      dueDateFormatted: json['due_date_formatted'],
+      isOverdue: json['is_overdue'] ?? false,
+      daysUntilDue: _parseInt(json['days_until_due']),
+      canPay: json['can_pay'] ?? false,
+      paidAt: json['paid_at'] != null
+          ? DateTime.tryParse(json['paid_at'].toString())
+          : null,
+      paidAtFormatted: json['paid_at_formatted'],
+      isCompleted: json['is_completed'] ?? false,
+      isPendingStatus: json['is_pending'] ?? false,
+      isProcessing: json['is_processing'] ?? false,
+      isFailed: json['is_failed'] ?? false,
+      // New due status fields
+      dueStatus: json['due_status'],
+      dueStatusLabel: json['due_status_label'],
+      isDueToday: json['is_due_today'] ?? false,
+      isDueSoon: json['is_due_soon'] ?? false,
+    );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value);
+    }
+    return null;
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  /// Check if installment is paid
+  bool get isPaid => isCompleted || status == 'paid' || status == 'completed';
+
+  /// Check if installment is pending (computed fallback)
+  bool get isPending => isPendingStatus || status == 'pending';
+
+  /// Get formatted amount
+  String get formattedAmount => '$currency ${amount.toStringAsFixed(2)}';
+
+  /// Get status display text
+  String get statusDisplayText {
+    if (statusLabel != null && statusLabel!.isNotEmpty) {
+      return statusLabel!;
+    }
+    switch (status.toLowerCase()) {
+      case 'paid':
+      case 'completed':
+        return 'Paid';
+      case 'pending':
+        return 'Pending';
+      case 'overdue':
+        return 'Overdue';
+      case 'processing':
+        return 'Processing';
+      case 'failed':
+        return 'Failed';
+      default:
+        return status;
+    }
+  }
+}
+
+/// Summary of installment payments
+class InstallmentSummary {
+  final double totalAmount;
+  final double paidAmount;
+  final double remainingAmount;
+  final String currency;
+  final String? nextPaymentDue;
+  final int overdueCount;
+  final int totalInstallments;
+  final int paidInstallments;
+  final int remainingInstallments;
+  final double? totalCareCost;
+  final double? paymentProgressPercentage;
+  final double? totalPaid;
+  final double? totalRemaining;
+  // New due status fields from API
+  final bool hasOverdue;
+  final int dueTodayCount;
+  final int dueSoonCount;
+  final NextPaymentInfo? nextPayment;
+
+  InstallmentSummary({
+    required this.totalAmount,
+    required this.paidAmount,
+    required this.remainingAmount,
+    required this.currency,
+    this.nextPaymentDue,
+    required this.overdueCount,
+    required this.totalInstallments,
+    required this.paidInstallments,
+    required this.remainingInstallments,
+    this.totalCareCost,
+    this.paymentProgressPercentage,
+    this.totalPaid,
+    this.totalRemaining,
+    this.hasOverdue = false,
+    this.dueTodayCount = 0,
+    this.dueSoonCount = 0,
+    this.nextPayment,
+  });
+
+  factory InstallmentSummary.fromJson(Map<String, dynamic> json) {
+    return InstallmentSummary(
+      totalAmount: _parseDouble(json['total_amount']),
+      paidAmount: _parseDouble(json['paid_amount']),
+      remainingAmount: _parseDouble(json['remaining_amount']),
+      currency: json['currency'] ?? 'GHS',
+      nextPaymentDue: json['next_payment_due'],
+      overdueCount: _parseInt(json['overdue_count']) ?? 0,
+      totalInstallments: _parseInt(json['total_installments']) ?? 0,
+      paidInstallments: _parseInt(json['paid_installments']) ?? 0,
+      remainingInstallments: _parseInt(json['remaining_installments']) ?? 0,
+      totalCareCost: _parseDoubleNullable(json['total_care_cost']),
+      paymentProgressPercentage: _parseDoubleNullable(json['payment_progress_percentage']),
+      totalPaid: _parseDoubleNullable(json['total_paid']),
+      totalRemaining: _parseDoubleNullable(json['total_remaining']),
+      // New due status fields
+      hasOverdue: json['has_overdue'] ?? false,
+      dueTodayCount: _parseInt(json['due_today_count']) ?? 0,
+      dueSoonCount: _parseInt(json['due_soon_count']) ?? 0,
+      nextPayment: json['next_payment'] != null
+          ? NextPaymentInfo.fromJson(json['next_payment'])
+          : null,
+    );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) {
+      return int.tryParse(value) ?? 0;
+    }
+    return 0;
+  }
+
+  static double _parseDouble(dynamic value) {
+    if (value == null) return 0.0;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value) ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  static double? _parseDoubleNullable(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
+  }
+
+  /// Get formatted total amount
+  String get formattedTotalAmount => '$currency ${totalAmount.toStringAsFixed(2)}';
+
+  /// Get formatted paid amount
+  String get formattedPaidAmount => '$currency ${paidAmount.toStringAsFixed(2)}';
+
+  /// Get formatted remaining amount
+  String get formattedRemainingAmount => '$currency ${remainingAmount.toStringAsFixed(2)}';
+
+  /// Get formatted total care cost
+  String get formattedTotalCareCost => '$currency ${(totalCareCost ?? totalAmount).toStringAsFixed(2)}';
+
+  /// Get formatted total paid
+  String get formattedTotalPaid => '$currency ${(totalPaid ?? paidAmount).toStringAsFixed(2)}';
+
+  /// Get formatted total remaining
+  String get formattedTotalRemaining => '$currency ${(totalRemaining ?? remainingAmount).toStringAsFixed(2)}';
+
+  /// Check if there are overdue payments (computed from count if API field not set)
+  bool get hasOverduePayments => hasOverdue || overdueCount > 0;
+
+  /// Get progress percentage (uses API value if available)
+  double get progressPercentage {
+    if (paymentProgressPercentage != null) return paymentProgressPercentage!;
+    if (totalInstallments == 0) return 0.0;
+    return (paidInstallments / totalInstallments) * 100;
+  }
+}
+
+/// Next payment information from API
+class NextPaymentInfo {
+  final int? id;
+  final String? dueStatus; // "overdue|due_today|due_soon|upcoming|paid|no_due_date"
+  final String? dueStatusLabel; // "Overdue by 3 days" | "Due Today" | "Due in 5 days" | etc.
+  final bool isOverdue;
+  final bool isDueToday;
+  final bool isDueSoon;
+  final int? daysUntilDue; // Negative if overdue
+  final String? dueDate;
+  final String? dueDateFormatted;
+  final double? amount;
+  final String? currency;
+
+  NextPaymentInfo({
+    this.id,
+    this.dueStatus,
+    this.dueStatusLabel,
+    this.isOverdue = false,
+    this.isDueToday = false,
+    this.isDueSoon = false,
+    this.daysUntilDue,
+    this.dueDate,
+    this.dueDateFormatted,
+    this.amount,
+    this.currency,
+  });
+
+  factory NextPaymentInfo.fromJson(Map<String, dynamic> json) {
+    return NextPaymentInfo(
+      id: json['id'] is int ? json['id'] : (json['id'] != null ? int.tryParse(json['id'].toString()) : null),
+      dueStatus: json['due_status'],
+      dueStatusLabel: json['due_status_label'],
+      isOverdue: json['is_overdue'] ?? false,
+      isDueToday: json['is_due_today'] ?? false,
+      isDueSoon: json['is_due_soon'] ?? false,
+      daysUntilDue: json['days_until_due'] is int ? json['days_until_due'] : (json['days_until_due'] != null ? int.tryParse(json['days_until_due'].toString()) : null),
+      dueDate: json['due_date'],
+      dueDateFormatted: json['due_date_formatted'],
+      amount: json['amount'] is double ? json['amount'] : (json['amount'] != null ? double.tryParse(json['amount'].toString()) : null),
+      currency: json['currency'],
+    );
+  }
+
+  /// Get formatted amount
+  String get formattedAmount => '${currency ?? 'GHS'} ${(amount ?? 0).toStringAsFixed(2)}';
+}
+
+/// Payment configuration for installments
+class InstallmentPaymentConfig {
+  final String publicKey;
+  final List<String> supportedChannels;
+
+  InstallmentPaymentConfig({
+    required this.publicKey,
+    required this.supportedChannels,
+  });
+
+  factory InstallmentPaymentConfig.fromJson(Map<String, dynamic> json) {
+    return InstallmentPaymentConfig(
+      publicKey: json['public_key'] ?? '',
+      supportedChannels: (json['supported_channels'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+    );
+  }
+}
+
+/// Response model for initiating installment payment
+class InstallmentPaymentResponse {
+  final bool success;
+  final String message;
+  final PaymentInitiation? data;
+
+  InstallmentPaymentResponse({
+    required this.success,
+    required this.message,
+    this.data,
+  });
+
+  factory InstallmentPaymentResponse.fromJson(Map<String, dynamic> json) {
+    return InstallmentPaymentResponse(
+      success: json['success'] ?? false,
+      message: json['message'] ?? '',
+      data: json['data'] != null
+          ? PaymentInitiation.fromJson(json['data'])
+          : null,
     );
   }
 }

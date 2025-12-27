@@ -4,14 +4,19 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'firebase_options.dart';
 import 'utils/app_colors.dart';
+import 'utils/secure_storage.dart';
 import 'services/auth/auth_service.dart';
+import 'services/contact_person/contact_person_auth_service.dart';
 import 'services/preferences_service.dart';
 import 'services/notification_service.dart';
+import 'services/app_version_service.dart';
 import 'models/auth/auth_models.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/nurse/nurse_main_screen.dart';
 import 'screens/patient/patient_main_screen.dart';
+import 'screens/contact_person/patient_selector_screen.dart';
+import 'screens/contact_person/contact_person_main_screen.dart';
 
 void main() async {
   // Ensure Flutter bindings are initialized and preserve splash
@@ -57,7 +62,15 @@ void main() async {
   } catch (e) {
     print('❌ Notification service initialization failed: $e');
   }
-  
+
+  // 📱 Initialize App Version Service (for force update feature)
+  try {
+    await AppVersionService().initialize();
+    print('✅ App Version service initialized successfully');
+  } catch (e) {
+    print('❌ App Version service initialization failed: $e');
+  }
+
   runApp(const MyApp());
 }
 
@@ -88,7 +101,9 @@ class AppInitializer extends StatefulWidget {
 
 class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObserver {
   final _authService = AuthService();
+  final _contactPersonAuthService = ContactPersonAuthService();
   final _preferencesService = PreferencesService();
+  final _secureStorage = SecureStorage();
 
   @override
   void initState() {
@@ -175,24 +190,35 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
   // Navigate directly to dashboard - NO BLOCKING API CALLS
   Future<void> _navigateToDashboardDirectly() async {
     try {
+      // First check if this is a contact person session
+      final userType = await _secureStorage.getUserType();
+      print('🔄 User type: $userType');
+
+      if (userType == 'contact_person') {
+        // Handle contact person session restoration
+        await _navigateToContactPersonDashboard();
+        return;
+      }
+
+      // Regular user flow
       print('🔄 Getting current user...');
       final user = await _authService.getCurrentUser();
-      
+
       if (user != null) {
         print('✅ User found: ${user.fullName} (${user.role})');
-        
+
         if (mounted) {
           // Navigate to dashboard immediately
           _navigateToDashboard(user);
-          
+
           // Validate token in background (completely non-blocking)
           // This NEVER forces a logout
           _authService.validateInBackground();
         }
-        
+
         return;
       }
-      
+
       print('❌ No user data found');
       // No user data found - go to login
       if (mounted) {
@@ -200,6 +226,84 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
       }
     } catch (e) {
       print('❌ Dashboard navigation error: $e');
+      if (mounted) {
+        _navigateToLogin();
+      }
+    }
+  }
+
+  // Navigate contact person to their dashboard
+  Future<void> _navigateToContactPersonDashboard() async {
+    try {
+      print('🔄 Restoring contact person session...');
+
+      final contactPerson = await _contactPersonAuthService.getStoredContactPerson();
+
+      if (contactPerson == null) {
+        print('❌ No contact person data found');
+        if (mounted) {
+          _navigateToLogin();
+        }
+        return;
+      }
+
+      print('✅ Contact person found: ${contactPerson.name}');
+
+      // Check if they had a patient selected
+      final selectedPatientId = await _contactPersonAuthService.getSelectedPatientId();
+
+      if (selectedPatientId != null) {
+        // Find the selected patient
+        final selectedPatient = contactPerson.linkedPatients.firstWhere(
+          (p) => p.id == selectedPatientId,
+          orElse: () => contactPerson.linkedPatients.first,
+        );
+
+        print('✅ Restoring with selected patient: ${selectedPatient.name}');
+
+        FlutterNativeSplash.remove();
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => ContactPersonMainScreen(
+                contactPersonData: {
+                  'id': contactPerson.id.toString(),
+                  'name': contactPerson.name,
+                  'phone': contactPerson.phone,
+                  'email': contactPerson.email,
+                  'avatar': contactPerson.avatar,
+                  'role': 'contact_person',
+                  'selectedPatientId': selectedPatient.id.toString(),
+                  'selectedPatientName': selectedPatient.name,
+                  'selectedPatientAge': selectedPatient.age,
+                  'selectedPatientPhone': selectedPatient.phone,
+                  'selectedPatientAvatar': selectedPatient.avatar,
+                  'selectedPatientRelationship': selectedPatient.relationship,
+                  'selectedPatientIsPrimary': selectedPatient.isPrimary,
+                  'linkedPatients': contactPerson.linkedPatients
+                      .map((p) => p.toJson())
+                      .toList(),
+                },
+              ),
+            ),
+          );
+        }
+      } else {
+        // No patient selected, go to patient selector
+        print('➡️ Navigating to patient selector');
+        FlutterNativeSplash.remove();
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => PatientSelectorScreen(
+                contactPerson: contactPerson,
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print('❌ Contact person dashboard navigation error: $e');
       if (mounted) {
         _navigateToLogin();
       }

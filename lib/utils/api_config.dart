@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 
 class ApiConfig {
   // Base URL - can be changed based on environment
-  static const String _localBaseUrl = 'https://ff8071514ed1.ngrok-free.app';
+  static const String _localBaseUrl = 'http://localhost:8000';
   static const String _productionBaseUrl = 'https://apps.judyscareagency.com'; // Replace with your production URL
 
   // Get base URL based on environment
@@ -153,6 +153,14 @@ static String initiatePaymentEndpoint(int requestId) =>
 
 /// Verify payment
 static String get verifyPaymentEndpoint => '$mobilePrefix/payments/verify';
+
+/// Get remaining installments for a care request
+static String careRequestInstallmentsEndpoint(int requestId) =>
+    '$mobilePrefix/care-requests/$requestId/installments';
+
+/// Pay specific installment
+static String payInstallmentEndpoint(int requestId, int paymentId) =>
+    '$mobilePrefix/care-requests/$requestId/installments/$paymentId/pay';
 
 // ==================== END CARE REQUEST ENDPOINTS ====================
 
@@ -380,6 +388,13 @@ static String refundPaymentEndpoint(int paymentId) =>
 
   static String contactPersonVerifyPaymentEndpoint(int patientId) =>
       '$contactPersonPrefix/patient/$patientId/care-requests/payment/verify';
+
+  // Installments
+  static String contactPersonInstallmentsEndpoint(int patientId, int requestId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/installments';
+
+  static String contactPersonPayInstallmentEndpoint(int patientId, int requestId, int paymentId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/installments/$paymentId/pay';
 
   // Feedback
   static String contactPersonFeedbackEndpoint(int patientId) =>

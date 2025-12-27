@@ -4,6 +4,8 @@ import '../../services/contact_person/contact_person_service.dart';
 import '../../models/care_request/care_request_models.dart';
 import '../../models/contact_person/contact_person_models.dart';
 import '../../utils/string_utils.dart';
+import '../patient/widgets/tabbed_care_request_card.dart';
+import '../payment/care_payment_screen.dart';
 import 'contact_person_care_request_screen.dart';
 
 class ContactPersonCareRequestListsScreen extends StatefulWidget {
@@ -1083,33 +1085,398 @@ class _ContactPersonCareRequestListsScreenState
   }
 
   Widget _buildActionSection(CareRequest request) {
+    final canPayAssessment = request.status == 'pending_payment';
+    final canPayCare = request.status == 'awaiting_care_payment';
+
     return Column(
       children: [
         const Divider(height: 32),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF199A8E),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        if (canPayAssessment) ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _continueToPayment(request),
+              icon: const Icon(Icons.payment),
+              label: const Text(
+                'Pay Assessment Fee',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            child: const Text(
-              'Close',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF199A8E),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ),
-        ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF199A8E),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Color(0xFF199A8E)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Close',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ] else if (canPayCare) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFF199A8E).withOpacity(0.1),
+                  const Color(0xFF199A8E).withOpacity(0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF199A8E).withOpacity(0.3),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      color: Color(0xFF199A8E),
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Care Service Payment Required',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ],
+                ),
+                if (request.carePayment != null) ...[
+                  const SizedBox(height: 12),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Amount Due:',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      Text(
+                        '${request.carePayment!.currency} ${request.carePayment!.totalAmount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF199A8E),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _continueToCarePayment(request),
+              icon: const Icon(Icons.payment),
+              label: const Text(
+                'Pay for Care Services',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF199A8E),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () => Navigator.pop(context),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF199A8E),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                side: const BorderSide(color: Color(0xFF199A8E)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Close',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ] else ...[
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF199A8E),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Close',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
+  }
+
+  Future<void> _continueToPayment(CareRequest request) async {
+    Navigator.pop(context); // Close detail modal
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF199A8E),
+        ),
+      ),
+    );
+
+    try {
+      final detailResponse = await _contactPersonService.getCareRequestById(request.id);
+
+      if (!mounted) return;
+
+      Navigator.pop(context); // Close loading dialog
+
+      if (detailResponse.success && detailResponse.data != null) {
+        final careRequest = detailResponse.data!;
+
+        final response = await _contactPersonService.getRequestInfo(
+          id: careRequest.id,
+          careType: careRequest.careType,
+          region: careRequest.region,
+        );
+
+        if (response.success && response.data != null) {
+          final assessmentFee = response.data!.assessmentFee.total;
+
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CarePaymentScreen(
+                careRequest: careRequest,
+                assessmentFee: assessmentFee,
+              ),
+            ),
+          );
+
+          if (result == true) {
+            _loadCareRequests(refresh: true, forceRefresh: true);
+          }
+        } else {
+          throw Exception(response.message);
+        }
+      } else {
+        throw Exception(detailResponse.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _continueToCarePayment(CareRequest request) async {
+    Navigator.pop(context); // Close detail modal
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(
+          color: Color(0xFF199A8E),
+        ),
+      ),
+    );
+
+    try {
+      final detailResponse = await _contactPersonService.getCareRequestById(request.id);
+
+      if (!mounted) return;
+
+      Navigator.pop(context); // Close loading dialog
+
+      if (detailResponse.success && detailResponse.data != null) {
+        final careRequest = detailResponse.data!;
+
+        if (careRequest.carePayment == null) {
+          throw Exception('Care payment information not found');
+        }
+
+        final carePaymentAmount = careRequest.carePayment!.totalAmount;
+
+        // Navigate to payment screen and wait for result
+        final result = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CarePaymentScreen(
+              careRequest: careRequest,
+              assessmentFee: carePaymentAmount,
+              isCarePayment: true,
+            ),
+          ),
+        );
+
+        // Handle payment result
+        if (result == true) {
+          // Payment successful - refresh the list
+          _loadCareRequests(refresh: true, forceRefresh: true);
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.check_circle,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Care service payment successful! Care will begin shortly.',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: const Color(0xFF4CAF50),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                duration: const Duration(seconds: 4),
+              ),
+            );
+          }
+        } else if (result == false) {
+          // Payment cancelled or failed
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.info_outline,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Payment was not completed. You can try again from the request details.',
+                        style: TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.orange.shade700,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                duration: const Duration(seconds: 3),
+                action: SnackBarAction(
+                  label: 'OK',
+                  textColor: Colors.white,
+                  onPressed: () {},
+                ),
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception(detailResponse.message);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -1292,276 +1659,17 @@ class _ContactPersonCareRequestListsScreenState
   }
 
   Widget _buildCareRequestCard(CareRequest request) {
-    final createdDate = request.createdAt;
-    final urgencyColor = _getUrgencyColor(request.urgencyLevel);
-    final statusColor = _getStatusColor(request.status);
-    final isPendingPayment = request.status == 'pending_payment';
-    final isAwaitingCarePayment = request.status == 'awaiting_care_payment';
-    final needsPayment = isPendingPayment || isAwaitingCarePayment;
+    // Use a key that changes when the list is refreshed to force Payment tab data reload
+    final refreshKey = '${request.id}_${_lastFetchTime?.millisecondsSinceEpoch ?? 0}';
 
-    String? scheduledTimeDisplay;
-    if (request.assessmentScheduledAt != null) {
-      final scheduledDate = request.assessmentScheduledAt!;
-      final now = DateTime.now();
-      final difference = scheduledDate.difference(now);
-
-      if (difference.inDays == 0) {
-        scheduledTimeDisplay =
-            'Today at ${DateFormat('h:mm a').format(scheduledDate)}';
-      } else if (difference.inDays == 1) {
-        scheduledTimeDisplay =
-            'Tomorrow at ${DateFormat('h:mm a').format(scheduledDate)}';
-      } else if (difference.inDays < 7) {
-        scheduledTimeDisplay =
-            DateFormat('EEE, MMM d • h:mm a').format(scheduledDate);
-      } else {
-        scheduledTimeDisplay =
-            DateFormat('MMM d, yyyy • h:mm a').format(scheduledDate);
-      }
-    }
-
-    final showScheduledInfo = request.status == 'nurse_assigned' ||
-        request.status == 'assessment_scheduled' ||
-        request.status == 'assessment_completed';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: needsPayment
-              ? const Color(0xFF2196F3).withOpacity(0.5)
-              : Colors.grey[200]!,
-          width: needsPayment ? 2 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => _showRequestDetailModal(request),
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: urgencyColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _getUrgencyIcon(request.urgencyLevel),
-                        color: urgencyColor,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            StringUtils.formatCareType(request.careType),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            DateFormat('MMM d, yyyy').format(createdDate),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _getStatusDisplayText(request.status),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (scheduledTimeDisplay != null && showScheduledInfo) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFFFF9A00).withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFF9A00).withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.schedule,
-                            size: 16,
-                            color: Color(0xFFFF9A00),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                request.status == 'assessment_completed'
-                                    ? 'Assessment Completed'
-                                    : 'Assessment Scheduled',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                scheduledTimeDisplay,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFFF9A00),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                Text(
-                  request.description,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[700],
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFB),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.location_on_outlined,
-                          size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          request.serviceAddress,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (needsPayment) ...[
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2196F3).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: const Color(0xFF2196F3).withOpacity(0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.info_outline,
-                          size: 16,
-                          color: Color(0xFF2196F3),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            isAwaitingCarePayment
-                                ? 'Tap to view care payment details'
-                                : 'Tap to view assessment payment details',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        if (isAwaitingCarePayment && request.carePayment != null)
-                          Text(
-                            '${request.carePayment!.currency} ${request.carePayment!.totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF199A8E),
-                            ),
-                          ),
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.arrow_forward,
-                          size: 16,
-                          color: Color(0xFF2196F3),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
+    return TabbedCareRequestCard(
+      key: ValueKey(refreshKey),
+      request: request,
+      isContactPerson: true,
+      onTap: () => _showRequestDetailModal(request),
+      onPaymentComplete: () {
+        _loadCareRequests(refresh: true, forceRefresh: true);
+      },
     );
   }
 

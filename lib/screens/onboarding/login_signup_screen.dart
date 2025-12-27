@@ -140,7 +140,7 @@ class _WelcomeSection extends StatelessWidget {
     return const Column(
       children: [
         Text(
-          'Welcome back!',
+          'Welcome!',
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,

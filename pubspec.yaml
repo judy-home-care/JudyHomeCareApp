@@ -1,7 +1,7 @@
 name: Judy_Home_HealthCare
 description: "Home HealthCare Service"
 publish_to: 'none'
-version: 1.0.0+10
+version: 1.0.0+11
 
 environment:
   sdk: ^3.9.0
@@ -34,6 +34,7 @@ dependencies:
   provider: ^6.1.1
   local_auth: ^2.1.7
   flutter_inappwebview: ^6.1.5
+  package_info_plus: ^8.0.0
   
   # Firebase
   firebase_core: ^2.24.2

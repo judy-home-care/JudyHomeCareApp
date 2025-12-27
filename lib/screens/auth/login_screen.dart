@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Welcome back, ${user.firstName}!'),
+        content: Text('Welcome, ${user.firstName}!'),
         backgroundColor: _primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -536,7 +536,7 @@ class _WelcomeSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Welcome back',
+          'Welcome',
           style: TextStyle(
             fontSize: 36,
             fontWeight: FontWeight.bold,

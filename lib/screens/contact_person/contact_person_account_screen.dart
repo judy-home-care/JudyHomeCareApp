@@ -5,6 +5,7 @@ import '../../services/messages/message_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../messages/conversations_screen.dart';
+import '../password_security/password_security.dart';
 import 'patient_selector_screen.dart';
 import '../auth/login_screen.dart';
 
@@ -85,6 +86,7 @@ class _ContactPersonAccountScreenState
               child: Column(
                 children: [
                   _buildCurrentViewingSection(),
+                  _buildAccountSettings(),
                   _buildMessagesSection(),
                   _buildLinkedPatientsSection(),
                   _buildLogoutButton(),
@@ -428,6 +430,66 @@ class _ContactPersonAccountScreenState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAccountSettings() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'Account Settings',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          _buildSettingTile(
+            icon: Icons.lock_outline,
+            title: 'Password & Security',
+            subtitle: 'Change password and security settings',
+            iconColor: AppColors.primaryGreen,
+            iconBg: const Color(0xFFE8F5F5),
+            onTap: () => _navigateToPasswordSecurity(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToPasswordSecurity() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PasswordSecurityScreen(
+          userData: {
+            'id': widget.contactPerson.id,
+            'name': widget.contactPerson.name,
+            'email': widget.contactPerson.email,
+            'phone': widget.contactPerson.phone,
+            'avatar': widget.contactPerson.avatar,
+            'type': 'contact_person',
+          },
+        ),
       ),
     );
   }

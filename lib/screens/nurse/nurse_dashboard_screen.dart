@@ -8,6 +8,7 @@ import '../../utils/app_colors.dart';
 import '../../services/dashboard/dashboard_service.dart';
 import '../../services/time_tracking_service.dart';
 import '../../services/location_service.dart';
+import '../../services/app_version_service.dart';
 import '../../models/dashboard/nurse_dashboard_models.dart';
 import '../schedules/schedule_patients_screen.dart';
 import 'nurse_patients_screen.dart';
@@ -156,6 +157,9 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
 
         // Force dashboard reload
         _loadDashboardData(forceRefresh: true, silent: true);
+
+        // Also refresh notification badge count explicitly
+        _loadUnreadNotificationCount();
       } else if (_shouldRefreshOnResume(timeSinceLastVisible)) {
         // Only refresh if cache is expired or we've been away for a while
         debugPrint('📱 [Nurse Dashboard] Cache expired or long absence, refreshing');
@@ -175,8 +179,8 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
         }
       }
 
-      // Refresh notification count on app resume
-      _notificationService.refreshBadge();
+      // Refresh notification count on app resume (direct setState, not via listener)
+      _loadUnreadNotificationCount();
     } else if (state == AppLifecycleState.paused) {
       _isScreenVisible = false;
       _lastVisibleTime = DateTime.now();
@@ -227,11 +231,15 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
   /// Load unread notification count (only called once on init and resume)
   Future<void> _loadUnreadNotificationCount() async {
     try {
-      // Just call refreshBadge() - it updates BOTH count AND badge
-      await _notificationService.refreshBadge();
-      debugPrint('📊 [Nurse Dashboard] Badge refreshed and count updated');
+      final response = await _notificationService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = response.unreadCount;
+        });
+        debugPrint('📊 [Nurse Dashboard] Initial notification count loaded: ${response.unreadCount}');
+      }
     } catch (e) {
-      debugPrint('❌ [Nurse Dashboard] Error refreshing badge: $e');
+      debugPrint('❌ [Nurse Dashboard] Error loading unread count: $e');
     }
   }
 
@@ -1246,19 +1254,30 @@ String _getRemainingCacheTime() {
     debugPrint('🌐 Fetching dashboard from API...');
 
     try {
-      final data = await _dashboardService.getNurseMobileDashboard();
-      
+      final response = await _dashboardService.getNurseMobileDashboard();
+
       if (mounted) {
         setState(() {
-          _dashboardData = data;
+          _dashboardData = response.data;
           _lastFetchTime = DateTime.now();
           _isLoading = false;
         });
-        
+
         debugPrint('✅ Dashboard loaded (${_cacheAge})');
 
+        // Check for app version requirements and show update dialog if needed
+        if (response.versionRequirement != null) {
+          final versionService = AppVersionService();
+          if (versionService.needsUpdate(response.versionRequirement!)) {
+            versionService.showForceUpdateDialog(
+              context,
+              requirement: response.versionRequirement,
+            );
+          }
+        }
+
         _checkAndStopCompletedTimer();
-        
+
         // Show notification if silent refresh
         if (silent && _isTabVisible) {
           _showDataUpdatedNotification();

@@ -8,6 +8,8 @@ import '../../models/progress_notes/progress_note_models.dart';
 import '../../utils/api_client.dart';
 import '../../utils/api_config.dart';
 import '../../utils/secure_storage.dart';
+import '../app_version_service.dart';
+import '../dashboard/dashboard_service.dart';
 
 class ContactPersonService {
   final ApiClient _apiClient = ApiClient();
@@ -62,8 +64,17 @@ class ContactPersonService {
     }
   }
 
+  /// Extract version requirement from API response
+  VersionRequirement? _extractVersionInfo(Map<String, dynamic> response) {
+    final versionData = response['version_info'] ?? response['app_version'];
+    if (versionData != null && versionData is Map<String, dynamic>) {
+      return VersionRequirement.fromJson(versionData);
+    }
+    return null;
+  }
+
   /// Get patient dashboard
-  Future<PatientDashboardData> getPatientDashboard(int patientId) async {
+  Future<DashboardResponse<PatientDashboardData>> getPatientDashboard(int patientId) async {
     try {
       debugPrint('[ContactPersonService] Fetching dashboard for patient $patientId...');
 
@@ -71,7 +82,10 @@ class ContactPersonService {
         ApiConfig.contactPersonPatientDashboardEndpoint(patientId),
       );
 
-      return PatientDashboardData.fromJson(response['data'] ?? response);
+      return DashboardResponse(
+        data: PatientDashboardData.fromJson(response['data'] ?? response),
+        versionRequirement: _extractVersionInfo(response),
+      );
     } catch (e) {
       debugPrint('[ContactPersonService] Error fetching dashboard: $e');
       rethrow;
@@ -290,6 +304,73 @@ class ContactPersonService {
     }
   }
 
+  /// Get care request by ID
+  /// Uses the regular patient endpoint which works for contact persons too
+  Future<CareRequestDetailResponse> getCareRequestById(int requestId) async {
+    try {
+      debugPrint('[ContactPersonService] Fetching care request detail for ID $requestId...');
+
+      // Use the regular patient endpoint as it works for contact persons too
+      final response = await _apiClient.get(
+        ApiConfig.careRequestDetailEndpoint(requestId),
+      );
+
+      debugPrint('[ContactPersonService] Care request detail response received');
+
+      if (response['success'] == true) {
+        return CareRequestDetailResponse.fromJson(response);
+      } else {
+        throw Exception(response['message'] ?? 'Failed to fetch care request');
+      }
+    } catch (e) {
+      debugPrint('[ContactPersonService] Error fetching care request detail: $e');
+      rethrow;
+    }
+  }
+
+  /// Get care request info (assessment fee, etc.)
+  /// Uses the regular patient endpoint which works for contact persons too
+  Future<CareRequestInfoResponse> getRequestInfo({
+    int? id,
+    String? careType,
+    String? region,
+  }) async {
+    try {
+      debugPrint('[ContactPersonService] Fetching request info...');
+
+      final queryParams = <String, dynamic>{};
+
+      if (id != null) {
+        queryParams['id'] = id.toString();
+      }
+      if (careType != null && careType.isNotEmpty) {
+        queryParams['care_type'] = careType;
+      }
+      if (region != null && region.isNotEmpty) {
+        queryParams['region'] = region;
+      }
+
+      // Use the regular patient endpoint as it works for contact persons too
+      final uri = Uri.parse(ApiConfig.careRequestInfoEndpoint).replace(
+        queryParameters: queryParams.isNotEmpty ? queryParams : null,
+      );
+
+      debugPrint('[ContactPersonService] Request info URL: ${uri.toString()}');
+
+      final response = await _apiClient.get(uri.toString());
+
+      if (response['success'] == true) {
+        debugPrint('[ContactPersonService] Request info received');
+        return CareRequestInfoResponse.fromJson(response);
+      } else {
+        throw Exception(response['message'] ?? 'Failed to fetch request info');
+      }
+    } catch (e) {
+      debugPrint('[ContactPersonService] Error fetching request info: $e');
+      rethrow;
+    }
+  }
+
   /// Initiate payment
   Future<Map<String, dynamic>> initiatePayment(int requestId) async {
     try {
@@ -325,6 +406,134 @@ class ContactPersonService {
       debugPrint('[ContactPersonService] Error verifying payment: $e');
       rethrow;
     }
+  }
+
+  // ==================== INSTALLMENT OPERATIONS ====================
+
+  /// Get installments for a care request
+  /// Falls back to regular patient endpoint if contact person endpoint not available
+  Future<InstallmentsResponse> getInstallments(int requestId) async {
+    try {
+      final patientId = await _getPatientId();
+      debugPrint('[ContactPersonService] Fetching installments for request $requestId...');
+
+      // Try contact person specific endpoint first
+      try {
+        final response = await _apiClient.get(
+          ApiConfig.contactPersonInstallmentsEndpoint(patientId, requestId),
+        );
+
+        debugPrint('[ContactPersonService] Installments response received from contact person endpoint');
+
+        if (response['success'] == true) {
+          return InstallmentsResponse.fromJson(response);
+        } else {
+          throw Exception(response['message'] ?? 'Failed to fetch installments');
+        }
+      } catch (e) {
+        debugPrint('[ContactPersonService] Contact person endpoint failed, trying regular endpoint...');
+
+        // Fall back to regular patient endpoint
+        final fallbackResponse = await _apiClient.get(
+          ApiConfig.careRequestInstallmentsEndpoint(requestId),
+        );
+
+        debugPrint('[ContactPersonService] Installments response received from fallback endpoint');
+
+        if (fallbackResponse['success'] == true) {
+          return InstallmentsResponse.fromJson(fallbackResponse);
+        } else {
+          throw Exception(fallbackResponse['message'] ?? 'Failed to fetch installments');
+        }
+      }
+    } catch (e) {
+      debugPrint('[ContactPersonService] Error fetching installments: $e');
+      rethrow;
+    }
+  }
+
+  /// Initiate installment payment
+  /// Falls back to regular patient endpoint if contact person endpoint not available
+  Future<InstallmentPaymentResponse> initiateInstallmentPayment({
+    required int requestId,
+    required int paymentId,
+    required String paymentMethod,
+    String? paymentProvider,
+    String? phoneNumber,
+  }) async {
+    try {
+      final patientId = await _getPatientId();
+      debugPrint('[ContactPersonService] Initiating installment payment...');
+      debugPrint('[ContactPersonService] Request ID: $requestId, Payment ID: $paymentId');
+
+      final body = <String, dynamic>{
+        'payment_method': paymentMethod,
+      };
+
+      if (paymentProvider != null && paymentProvider.isNotEmpty) {
+        body['payment_provider'] = paymentProvider;
+      }
+
+      if (phoneNumber != null && phoneNumber.isNotEmpty) {
+        body['phone_number'] = phoneNumber;
+      }
+
+      // Try contact person specific endpoint first
+      try {
+        final response = await _apiClient.post(
+          ApiConfig.contactPersonPayInstallmentEndpoint(patientId, requestId, paymentId),
+          body: body,
+          requiresAuth: true,
+        );
+
+        debugPrint('[ContactPersonService] Installment payment response received from contact person endpoint');
+
+        if (response['success'] == true) {
+          return InstallmentPaymentResponse.fromJson(response);
+        } else {
+          throw Exception(response['message'] ?? 'Failed to initiate installment payment');
+        }
+      } catch (e) {
+        debugPrint('[ContactPersonService] Contact person endpoint failed, trying regular endpoint...');
+
+        // Fall back to regular patient endpoint
+        // Use 'channel' instead of 'payment_method' for the regular endpoint
+        final fallbackBody = <String, dynamic>{
+          'channel': paymentMethod,
+        };
+
+        if (paymentProvider != null && paymentProvider.isNotEmpty) {
+          fallbackBody['payment_provider'] = paymentProvider;
+        }
+
+        if (phoneNumber != null && phoneNumber.isNotEmpty) {
+          fallbackBody['phone_number'] = phoneNumber;
+        }
+
+        final fallbackResponse = await _apiClient.post(
+          ApiConfig.payInstallmentEndpoint(requestId, paymentId),
+          body: fallbackBody,
+          requiresAuth: true,
+        );
+
+        debugPrint('[ContactPersonService] Installment payment response received from fallback endpoint');
+
+        if (fallbackResponse['success'] == true) {
+          return InstallmentPaymentResponse.fromJson(fallbackResponse);
+        } else {
+          throw Exception(fallbackResponse['message'] ?? 'Failed to initiate installment payment');
+        }
+      }
+    } catch (e) {
+      debugPrint('[ContactPersonService] Error initiating installment payment: $e');
+      rethrow;
+    }
+  }
+
+  /// Check if care request has installments
+  bool hasInstallmentPayments(CareRequest request) {
+    return ['care_active', 'care_payment_received', 'awaiting_care_payment']
+        .contains(request.status);
   }
 
   // ==================== TRANSPORT REQUESTS ====================

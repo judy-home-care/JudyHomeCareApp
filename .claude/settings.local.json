@@ -11,7 +11,8 @@
       "Bash(ls:*)",
       "Bash(whereis flutter:*)",
       "Bash(fvm flutter analyze:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(flutter pub get:*)"
     ],
     "deny": [],
     "ask": []

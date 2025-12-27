@@ -139,22 +139,34 @@ class SecureStorage {
   }
 
   // Check if user is logged in - IMPROVED VERSION
+  // Supports both regular users AND contact persons
   Future<bool> isLoggedIn() async {
     try {
       // Check if token exists
       final token = await getToken();
       if (token == null || token.isEmpty) return false;
 
-      // Check if user data exists
-      final userData = await getUserData();
-      if (userData == null) return false;
+      // Check user type to determine which data to verify
+      final userType = await getUserType();
 
-      // Check token expiry - be generous
-      final isExpired = await isTokenExpired();
-      if (isExpired) return false;
+      if (userType == 'contact_person') {
+        // For contact persons, check contact person data
+        final contactPersonData = await getContactPersonData();
+        if (contactPersonData == null) return false;
+        // Contact persons don't have token expiry, so just check token exists
+        return true;
+      } else {
+        // For regular users (patient, nurse, etc.), check user data
+        final userData = await getUserData();
+        if (userData == null) return false;
 
-      // All checks passed - user is logged in
-      return true;
+        // Check token expiry - be generous
+        final isExpired = await isTokenExpired();
+        if (isExpired) return false;
+
+        // All checks passed - user is logged in
+        return true;
+      }
     } catch (e) {
       // If there's any error, try to determine if we have basic auth data
       final token = await getToken();

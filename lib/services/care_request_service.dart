@@ -486,6 +486,132 @@ class CareRequestService {
   }
 
 
+  // ==================== INSTALLMENT OPERATIONS ====================
+
+  /// Get installments for a care request
+  ///
+  /// Returns remaining installments if first payment has been made,
+  /// otherwise returns empty data.
+  ///
+  /// Parameters:
+  /// - [requestId]: The ID of the care request
+  Future<InstallmentsResponse> getInstallments(int requestId) async {
+    try {
+      print('📡 [CareRequestService] Fetching installments for request $requestId...');
+
+      final response = await _apiClient.get(
+        ApiConfig.careRequestInstallmentsEndpoint(requestId),
+      );
+
+      print('✅ [CareRequestService] Installments response received');
+      print('🎯 [CareRequestService] Success: ${response['success']}');
+
+      if (response['success'] == true) {
+        print('✅ [CareRequestService] Installments fetched successfully');
+        return InstallmentsResponse.fromJson(response);
+      } else {
+        print('❌ [CareRequestService] Failed to fetch installments');
+        print('❌ [CareRequestService] Error message: ${response['message']}');
+        throw CareRequestException(
+          message: response['message'] ?? 'Failed to fetch installments',
+        );
+      }
+    } catch (e) {
+      print('💥 [CareRequestService] Installments fetch exception: $e');
+
+      if (e is CareRequestException) {
+        rethrow;
+      }
+      throw CareRequestException(
+        message: 'An unexpected error occurred: $e',
+      );
+    }
+  }
+
+  /// Pay a specific installment
+  ///
+  /// Initiates payment for a specific installment.
+  ///
+  /// Parameters:
+  /// - [requestId]: The ID of the care request
+  /// - [paymentId]: The ID of the installment payment
+  /// - [channel]: Payment channel (mobile_money, card, bank)
+  /// - [provider]: Payment provider (mtn, vodafone, airteltigo) - required for mobile_money
+  /// - [phoneNumber]: Phone number for mobile money payments
+  Future<InstallmentPaymentResponse> payInstallment({
+    required int requestId,
+    required int paymentId,
+    required String channel,
+    String? provider,
+    String? phoneNumber,
+  }) async {
+    try {
+      print('📡 [CareRequestService] Initiating installment payment...');
+      print('🔗 [CareRequestService] Request ID: $requestId, Payment ID: $paymentId');
+      print('💳 [CareRequestService] Channel: $channel');
+
+      final body = <String, dynamic>{
+        'channel': channel,
+      };
+
+      if (provider != null && provider.isNotEmpty) {
+        body['provider'] = provider;
+      }
+
+      if (phoneNumber != null && phoneNumber.isNotEmpty) {
+        body['phone_number'] = phoneNumber;
+      }
+
+      final response = await _apiClient.post(
+        ApiConfig.payInstallmentEndpoint(requestId, paymentId),
+        body: body,
+        requiresAuth: true,
+      );
+
+      print('✅ [CareRequestService] Installment payment response received');
+      print('🎯 [CareRequestService] Success: ${response['success']}');
+      print('📦 [CareRequestService] Response data: ${response['data']}');
+
+      if (response['success'] == true) {
+        print('✅ [CareRequestService] Installment payment initiated successfully');
+        final data = response['data'];
+        if (data != null) {
+          print('🔗 [CareRequestService] payment_url: ${data['payment_url']}');
+          print('🔗 [CareRequestService] authorization_url: ${data['authorization_url']}');
+          print('🔗 [CareRequestService] checkout_url: ${data['checkout_url']}');
+          print('📝 [CareRequestService] reference: ${data['reference']}');
+        }
+        return InstallmentPaymentResponse.fromJson(response);
+      } else {
+        print('❌ [CareRequestService] Installment payment initiation failed');
+        print('❌ [CareRequestService] Error message: ${response['message']}');
+        throw CareRequestException(
+          message: response['message'] ?? 'Failed to initiate installment payment',
+          errors: response['errors'],
+        );
+      }
+    } catch (e) {
+      print('💥 [CareRequestService] Installment payment exception: $e');
+
+      if (e is CareRequestException) {
+        rethrow;
+      }
+      throw CareRequestException(
+        message: 'An unexpected error occurred: $e',
+      );
+    }
+  }
+
+  /// Check if care request has installments
+  ///
+  /// Parameters:
+  /// - [request]: The care request to check
+  bool hasInstallmentPayments(CareRequest request) {
+    // Care requests with care_active or care_payment_received status may have installments
+    return ['care_active', 'care_payment_received', 'awaiting_care_payment']
+        .contains(request.status);
+  }
+
   /// Get care requests assigned to nurse (for assessments)
   Future<CareRequestsResponse> getAssignedCareRequests({
     int page = 1,

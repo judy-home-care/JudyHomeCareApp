@@ -6,6 +6,7 @@ import '../../utils/app_colors.dart';
 import 'patient_feedback_screen.dart';
 import '../../utils/string_utils.dart';
 import '../../services/dashboard/dashboard_service.dart';
+import '../../services/app_version_service.dart';
 import '../../models/dashboard/patient_dashboard_models.dart';
 import '../transport/transport_request_screen.dart';
 import 'care_request_screen.dart';
@@ -404,16 +405,27 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     debugPrint('🌐 Fetching patient dashboard from API...');
 
     try {
-      final data = await _dashboardService.getPatientMobileDashboard();
+      final response = await _dashboardService.getPatientMobileDashboard();
 
       if (mounted) {
         setState(() {
-          _dashboardData = data;
+          _dashboardData = response.data;
           _lastFetchTime = DateTime.now();
           _isLoading = false;
         });
 
         debugPrint('✅ Dashboard loaded (${_cacheAge})');
+
+        // Check for app version requirements and show update dialog if needed
+        if (response.versionRequirement != null) {
+          final versionService = AppVersionService();
+          if (versionService.needsUpdate(response.versionRequirement!)) {
+            versionService.showForceUpdateDialog(
+              context,
+              requirement: response.versionRequirement,
+            );
+          }
+        }
 
         // Show notification if silent refresh
         if (silent && _isTabVisible) {

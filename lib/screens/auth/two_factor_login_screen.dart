@@ -500,7 +500,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Welcome back, ${userData['first_name']}!'),
+        content: Text('Welcome, ${userData['first_name']}!'),
         backgroundColor: AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(

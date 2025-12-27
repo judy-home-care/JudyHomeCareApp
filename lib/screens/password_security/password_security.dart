@@ -207,10 +207,13 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                     _buildSecurityStatusCard(),
                     const SizedBox(height: 24),
                     _buildPasswordSection(),
-                    const SizedBox(height: 20),
-                    _buildTwoFactorSection(),
-                    const SizedBox(height: 20),
-                    _buildSecuritySettingsSection(),
+                    // Only show 2FA and security notifications for non-contact persons
+                    if (widget.userData['type'] != 'contact_person') ...[
+                      const SizedBox(height: 20),
+                      _buildTwoFactorSection(),
+                      const SizedBox(height: 20),
+                      _buildSecuritySettingsSection(),
+                    ],
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -291,11 +294,16 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
   }
 
   String _getSecurityLevel() {
+    // For contact persons, just show "Good Security" since they only have password
+    if (widget.userData['type'] == 'contact_person') {
+      return 'Good Security';
+    }
+
     int score = 0;
     if (_twoFactorEnabled) score += 40;
     if (_emailNotifications) score += 30;
     if (_loginAlerts) score += 30;
-    
+
     if (score >= 80) return 'Excellent Security';
     if (score >= 60) return 'Good Security';
     if (score >= 40) return 'Moderate Security';

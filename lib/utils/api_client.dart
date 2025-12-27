@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'api_config.dart';
 import 'secure_storage.dart';
+import '../services/app_version_service.dart';
 
 /// Custom API Error exception class
 class ApiError implements Exception {
@@ -163,6 +164,10 @@ class ApiClient {
     bool requiresAuth,
   ) async {
     final headers = Map<String, String>.from(ApiConfig.headers);
+
+    // Add version headers for backend version checking
+    final versionService = AppVersionService();
+    headers.addAll(versionService.getVersionHeaders());
 
     if (requiresAuth) {
       final token = await _storage.getToken();

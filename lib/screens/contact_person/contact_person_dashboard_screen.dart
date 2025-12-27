@@ -5,6 +5,7 @@ import '../../models/contact_person/contact_person_models.dart';
 import '../../models/dashboard/patient_dashboard_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/app_version_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/string_utils.dart';
@@ -287,16 +288,27 @@ class ContactPersonDashboardScreenState
     _isRefreshing = true;
 
     try {
-      final data = await _contactPersonService.getPatientDashboard(
+      final response = await _contactPersonService.getPatientDashboard(
         widget.selectedPatient.id,
       );
 
       if (mounted) {
         setState(() {
-          _dashboardData = data;
+          _dashboardData = response.data;
           _lastFetchTime = DateTime.now();
           _isLoading = false;
         });
+
+        // Check for app version requirements and show update dialog if needed
+        if (response.versionRequirement != null) {
+          final versionService = AppVersionService();
+          if (versionService.needsUpdate(response.versionRequirement!)) {
+            versionService.showForceUpdateDialog(
+              context,
+              requirement: response.versionRequirement,
+            );
+          }
+        }
 
         if (silent && _isTabVisible) {
           _showDataUpdatedNotification();
