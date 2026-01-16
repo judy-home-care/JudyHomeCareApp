@@ -71,9 +71,10 @@ class RecentSchedule {
 
 class PatientFeedback {
   final int id;
-  final int nurseId;
-  final String nurseName;
+  final int? nurseId;
+  final String? nurseName;
   final int? scheduleId;
+  final String type; // 'nurse' or 'general'
   final int rating;
   final String stars;
   final String feedbackText;
@@ -88,9 +89,10 @@ class PatientFeedback {
 
   PatientFeedback({
     required this.id,
-    required this.nurseId,
-    required this.nurseName,
+    this.nurseId,
+    this.nurseName,
     this.scheduleId,
+    required this.type,
     required this.rating,
     required this.stars,
     required this.feedbackText,
@@ -104,23 +106,30 @@ class PatientFeedback {
     required this.createdAt,
   });
 
+  /// Returns true if this is general feedback (not tied to a specific nurse)
+  bool get isGeneralFeedback => type == 'general' || nurseId == null;
+
+  /// Returns the display name (nurse name or "General Feedback")
+  String get displayName => nurseName ?? 'General Feedback';
+
   factory PatientFeedback.fromJson(Map<String, dynamic> json) {
     return PatientFeedback(
       id: json['id'],
       nurseId: json['nurse_id'],
       nurseName: json['nurse_name'],
       scheduleId: json['schedule_id'],
-      rating: json['rating'],
+      type: json['type'] ?? 'nurse',
+      rating: json['rating'] ?? 0,
       stars: json['stars'] ?? '',
-      feedbackText: json['feedback_text'],
+      feedbackText: json['feedback_text'] ?? '',
       wouldRecommend: json['would_recommend'] ?? false,
-      careDate: json['care_date'],
-      status: json['status'],
+      careDate: json['care_date'] ?? '',
+      status: json['status'] ?? '',
       isResponded: json['is_responded'] ?? false,
       responseText: json['response_text'],
       respondedAt: json['responded_at'],
       daysSinceSubmission: json['days_since_submission'] ?? 0,
-      createdAt: json['created_at'],
+      createdAt: json['created_at'] ?? '',
     );
   }
 }

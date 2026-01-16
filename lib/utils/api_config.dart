@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   // Base URL - can be changed based on environment
   static const String _localBaseUrl = 'http://localhost:8000';
-  static const String _productionBaseUrl = 'https://apps.judyscareagency.com'; // Replace with your production URL
+  static const String _productionBaseUrl = 'https://convivially-peskier-jayda.ngrok-free.dev'; // Replace with your production URL
 
   // Get base URL based on environment
   static String get baseUrl {
@@ -223,6 +223,25 @@ static const String getFeedbackStatisticsEndpoint = '$feedbackPrefix/statistics'
 
 // ==================== END PATIENT FEEDBACK ENDPOINTS ====================
 
+// ==================== SURVEY ENDPOINTS ====================
+
+/// Survey prefix
+static const String surveyPrefix = '$mobilePrefix/patient/surveys';
+
+/// Get pending surveys
+static String get pendingSurveysEndpoint => '$surveyPrefix/pending';
+
+/// Get survey details with questions
+static String surveyDetailEndpoint(int responseId) => '$surveyPrefix/$responseId';
+
+/// Submit survey answers
+static String submitSurveyEndpoint(int responseId) => '$surveyPrefix/$responseId/submit';
+
+/// Get completed surveys
+static String get completedSurveysEndpoint => '$surveyPrefix/completed';
+
+// ==================== END SURVEY ENDPOINTS ====================
+
 // ==================== PAYMENT ENDPOINTS ====================
 
 /// Get Paystack configuration (public key and channels)
@@ -251,6 +270,31 @@ static String refundPaymentEndpoint(int paymentId) =>
     '$mobilePrefix/payments/$paymentId/refund';
 
 // ==================== END PAYMENT ENDPOINTS ====================
+
+// ==================== WALLET ENDPOINTS ====================
+
+/// Wallet prefix
+static const String walletPrefix = '$mobilePrefix/wallet';
+
+/// Get wallet info (balance, status)
+static String get walletInfoEndpoint => walletPrefix;
+
+/// Get payment configuration for deposits
+static String get walletPaymentConfigEndpoint => '$walletPrefix/payment-config';
+
+/// Initiate wallet deposit
+static String get walletDepositEndpoint => '$walletPrefix/deposit';
+
+/// Verify wallet deposit
+static String get walletDepositVerifyEndpoint => '$walletPrefix/deposit/verify';
+
+/// Pay from wallet
+static String get walletPayEndpoint => '$walletPrefix/pay';
+
+/// Get wallet transaction history
+static String get walletTransactionsEndpoint => '$walletPrefix/transactions';
+
+// ==================== END WALLET ENDPOINTS ====================
 
   // ==================== NOTIFICATION ENDPOINTS ====================
   
@@ -415,6 +459,19 @@ static String refundPaymentEndpoint(int paymentId) =>
 
   static String contactPersonTransportRequestDetailEndpoint(int patientId, int requestId) =>
       '$contactPersonPrefix/patient/$patientId/transport-requests/$requestId';
+
+  // Surveys
+  static String contactPersonPendingSurveysEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/surveys/pending';
+
+  static String contactPersonCompletedSurveysEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/surveys/completed';
+
+  static String contactPersonSurveyDetailEndpoint(int patientId, int responseId) =>
+      '$contactPersonPrefix/patient/$patientId/surveys/$responseId';
+
+  static String contactPersonSubmitSurveyEndpoint(int patientId, int responseId) =>
+      '$contactPersonPrefix/patient/$patientId/surveys/$responseId/submit';
 
   // ==================== END CONTACT PERSON ENDPOINTS ====================
 

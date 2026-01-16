@@ -3,12 +3,15 @@ import '../../utils/app_colors.dart';
 import '../../utils/api_config.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/messages/message_service.dart';
+import '../../services/wallet_service.dart';
+import '../../models/wallet/wallet_models.dart';
 import '../profile/profile_screen.dart';
 import '../password_security/password_security.dart';
 import '../transport/transport_request_screen.dart';
 import '../help_center.dart';
 import '../onboarding/login_signup_screen.dart';
 import '../messages/conversations_screen.dart';
+import '../wallet/wallet_screen.dart';
 import 'patient_notification_preferences.dart';
 import 'patient_faq_screen.dart';
 import 'help_patient_center.dart'; 
@@ -30,12 +33,16 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
 
   final _authService = AuthService();
   final _messageService = MessageService();
+  final _walletService = WalletService();
 
   // ✅ Create a mutable copy of patientData that can be updated
   late Map<String, dynamic> _currentPatientData;
 
   // Message unread count
   int _unreadMessageCount = 0;
+
+  // Wallet info
+  WalletInfo? _walletInfo;
   
   // Keep screen alive in IndexedStack
   @override
@@ -47,6 +54,20 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
     // ✅ Initialize with widget data
     _currentPatientData = Map<String, dynamic>.from(widget.patientData);
     _loadUnreadMessageCount();
+    _loadWalletInfo();
+  }
+
+  Future<void> _loadWalletInfo() async {
+    try {
+      final response = await _walletService.getWalletInfo();
+      if (mounted && response.success) {
+        setState(() {
+          _walletInfo = response.data;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load wallet info: $e');
+    }
   }
 
   Future<void> _loadUnreadMessageCount() async {
@@ -67,8 +88,11 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
   }
 
   Future<void> _refreshData() async {
-    // Refresh unread message count
-    await _loadUnreadMessageCount();
+    // Refresh unread message count and wallet
+    await Future.wait([
+      _loadUnreadMessageCount(),
+      _loadWalletInfo(),
+    ]);
   }
 
   @override
@@ -87,6 +111,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
               child: Column(
                 children: [
                   _buildAccountSettings(),
+                  _buildWalletSection(),
                   _buildMessagesSection(),
                   _buildServicesSection(),
                   _buildHelpSection(),
@@ -313,6 +338,64 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         ],
       ),
     );
+  }
+
+  Widget _buildWalletSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'My Wallet',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          _buildSettingTile(
+            icon: Icons.account_balance_wallet_outlined,
+            title: 'Wallet',
+            subtitle: _walletInfo != null
+                ? 'Balance: ${_walletInfo!.formattedBalance}'
+                : 'Manage your wallet',
+            iconColor: AppColors.primaryGreen,
+            iconBg: const Color(0xFFE8F5F5),
+            badge: _walletInfo?.formattedBalance,
+            onTap: () => _navigateToWallet(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _navigateToWallet() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WalletScreen(
+          patientData: _currentPatientData,
+        ),
+      ),
+    );
+    // Refresh wallet info when returning
+    _loadWalletInfo();
   }
 
   Widget _buildMessagesSection() {

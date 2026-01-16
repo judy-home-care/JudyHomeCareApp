@@ -630,6 +630,7 @@ class InstallmentsData {
   final bool firstPaymentCompleted;
   final List<Installment> installments;
   final List<Installment> completedPayments;
+  final List<Installment> refundedPayments;
   final InstallmentSummary? summary;
   final InstallmentPaymentConfig? paymentConfig;
 
@@ -638,6 +639,7 @@ class InstallmentsData {
     required this.firstPaymentCompleted,
     required this.installments,
     required this.completedPayments,
+    required this.refundedPayments,
     this.summary,
     this.paymentConfig,
   });
@@ -651,6 +653,10 @@ class InstallmentsData {
               .toList() ??
           [],
       completedPayments: (json['completed_payments'] as List<dynamic>?)
+              ?.map((item) => Installment.fromJson(item))
+              .toList() ??
+          [],
+      refundedPayments: (json['refunded_payments'] as List<dynamic>?)
               ?.map((item) => Installment.fromJson(item))
               .toList() ??
           [],

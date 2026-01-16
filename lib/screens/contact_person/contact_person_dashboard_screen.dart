@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/contact_person/contact_person_models.dart';
 import '../../models/dashboard/patient_dashboard_models.dart';
+import '../../models/wallet/wallet_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/app_version_service.dart';
+import '../../services/wallet_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/string_utils.dart';
 import '../modern_notifications_sheet.dart';
+import '../wallet/wallet_screen.dart';
 import 'contact_person_care_request_lists_screen.dart';
 import 'contact_person_feedback_screen.dart';
 import 'contact_person_transport_screen.dart';
@@ -37,10 +40,14 @@ class ContactPersonDashboardScreenState
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   final _contactPersonService = ContactPersonService();
   final _notificationService = NotificationService();
+  final _walletService = WalletService();
 
   bool _isLoading = true;
   String? _errorMessage;
   PatientDashboardData? _dashboardData;
+
+  // Wallet state - for patient's wallet
+  WalletInfo? _walletInfo;
 
   // Cache management
   DateTime? _lastFetchTime;
@@ -288,9 +295,28 @@ class ContactPersonDashboardScreenState
     _isRefreshing = true;
 
     try {
-      final response = await _contactPersonService.getPatientDashboard(
+      // Fetch dashboard and wallet data in parallel
+      final dashboardFuture = _contactPersonService.getPatientDashboard(
         widget.selectedPatient.id,
       );
+      final walletFuture = _walletService.getWalletInfo(
+        patientId: widget.selectedPatient.id,
+      );
+
+      final response = await dashboardFuture;
+
+      // Try to load wallet (don't fail if wallet fails)
+      try {
+        final walletResponse = await walletFuture;
+        if (mounted && walletResponse.success) {
+          setState(() {
+            _walletInfo = walletResponse.data;
+          });
+        }
+      } catch (walletError) {
+        debugPrint('⚠️ Failed to load patient wallet info: $walletError');
+        // Don't fail dashboard if wallet fails
+      }
 
       if (mounted) {
         setState(() {
@@ -324,6 +350,28 @@ class ContactPersonDashboardScreenState
     } finally {
       _isRefreshing = false;
     }
+  }
+
+  /// Load patient wallet info separately
+  Future<void> _loadWalletInfo() async {
+    try {
+      final response = await _walletService.getWalletInfo(
+        patientId: widget.selectedPatient.id,
+      );
+      if (mounted && response.success) {
+        setState(() {
+          _walletInfo = response.data;
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to refresh patient wallet info: $e');
+    }
+  }
+
+  /// Public method to refresh wallet info
+  void refreshWalletInfo() {
+    debugPrint('🔄 [ContactPersonDashboard] refreshWalletInfo called');
+    _loadWalletInfo();
   }
 
   void _showDataUpdatedNotification() {
@@ -638,6 +686,8 @@ class ContactPersonDashboardScreenState
               const SizedBox(height: 32),
               _buildGreeting(),
               const SizedBox(height: 24),
+              _buildWalletCard(),
+              const SizedBox(height: 24),
               _buildHealthMetrics(),
               const SizedBox(height: 32),
               _buildScheduledVisits(),
@@ -648,6 +698,103 @@ class ContactPersonDashboardScreenState
               const SizedBox(height: 100),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWalletCard() {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WalletScreen(
+              patientData: {
+                'id': widget.selectedPatient.id.toString(),
+                'name': widget.selectedPatient.name,
+                'phone': widget.selectedPatient.phone,
+                'avatar': widget.selectedPatient.avatar,
+              },
+              patientId: widget.selectedPatient.id,
+            ),
+          ),
+        );
+        // Refresh wallet after returning from wallet screen
+        if (result == true || result == null) {
+          _loadWalletInfo();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primaryGreen, Color(0xFF25B5A8)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryGreen.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${widget.selectedPatient.name.split(' ').first}\'s Wallet',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.9),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _walletInfo?.formattedBalance ?? 'GHS 0.00',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -859,9 +1006,35 @@ class ContactPersonDashboardScreenState
     );
   }
 
+  /// Check if today falls within the schedule's date range
+  bool _isTodayWithinSchedule(ScheduleVisit visit) {
+    // First check the simple case
+    if (visit.dateDisplay == 'Today') return true;
+
+    // For multi-day schedules, check if today is within the date range
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    // Try to parse the start and end dates
+    final start = DateTime.tryParse(visit.startDate);
+    final end = DateTime.tryParse(visit.endDate);
+
+    if (start == null || end == null) {
+      // Fall back to dateDisplay check if parsing fails
+      return visit.dateDisplay == 'Today';
+    }
+
+    // Normalize dates to compare only date parts (not time)
+    final startOnly = DateTime(start.year, start.month, start.day);
+    final endOnly = DateTime(end.year, end.month, end.day);
+
+    // Check if today falls within the range (inclusive)
+    return !todayOnly.isBefore(startOnly) && !todayOnly.isAfter(endOnly);
+  }
+
   Widget _buildScheduledVisits() {
     final todayVisits = _dashboardData!.scheduleVisits
-        .where((visit) => visit.dateDisplay == 'Today')
+        .where((visit) => _isTodayWithinSchedule(visit))
         .toList();
 
     final upcomingVisits = todayVisits

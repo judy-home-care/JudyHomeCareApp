@@ -7,13 +7,17 @@ import 'patient_feedback_screen.dart';
 import '../../utils/string_utils.dart';
 import '../../services/dashboard/dashboard_service.dart';
 import '../../services/app_version_service.dart';
+import '../../services/wallet_service.dart';
 import '../../models/dashboard/patient_dashboard_models.dart';
+import '../../models/wallet/wallet_models.dart';
 import '../transport/transport_request_screen.dart';
 import 'care_request_screen.dart';
 import '../../services/care_request_service.dart';
 import 'care_request_lists_screen.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/notification_service.dart';
+import '../wallet/wallet_screen.dart';
+import '../../main.dart' show routeObserver;
 
 class PatientDashboardScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -32,12 +36,16 @@ class PatientDashboardScreen extends StatefulWidget {
 
 // CRITICAL: PUBLIC state class (no underscore prefix)
 class PatientDashboardScreenState extends State<PatientDashboardScreen>
-    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin, RouteAware {
   final _dashboardService = DashboardService();
+  final _walletService = WalletService();
 
   bool _isLoading = true;
   String? _errorMessage;
   PatientDashboardData? _dashboardData;
+
+  // Wallet state
+  WalletInfo? _walletInfo;
 
   // Cache management
   DateTime? _lastFetchTime;
@@ -69,12 +77,29 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
   // Tab selection for Initial Assessment / My Nurses section
   int _nursesAssessmentTabIndex = 0; // 0 = Initial Assessment, 1 = My Nurses (default: Initial Assessment)
 
+  // Schedule timer state for in-progress visits
+  Timer? _scheduleTimer;
+  int _scheduleElapsedSeconds = 0;
+  int? _activeScheduleId;
+
   // CRITICAL: Keep state alive when switching tabs
   @override
   bool get wantKeepAlive => true;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route observer to detect when this screen becomes visible
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
+    // Cancel schedule timer
+    _scheduleTimer?.cancel();
+
+    // Unsubscribe from route observer
+    routeObserver.unsubscribe(this);
     WidgetsBinding.instance.removeObserver(this);
 
     // Clean up FCM listeners (multi-listener pattern)
@@ -82,6 +107,15 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     _removeReceivedListener?.call();
 
     super.dispose();
+  }
+
+  // Called when returning to this screen from another screen
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    debugPrint('🔄 [Patient Dashboard] Returned to screen - refreshing wallet');
+    // Refresh wallet info when returning from any screen
+    _loadWalletInfo();
   }
 
   @override
@@ -405,7 +439,24 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     debugPrint('🌐 Fetching patient dashboard from API...');
 
     try {
-      final response = await _dashboardService.getPatientMobileDashboard();
+      // Fetch dashboard and wallet data in parallel
+      final dashboardFuture = _dashboardService.getPatientMobileDashboard();
+      final walletFuture = _walletService.getWalletInfo();
+
+      final response = await dashboardFuture;
+
+      // Try to load wallet (don't fail if wallet fails)
+      try {
+        final walletResponse = await walletFuture;
+        if (mounted && walletResponse.success) {
+          setState(() {
+            _walletInfo = walletResponse.data;
+          });
+        }
+      } catch (walletError) {
+        debugPrint('⚠️ Failed to load wallet info: $walletError');
+        // Don't fail dashboard if wallet fails
+      }
 
       if (mounted) {
         setState(() {
@@ -415,6 +466,9 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
         });
 
         debugPrint('✅ Dashboard loaded (${_cacheAge})');
+
+        // Update schedule timer if there's an in-progress visit
+        _updateScheduleTimerIfNeeded();
 
         // Check for app version requirements and show update dialog if needed
         if (response.versionRequirement != null) {
@@ -727,6 +781,8 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
               const SizedBox(height: 32),
               _buildGreeting(),
               const SizedBox(height: 24),
+              _buildWalletCard(),
+              const SizedBox(height: 24),
               _buildHealthMetrics(),
               const SizedBox(height: 32),
               _buildScheduledVisits(),
@@ -802,6 +858,117 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
         ),
       ],
     );
+  }
+
+  Widget _buildWalletCard() {
+    return GestureDetector(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => WalletScreen(
+              patientData: widget.patientData,
+            ),
+          ),
+        );
+        // Refresh wallet after returning from wallet screen
+        if (result == true || result == null) {
+          _loadWalletInfo();
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [AppColors.primaryGreen, Color(0xFF25B5A8)],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryGreen.withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(
+                Icons.account_balance_wallet,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Wallet Balance',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.white.withOpacity(0.9),
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _walletInfo?.formattedBalance ?? 'GHS 0.00',
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.white,
+                size: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadWalletInfo() async {
+    try {
+      final response = await _walletService.getWalletInfo();
+      if (mounted && response.success) {
+        setState(() {
+          _walletInfo = response.data;
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to refresh wallet info: $e');
+    }
+  }
+
+  /// Public method to refresh wallet info - called from PatientMainScreen
+  /// when returning from payment screens
+  void refreshWalletInfo() {
+    debugPrint('🔄 [Dashboard] refreshWalletInfo called');
+    _loadWalletInfo();
   }
 
   Widget _buildHealthMetrics() {
@@ -923,9 +1090,35 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     );
   }
 
+  /// Check if today falls within the schedule's date range
+  bool _isTodayWithinSchedule(ScheduleVisit visit) {
+    // First check the simple case
+    if (visit.dateDisplay == 'Today') return true;
+
+    // For multi-day schedules, check if today is within the date range
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    // Try to parse the start and end dates
+    final start = DateTime.tryParse(visit.startDate);
+    final end = DateTime.tryParse(visit.endDate);
+
+    if (start == null || end == null) {
+      // Fall back to dateDisplay check if parsing fails
+      return visit.dateDisplay == 'Today';
+    }
+
+    // Normalize dates to compare only date parts (not time)
+    final startOnly = DateTime(start.year, start.month, start.day);
+    final endOnly = DateTime(end.year, end.month, end.day);
+
+    // Check if today falls within the range (inclusive)
+    return !todayOnly.isBefore(startOnly) && !todayOnly.isAfter(endOnly);
+  }
+
   Widget _buildScheduledVisits() {
     final todayVisits = _dashboardData!.scheduleVisits
-        .where((visit) => visit.dateDisplay == 'Today')
+        .where((visit) => _isTodayWithinSchedule(visit))
         .toList();
 
     final upcomingVisits = todayVisits
@@ -992,6 +1185,92 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
           _buildScheduleCard(visitToShow),
       ],
     );
+  }
+
+  /// Start the schedule elapsed timer for in-progress visits
+  void _startScheduleTimer(ScheduleVisit visit) {
+    if (visit.timerStartedAt == null) return;
+
+    // Cancel existing timer if any
+    _scheduleTimer?.cancel();
+
+    // Calculate initial elapsed seconds from timerStartedAt
+    _scheduleElapsedSeconds = DateTime.now().difference(visit.timerStartedAt!).inSeconds;
+    _activeScheduleId = visit.id;
+
+    // Start a periodic timer that updates every second
+    _scheduleTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      setState(() {
+        _scheduleElapsedSeconds++;
+      });
+    });
+  }
+
+  /// Stop the schedule elapsed timer
+  void _stopScheduleTimer() {
+    _scheduleTimer?.cancel();
+    _scheduleTimer = null;
+    _activeScheduleId = null;
+    _scheduleElapsedSeconds = 0;
+  }
+
+  /// Format elapsed seconds to HH:MM:SS display
+  String _formatElapsedTime(int totalSeconds) {
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    final seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    }
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  /// Check and update schedule timer based on current in-progress visit
+  void _updateScheduleTimerIfNeeded() {
+    if (_dashboardData == null) {
+      _stopScheduleTimer();
+      return;
+    }
+
+    final todayVisits = _dashboardData!.scheduleVisits
+        .where((visit) => _isTodayWithinSchedule(visit))
+        .toList();
+
+    // Debug: Log all schedule visits and their timer status
+    for (final visit in todayVisits) {
+      debugPrint('📅 Schedule ${visit.id}: status=${visit.status}, timerStartedAt=${visit.timerStartedAt}');
+    }
+
+    // Find in-progress visit
+    ScheduleVisit? inProgressVisit;
+    for (final visit in todayVisits) {
+      final status = visit.status.toLowerCase();
+      if (status == 'in_progress' || status == 'in-progress' || status == 'inprogress') {
+        inProgressVisit = visit;
+        break;
+      }
+    }
+
+    if (inProgressVisit != null) {
+      debugPrint('⏱️ Found in-progress visit ${inProgressVisit.id}, timerStartedAt=${inProgressVisit.timerStartedAt}');
+
+      if (inProgressVisit.timerStartedAt != null) {
+        // Start or update timer if schedule changed or timer not running
+        if (_activeScheduleId != inProgressVisit.id || _scheduleTimer == null) {
+          _startScheduleTimer(inProgressVisit);
+        }
+      } else {
+        debugPrint('⚠️ In-progress visit has no timerStartedAt - backend may need to return timer_started_at field');
+        _stopScheduleTimer();
+      }
+    } else {
+      _stopScheduleTimer();
+    }
   }
 
   Widget _buildScheduleCard(ScheduleVisit visit) {
@@ -1205,14 +1484,14 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(
+                  children: [
+                    const Icon(
                       Icons.play_circle_outline,
                       color: Color(0xFFFF9A00),
                       size: 14,
                     ),
-                    SizedBox(width: 6),
-                    Text(
+                    const SizedBox(width: 6),
+                    const Text(
                       'In Progress',
                       style: TextStyle(
                         fontSize: 12,
@@ -1221,6 +1500,33 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                         letterSpacing: -0.2,
                       ),
                     ),
+                    // Show elapsed timer if nurse has started the timer
+                    if (visit.timerStartedAt != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 1,
+                        height: 12,
+                        color: const Color(0xFFFF9A00).withOpacity(0.3),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.timer,
+                        color: Color(0xFFFF9A00),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        _activeScheduleId == visit.id
+                            ? _formatElapsedTime(_scheduleElapsedSeconds)
+                            : _formatElapsedTime(DateTime.now().difference(visit.timerStartedAt!).inSeconds),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFFF9A00),
+                          letterSpacing: -0.2,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart';
 import 'patient_dashboard_screen.dart' show PatientDashboardScreen, PatientDashboardScreenState;
 import 'progress_note_screen.dart' show ProgressNoteScreen, ProgressNoteScreenState;
 import 'patient_schedules_screen.dart' show PatientSchedulesScreen, PatientSchedulesScreenState;
 import 'patient_care_plans_screen.dart' show PatientCarePlansScreen, PatientCarePlansScreenState;
 import 'patient_bottom_navigation.dart';
 import 'patient_account_screen.dart';
+import '../../main.dart' show routeObserver;
 
 class PatientMainScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -21,18 +21,18 @@ class PatientMainScreen extends StatefulWidget {
   State<PatientMainScreen> createState() => _PatientMainScreenState();
 }
 
-class _PatientMainScreenState extends State<PatientMainScreen> {
+class _PatientMainScreenState extends State<PatientMainScreen> with RouteAware {
   late int _currentIndex;
   late PageController _pageController;
 
   // ✅ GlobalKeys to access all cached screen states
-  final GlobalKey<PatientDashboardScreenState> _dashboardKey = 
+  final GlobalKey<PatientDashboardScreenState> _dashboardKey =
       GlobalKey<PatientDashboardScreenState>();
-  final GlobalKey<ProgressNoteScreenState> _progressNotesKey = 
+  final GlobalKey<ProgressNoteScreenState> _progressNotesKey =
       GlobalKey<ProgressNoteScreenState>();
-  final GlobalKey<PatientSchedulesScreenState> _schedulesKey = 
+  final GlobalKey<PatientSchedulesScreenState> _schedulesKey =
       GlobalKey<PatientSchedulesScreenState>();
-  final GlobalKey<PatientCarePlansScreenState> _carePlansKey = 
+  final GlobalKey<PatientCarePlansScreenState> _carePlansKey =
       GlobalKey<PatientCarePlansScreenState>();
 
   @override
@@ -43,9 +43,26 @@ class _PatientMainScreenState extends State<PatientMainScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route observer to detect when returning from pushed screens
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _pageController.dispose();
     super.dispose();
+  }
+
+  // Called when returning to this screen from a pushed screen
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    debugPrint('🔄 [PatientMainScreen] Returned from pushed screen - refreshing dashboard wallet');
+    // Refresh dashboard wallet when returning from any screen
+    _dashboardKey.currentState?.refreshWalletInfo();
   }
 
   void _onTabTapped(int index) {

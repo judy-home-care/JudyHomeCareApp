@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../models/contact_person/contact_person_models.dart';
+import '../../models/wallet/wallet_models.dart';
 import '../../services/contact_person/contact_person_auth_service.dart';
 import '../../services/messages/message_service.dart';
+import '../../services/wallet_service.dart';
 import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../messages/conversations_screen.dart';
 import '../password_security/password_security.dart';
+import '../wallet/wallet_screen.dart';
 import 'patient_selector_screen.dart';
 import '../auth/login_screen.dart';
 
@@ -29,9 +32,13 @@ class _ContactPersonAccountScreenState
     with AutomaticKeepAliveClientMixin {
   final ContactPersonAuthService _authService = ContactPersonAuthService();
   final MessageService _messageService = MessageService();
+  final WalletService _walletService = WalletService();
 
   // Message unread count
   int _unreadMessageCount = 0;
+
+  // Wallet state for patient's wallet
+  WalletInfo? _walletInfo;
 
   @override
   bool get wantKeepAlive => true;
@@ -40,6 +47,7 @@ class _ContactPersonAccountScreenState
   void initState() {
     super.initState();
     _loadUnreadMessageCount();
+    _loadWalletInfo();
   }
 
   Future<void> _loadUnreadMessageCount() async {
@@ -56,7 +64,25 @@ class _ContactPersonAccountScreenState
   }
 
   Future<void> _refreshData() async {
-    await _loadUnreadMessageCount();
+    await Future.wait([
+      _loadUnreadMessageCount(),
+      _loadWalletInfo(),
+    ]);
+  }
+
+  Future<void> _loadWalletInfo() async {
+    try {
+      final response = await _walletService.getWalletInfo(
+        patientId: widget.selectedPatient.id,
+      );
+      if (mounted && response.success) {
+        setState(() {
+          _walletInfo = response.data;
+        });
+      }
+    } catch (e) {
+      debugPrint('Failed to load patient wallet info: $e');
+    }
   }
 
   String _getFullAvatarUrl(String? avatarPath) {
@@ -86,6 +112,7 @@ class _ContactPersonAccountScreenState
               child: Column(
                 children: [
                   _buildCurrentViewingSection(),
+                  _buildWalletSection(),
                   _buildAccountSettings(),
                   _buildMessagesSection(),
                   _buildLinkedPatientsSection(),
@@ -432,6 +459,69 @@ class _ContactPersonAccountScreenState
         ],
       ),
     );
+  }
+
+  Widget _buildWalletSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              '${widget.selectedPatient.name.split(' ').first}\'s Wallet',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          _buildSettingTile(
+            icon: Icons.account_balance_wallet,
+            title: 'Wallet Balance',
+            subtitle: _walletInfo?.formattedBalance ?? 'GHS 0.00',
+            iconColor: AppColors.primaryGreen,
+            iconBg: const Color(0xFFE8F5F5),
+            onTap: () => _navigateToWallet(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToWallet() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WalletScreen(
+          patientData: {
+            'id': widget.selectedPatient.id.toString(),
+            'name': widget.selectedPatient.name,
+            'phone': widget.selectedPatient.phone,
+            'avatar': widget.selectedPatient.avatar,
+          },
+          patientId: widget.selectedPatient.id,
+        ),
+      ),
+    );
+    // Refresh wallet after returning from wallet screen
+    if (result == true || result == null) {
+      _loadWalletInfo();
+    }
   }
 
   Widget _buildAccountSettings() {

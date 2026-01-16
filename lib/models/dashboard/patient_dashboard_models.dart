@@ -44,6 +44,15 @@ class PatientDashboardData {
   }
 }
 
+/// Helper to parse timer_started_at from various formats
+DateTime? _parseTimerStartedAt(Map<String, dynamic> json) {
+  // Try camelCase first, then snake_case
+  final value = json['timerStartedAt'] ?? json['timer_started_at'];
+  if (value == null) return null;
+  if (value is String) return DateTime.tryParse(value);
+  return null;
+}
+
 class ScheduleVisit {
   final int id;
   final String date;
@@ -57,6 +66,7 @@ class ScheduleVisit {
   final String dailyDuration;
   final String assignmentDuration;
   final String? timeCompleted;
+  final DateTime? timerStartedAt;
   final String status;
   final String carePlanTitle;
   final String careType;
@@ -77,6 +87,7 @@ class ScheduleVisit {
     required this.dailyDuration,
     required this.assignmentDuration,
     this.timeCompleted,
+    this.timerStartedAt,
     required this.status,
     required this.carePlanTitle,
     required this.careType,
@@ -118,6 +129,7 @@ class ScheduleVisit {
       dailyDuration: json['dailyDuration'] ?? json['duration'] ?? '0m',
       assignmentDuration: json['assignmentDuration'] ?? '',
       timeCompleted: json['timeCompleted'],
+      timerStartedAt: _parseTimerStartedAt(json),
       status: json['status'] ?? 'scheduled',
       carePlanTitle: json['carePlanTitle'] ?? '',
       careType: json['careType'] ?? '',

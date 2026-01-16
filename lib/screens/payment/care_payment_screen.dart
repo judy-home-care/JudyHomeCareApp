@@ -6,18 +6,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../../services/payment_service.dart';
+import '../../services/wallet_service.dart';
 import '../../models/care_request/care_request_models.dart';
+import '../../models/wallet/wallet_models.dart';
+import '../wallet/wallet_deposit_screen.dart';
+import '../../utils/app_colors.dart';
 
 class CarePaymentScreen extends StatefulWidget {
   final CareRequest careRequest;
   final double assessmentFee;
   final bool isCarePayment;
+  /// Optional patient ID for contact person paying on behalf of patient
+  final int? patientId;
 
   const CarePaymentScreen({
     Key? key,
     required this.careRequest,
     required this.assessmentFee,
     this.isCarePayment = false,
+    this.patientId,
   }) : super(key: key);
 
   @override
@@ -26,13 +33,43 @@ class CarePaymentScreen extends StatefulWidget {
 
 class _CarePaymentScreenState extends State<CarePaymentScreen> {
   final _paymentService = PaymentService();
-  
+  final _walletService = WalletService();
+
   bool _isProcessing = false;
+  bool _isLoadingWallet = true;
   String? _errorMessage;
+
+  // Payment method selection
+  String _selectedPaymentMethod = 'paystack'; // 'paystack' or 'wallet'
+  WalletInfo? _walletInfo;
 
   @override
   void initState() {
     super.initState();
+    _loadWalletInfo();
+  }
+
+  Future<void> _loadWalletInfo() async {
+    setState(() => _isLoadingWallet = true);
+    try {
+      // Pass patientId for contact person viewing patient's wallet
+      final response = await _walletService.getWalletInfo(
+        patientId: widget.patientId,
+      );
+      if (mounted && response.success) {
+        setState(() {
+          _walletInfo = response.data;
+          _isLoadingWallet = false;
+        });
+      } else {
+        setState(() => _isLoadingWallet = false);
+      }
+    } catch (e) {
+      log('Failed to load wallet info: $e');
+      if (mounted) {
+        setState(() => _isLoadingWallet = false);
+      }
+    }
   }
 
   @override
@@ -40,16 +77,81 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
     super.dispose();
   }
 
-  /// Process payment - simplified to use Paystack's payment page
+  /// Process payment based on selected method
   Future<void> _processPayment() async {
+    if (_selectedPaymentMethod == 'wallet') {
+      await _processWalletPayment();
+    } else {
+      await _processPaystackPayment();
+    }
+  }
+
+  /// Process wallet payment
+  Future<void> _processWalletPayment() async {
+    // Check if wallet has sufficient balance
+    final walletBalance = _walletInfo?.balance ?? 0;
+    if (walletBalance < widget.assessmentFee) {
+      _showInsufficientBalanceDialog(walletBalance);
+      return;
+    }
+
     setState(() {
       _isProcessing = true;
       _errorMessage = null;
     });
 
     try {
-      log('🚀 [PaymentScreen] Initializing payment...');
-      
+      log('🚀 [PaymentScreen] Processing wallet payment...');
+
+      // Get the payment ID for this care request
+      // Use carePayment if isCarePayment, otherwise use assessmentPayment
+      final payment = widget.isCarePayment
+          ? widget.careRequest.carePayment
+          : widget.careRequest.assessmentPayment;
+
+      if (payment == null) {
+        setState(() => _isProcessing = false);
+        _showError('Payment information not found. Please try again later.');
+        return;
+      }
+
+      // Pass patientId for contact person paying on behalf of patient
+      final response = await _walletService.payFromWallet(
+        payment.id,
+        patientId: widget.patientId,
+      );
+
+      setState(() => _isProcessing = false);
+
+      if (response.success) {
+        log('✅ [PaymentScreen] Wallet payment successful!');
+        _showWalletSuccessDialog(response);
+      } else if (response.isInsufficientBalance) {
+        log('⚠️ [PaymentScreen] Insufficient balance');
+        final shortfall = response.insufficientBalanceData?.shortfall ??
+            (widget.assessmentFee - (response.insufficientBalanceData?.available ?? 0));
+        _showInsufficientBalanceDialog(response.insufficientBalanceData?.available ?? 0);
+      } else {
+        log('❌ [PaymentScreen] Wallet payment failed: ${response.message}');
+        _showError(response.message ?? 'Payment failed');
+      }
+    } catch (e) {
+      setState(() => _isProcessing = false);
+      log('💥 [PaymentScreen] Wallet payment error: $e');
+      _showError('Payment failed: ${e.toString()}');
+    }
+  }
+
+  /// Process Paystack payment - simplified to use Paystack's payment page
+  Future<void> _processPaystackPayment() async {
+    setState(() {
+      _isProcessing = true;
+      _errorMessage = null;
+    });
+
+    try {
+      log('🚀 [PaymentScreen] Initializing Paystack payment...');
+
       // Send mobile_money channel WITHOUT phone_number
       // This triggers the backend's else block which shows ALL payment options
       // (Mobile Money, Card, Bank Transfer)
@@ -71,7 +173,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
       final paymentData = initResponse.data!;
       final authorizationUrl = paymentData.authorizationUrl;
       final reference = paymentData.reference;
-      
+
       log('✅ [PaymentScreen] Payment initialized');
       log('🔗 [PaymentScreen] Authorization URL: $authorizationUrl');
       log('📝 [PaymentScreen] Reference: $reference');
@@ -80,7 +182,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
 
       // Open Paystack payment page in webview
       final paymentSuccessful = await _openPaymentWebView(
-        authorizationUrl, 
+        authorizationUrl,
         reference
       );
 
@@ -88,7 +190,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
         // Verify payment on backend
         setState(() => _isProcessing = true);
         log('🔄 [PaymentScreen] Verifying payment...');
-        
+
         final verifyResponse = await _paymentService.verifyPayment(reference);
         setState(() => _isProcessing = false);
 
@@ -111,6 +213,257 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
       log('💥 [PaymentScreen] Stack trace: $stackTrace');
       _showError('Payment failed: ${e.toString()}');
     }
+  }
+
+  /// Show insufficient balance dialog with option to deposit
+  void _showInsufficientBalanceDialog(double availableBalance) {
+    if (!mounted) return;
+
+    final shortfall = widget.assessmentFee - availableBalance;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.account_balance_wallet_outlined,
+                color: Colors.orange.shade700,
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Insufficient Balance',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'You need GHS ${widget.assessmentFee.toStringAsFixed(2)} but only have GHS ${availableBalance.toStringAsFixed(2)} in your wallet.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Shortfall: ',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                  Text(
+                    'GHS ${shortfall.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      side: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.of(context).pop();
+                      // Navigate to deposit screen with pre-filled shortfall amount
+                      // Pass patientId for contact person depositing to patient's wallet
+                      final result = await Navigator.push<bool>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WalletDepositScreen(
+                            patientData: {},
+                            prefilledAmount: shortfall,
+                            patientId: widget.patientId,
+                          ),
+                        ),
+                      );
+                      // Refresh wallet info after deposit
+                      if (result == true) {
+                        _loadWalletInfo();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryGreen,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Deposit',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show wallet payment success dialog
+  void _showWalletSuccessDialog(WalletPayResponse response) {
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryGreen,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check,
+                color: Colors.white,
+                size: 48,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Payment Successful!',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Your payment has been completed successfully using your wallet.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                height: 1.5,
+              ),
+            ),
+            if (response.wallet != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'New Balance: ',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    Text(
+                      response.wallet!.formattedBalance,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryGreen,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).pop(true); // Return to requests with success
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryGreen,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Done',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// Show cancellation dialog - allows retry
@@ -378,13 +731,195 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
         children: [
           _buildPaymentSummaryCard(),
           const SizedBox(height: 24),
-          _buildPaymentInfoCard(),
+          _buildPaymentMethodSelection(),
           const SizedBox(height: 32),
           _buildPayButton(),
           const SizedBox(height: 16),
           _buildSecurityBadges(),
           const SizedBox(height: 40),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodSelection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Select Payment Method',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Paystack option
+          _buildPaymentMethodOption(
+            value: 'paystack',
+            icon: Icons.payment,
+            title: 'Pay with Paystack',
+            subtitle: 'Card, Mobile Money, Bank',
+            isSelected: _selectedPaymentMethod == 'paystack',
+          ),
+
+          const SizedBox(height: 12),
+
+          // Wallet option
+          _buildPaymentMethodOption(
+            value: 'wallet',
+            icon: Icons.account_balance_wallet,
+            title: 'Pay from Wallet',
+            subtitle: _isLoadingWallet
+                ? 'Loading balance...'
+                : 'Balance: ${_walletInfo?.formattedBalance ?? 'GHS 0.00'}',
+            isSelected: _selectedPaymentMethod == 'wallet',
+            showBadge: _walletInfo != null &&
+                (_walletInfo!.balance) >= widget.assessmentFee,
+            badgeText: 'Sufficient',
+            showInsufficientWarning: _walletInfo != null &&
+                (_walletInfo!.balance) < widget.assessmentFee,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodOption({
+    required String value,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    bool showBadge = false,
+    String? badgeText,
+    bool showInsufficientWarning = false,
+  }) {
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPaymentMethod = value),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primaryGreen.withOpacity(0.1)
+              : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primaryGreen : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? AppColors.primaryGreen
+                    : Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected ? Colors.white : Colors.grey.shade600,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? AppColors.primaryGreen
+                              : Colors.grey.shade800,
+                        ),
+                      ),
+                      if (showBadge && badgeText != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.shade100,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            badgeText,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green.shade700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                  if (showInsufficientWarning) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 14,
+                          color: Colors.orange.shade600,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Insufficient balance - deposit to pay',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Colors.orange.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            Radio<String>(
+              value: value,
+              groupValue: _selectedPaymentMethod,
+              onChanged: (v) => setState(() => _selectedPaymentMethod = v!),
+              activeColor: AppColors.primaryGreen,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -567,6 +1102,14 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
   }
 
   Widget _buildPayButton() {
+    final isWalletPayment = _selectedPaymentMethod == 'wallet';
+    final buttonText = isWalletPayment
+        ? 'Pay from Wallet - GHS ${widget.assessmentFee.toStringAsFixed(2)}'
+        : 'Pay with Paystack - GHS ${widget.assessmentFee.toStringAsFixed(2)}';
+    final buttonIcon = isWalletPayment
+        ? Icons.account_balance_wallet
+        : Icons.lock_outline;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: SizedBox(
@@ -575,7 +1118,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
         child: ElevatedButton(
           onPressed: _isProcessing ? null : _processPayment,
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF199A8E),
+            backgroundColor: AppColors.primaryGreen,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
@@ -594,18 +1137,21 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               : Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
-                      Icons.lock_outline,
+                    Icon(
+                      buttonIcon,
                       size: 20,
                       color: Colors.white,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      'Pay GHS ${widget.assessmentFee.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    Flexible(
+                      child: Text(
+                        buttonText,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

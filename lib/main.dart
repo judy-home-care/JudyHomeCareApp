@@ -18,6 +18,9 @@ import 'screens/patient/patient_main_screen.dart';
 import 'screens/contact_person/patient_selector_screen.dart';
 import 'screens/contact_person/contact_person_main_screen.dart';
 
+/// Global RouteObserver for tracking navigation and refreshing data
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
+
 void main() async {
   // Ensure Flutter bindings are initialized and preserve splash
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -82,6 +85,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Judy Home Healthcare',
       debugShowCheckedModeBanner: false,
+      navigatorObservers: [routeObserver],
       theme: ThemeData(
         primaryColor: AppColors.primaryGreen,
         scaffoldBackgroundColor: Colors.white,

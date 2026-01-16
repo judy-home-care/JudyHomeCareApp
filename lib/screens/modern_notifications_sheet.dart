@@ -3,6 +3,23 @@ import 'dart:ui';
 import '../../services/notification_service.dart';
 import '../../models/notification/notification_models.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/secure_storage.dart';
+// Patient screens
+import 'patient/care_request_lists_screen.dart';
+import 'patient/patient_schedules_screen.dart';
+import 'patient/patient_feedback_screen.dart';
+import 'patient/progress_note_screen.dart';
+import 'wallet/wallet_screen.dart';
+// Contact person screens
+import 'contact_person/contact_person_care_request_lists_screen.dart';
+import 'contact_person/contact_person_schedules_screen.dart';
+import 'contact_person/contact_person_feedback_screen.dart';
+import 'contact_person/contact_person_progress_notes_screen.dart';
+// Nurse screens
+import 'nurse/nurse_care_requests_lists_screen.dart';
+import 'schedules/schedule_patients_screen.dart';
+// Models for contact person
+import '../models/contact_person/contact_person_models.dart';
 
 class ModernNotificationsSheet extends StatefulWidget {
   const ModernNotificationsSheet({Key? key}) : super(key: key);
@@ -14,7 +31,8 @@ class ModernNotificationsSheet extends StatefulWidget {
 class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
     with SingleTickerProviderStateMixin {
   final NotificationService _notificationService = NotificationService();
-  
+  final SecureStorage _storage = SecureStorage();
+
   bool _isLoading = true;
   bool _isLoadingMore = false;
   String? _errorMessage;
@@ -33,17 +51,17 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
     super.initState();
     _loadNotifications();
     _scrollController.addListener(_onScroll);
-    
+
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    
+
     _scaleAnimation = CurvedAnimation(
       parent: _animationController,
       curve: Curves.easeOutBack,
     );
-    
+
     _animationController.forward();
   }
 
@@ -83,6 +101,13 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
           _hasMore = _currentPage < _lastPage;
           _isLoading = false;
         });
+
+        // Auto-mark all as read immediately when user opens the sheet
+        final unreadCount = _notifications.where((n) => !n.isRead).length;
+        if (unreadCount > 0) {
+          debugPrint('🔔 [NotificationsSheet] Auto-marking $unreadCount notifications as read');
+          _markAllAsRead();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -229,6 +254,242 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
         margin: const EdgeInsets.all(16),
       ),
     );
+  }
+
+  /// Navigate to the appropriate screen based on notification's notifiableType and userType
+  /// [fromDetailSheet] indicates if this is called from the detail sheet (2 sheets open) vs card (1 sheet open)
+  Future<void> _navigateToRelatedScreen(NotificationItem notification, {bool fromDetailSheet = false}) async {
+    final notifiableType = notification.notifiableType;
+    final userType = notification.userType.toLowerCase();
+
+    if (notifiableType == null) {
+      _showErrorMessage('Unable to navigate - no related item');
+      return;
+    }
+
+    // Capture the navigator BEFORE popping to avoid stale context issues
+    final navigator = Navigator.of(context, rootNavigator: true);
+
+    // Close sheets based on where we're navigating from
+    if (fromDetailSheet) {
+      // Close the notification detail sheet first
+      navigator.pop();
+    }
+    // Close the main notifications sheet
+    navigator.pop();
+
+    // Get user data for screens that need it
+    final userData = await _storage.getUserData();
+
+    if (userData == null) {
+      _showErrorMessage('Unable to load user data');
+      return;
+    }
+
+    // Navigate based on notifiable type and user type
+    Widget? targetScreen;
+
+    switch (notifiableType) {
+      case 'App\\Models\\CareRequest':
+        if (userType == 'patient') {
+          targetScreen = CareRequestListsScreen(patientData: userData);
+        } else if (userType == 'contact_person') {
+          // For contact person, we need contactPerson and selectedPatient
+          final cpData = _getContactPersonData(userData);
+          if (cpData != null) {
+            targetScreen = ContactPersonCareRequestListsScreen(
+              contactPerson: cpData['contactPerson'],
+              selectedPatient: cpData['selectedPatient'],
+            );
+          }
+        } else if (userType == 'nurse') {
+          targetScreen = NurseCareRequestsListScreen(nurseData: userData);
+        }
+        break;
+
+      case 'App\\Models\\WalletTransaction':
+      case 'App\\Models\\Expense':
+        if (userType == 'patient' || userType == 'contact_person') {
+          targetScreen = WalletScreen(patientData: userData);
+        }
+        break;
+
+      case 'App\\Models\\Schedule':
+        if (userType == 'patient') {
+          targetScreen = const PatientSchedulesScreen();
+        } else if (userType == 'contact_person') {
+          // Get patient ID from notification data or stored data
+          final patientId = _getPatientIdFromData(notification, userData);
+          if (patientId != null) {
+            targetScreen = ContactPersonSchedulesScreen(patientId: patientId);
+          }
+        } else if (userType == 'nurse') {
+          targetScreen = SchedulePatientsScreen(nurseData: userData);
+        }
+        break;
+
+      case 'App\\Models\\SurveyResponse':
+        if (userType == 'patient') {
+          targetScreen = const PatientFeedbackScreen();
+        } else if (userType == 'contact_person') {
+          // For contact person, we need contactPerson and selectedPatient
+          final cpData = _getContactPersonData(userData);
+          if (cpData != null) {
+            targetScreen = ContactPersonFeedbackScreen(
+              contactPerson: cpData['contactPerson'],
+              selectedPatient: cpData['selectedPatient'],
+            );
+          }
+        }
+        break;
+
+      case 'App\\Models\\ProgressNote':
+        if (userType == 'patient') {
+          targetScreen = const ProgressNoteScreen();
+        } else if (userType == 'contact_person') {
+          // Get patient ID from notification data or stored data
+          final patientId = _getPatientIdFromData(notification, userData);
+          if (patientId != null) {
+            targetScreen = ContactPersonProgressNotesScreen(patientId: patientId);
+          }
+        }
+        break;
+
+      case 'App\\Models\\PatientFeedback':
+        if (userType == 'patient') {
+          // Navigate to Nurse Visit & Feedbacks tab (index 1) with My Feedback toggle active
+          targetScreen = const PatientFeedbackScreen(
+            initialTabIndex: 1,
+            showMyFeedback: true,
+          );
+        } else if (userType == 'contact_person') {
+          // For contact person, we need contactPerson and selectedPatient
+          final cpData = _getContactPersonData(userData);
+          if (cpData != null) {
+            targetScreen = ContactPersonFeedbackScreen(
+              contactPerson: cpData['contactPerson'],
+              selectedPatient: cpData['selectedPatient'],
+              initialTabIndex: 1,
+              showMyFeedback: true,
+            );
+          }
+        }
+        break;
+
+      default:
+        debugPrint('Unknown notifiable type: $notifiableType');
+        break;
+    }
+
+    if (targetScreen != null) {
+      navigator.push(
+        MaterialPageRoute(builder: (context) => targetScreen!),
+      );
+    }
+  }
+
+  /// Extract contact person data from user data
+  Map<String, dynamic>? _getContactPersonData(Map<String, dynamic> userData) {
+    try {
+      // Check if we have contact person data in the stored user data
+      if (userData['contact_person'] != null) {
+        final contactPerson = ContactPersonUser.fromJson(userData['contact_person']);
+        // Try to get selected patient from stored data
+        if (userData['selected_patient'] != null) {
+          final selectedPatient = LinkedPatient.fromJson(userData['selected_patient']);
+          return {
+            'contactPerson': contactPerson,
+            'selectedPatient': selectedPatient,
+          };
+        }
+        // If no selected patient but there are linked patients, use the first one
+        if (contactPerson.linkedPatients.isNotEmpty) {
+          return {
+            'contactPerson': contactPerson,
+            'selectedPatient': contactPerson.linkedPatients.first,
+          };
+        }
+      }
+      // Alternative: the user data might be the contact person object directly
+      if (userData['linked_patients'] != null || userData['linkedPatients'] != null) {
+        final contactPerson = ContactPersonUser.fromJson(userData);
+        if (contactPerson.linkedPatients.isNotEmpty) {
+          return {
+            'contactPerson': contactPerson,
+            'selectedPatient': contactPerson.linkedPatients.first,
+          };
+        }
+      }
+    } catch (e) {
+      debugPrint('Error parsing contact person data: $e');
+    }
+    return null;
+  }
+
+  /// Get patient ID from notification data or user data
+  int? _getPatientIdFromData(NotificationItem notification, Map<String, dynamic> userData) {
+    // First try to get from notification data
+    if (notification.data != null) {
+      if (notification.data!['patient_id'] != null) {
+        return notification.data!['patient_id'] as int;
+      }
+      if (notification.data!['patientId'] != null) {
+        return notification.data!['patientId'] as int;
+      }
+    }
+    // Try to get from notifiableId if it's a patient-related notification
+    if (notification.notifiableId != null) {
+      return notification.notifiableId;
+    }
+    // Try to get from stored selected patient
+    if (userData['selected_patient'] != null && userData['selected_patient']['id'] != null) {
+      return userData['selected_patient']['id'] as int;
+    }
+    // Try to get from linked patients
+    final cpData = _getContactPersonData(userData);
+    if (cpData != null) {
+      return cpData['selectedPatient'].id;
+    }
+    return null;
+  }
+
+  /// Check if the notification has a navigable screen
+  bool _hasNavigableScreen(NotificationItem notification) {
+    final notifiableType = notification.notifiableType;
+    if (notifiableType == null) return false;
+
+    const navigableTypes = [
+      'App\\Models\\CareRequest',
+      'App\\Models\\WalletTransaction',
+      'App\\Models\\Expense',
+      'App\\Models\\Schedule',
+      'App\\Models\\SurveyResponse',
+      'App\\Models\\ProgressNote',
+      'App\\Models\\PatientFeedback',
+    ];
+
+    return navigableTypes.contains(notifiableType);
+  }
+
+  /// Get the label for the navigation button based on notifiable type
+  String _getNavigationLabel(String? notifiableType) {
+    switch (notifiableType) {
+      case 'App\\Models\\CareRequest':
+        return 'View Care Requests';
+      case 'App\\Models\\WalletTransaction':
+      case 'App\\Models\\Expense':
+        return 'View Wallet';
+      case 'App\\Models\\Schedule':
+        return 'View Schedules';
+      case 'App\\Models\\SurveyResponse':
+        return 'View Feedback';
+      case 'App\\Models\\ProgressNote':
+        return 'View Progress Notes';
+      case 'App\\Models\\PatientFeedback':
+        return 'View My Feedback';
+      default:
+        return 'View Details';
+    }
   }
 
   @override
@@ -746,6 +1007,8 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                         Expanded(
                           child: _buildNotificationContent(notification, isUnread),
                         ),
+                        if (_hasNavigableScreen(notification))
+                          _buildNavigationButton(notification),
                       ],
                     ),
                   ),
@@ -784,6 +1047,48 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
         child: Text(
           _getNotificationIcon(notification.notificationType),
           style: const TextStyle(fontSize: 28),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavigationButton(NotificationItem notification) {
+    return Container(
+      margin: const EdgeInsets.only(left: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _navigateToRelatedScreen(notification),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.primaryGreen.withOpacity(0.2),
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 20,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'View',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.primaryGreen,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -1040,6 +1345,44 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                     ),
                     const SizedBox(height: 24),
 
+                    // Navigation Button (if applicable)
+                    if (_hasNavigableScreen(notification)) ...[
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primaryGreen,
+                              AppColors.primaryGreen.withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryGreen.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: () => _navigateToRelatedScreen(notification, fromDetailSheet: true),
+                          icon: const Icon(Icons.open_in_new, size: 20),
+                          label: Text(_getNavigationLabel(notification.notifiableType)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            shadowColor: Colors.transparent,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
                     // Delete Button
                     SizedBox(
                       width: double.infinity,
@@ -1177,6 +1520,8 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
       'care_completed': '🎉',
       'care_request_created': '📝',
       'payment_received': '✅',
+      'feedback_response': '💬',
+      'feedback_received': '⭐',
     };
     return icons[type] ?? '🔔';
   }
@@ -1194,6 +1539,8 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
       'care_completed': AppColors.primaryGreen,
       'care_request_created': Color(0xFF6C63FF),
       'payment_received': AppColors.primaryGreen,
+      'feedback_response': Color(0xFF6C63FF),
+      'feedback_received': Color(0xFFFFB648),
     };
     return colors[type] ?? AppColors.primaryGreen;
   }

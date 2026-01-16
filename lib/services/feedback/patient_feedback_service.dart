@@ -147,6 +147,54 @@ class PatientFeedbackService {
     }
   }
 
+  /// Submit general feedback (not tied to a specific nurse)
+  /// Uses the same endpoint as nurse feedback but without nurse_id
+  Future<Map<String, dynamic>> submitGeneralFeedback({
+    required int rating,
+    required String feedbackText,
+    required bool wouldRecommend,
+  }) async {
+    try {
+      final body = {
+        'rating': rating,
+        'feedback_text': feedbackText,
+        'would_recommend': wouldRecommend,
+      };
+
+      final response = await _apiClient.post(
+        ApiConfig.submitFeedbackEndpoint,
+        body: body,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw FeedbackException(
+          message: 'Invalid response type',
+          statusCode: 0,
+        );
+      }
+
+      return {
+        'success': response['success'] ?? false,
+        'message': response['message'] ?? 'Feedback submitted successfully',
+        'data': response['data'],
+      };
+
+    } on ApiError catch (e) {
+      throw FeedbackException(
+        message: e.displayMessage,
+        statusCode: e.statusCode,
+      );
+    } on FeedbackException {
+      rethrow;
+    } catch (e) {
+      throw FeedbackException(
+        message: 'Failed to submit feedback. Please try again.',
+        statusCode: 0,
+      );
+    }
+  }
+
   /// Get feedback statistics
   Future<Map<String, dynamic>> getFeedbackStatistics() async {
     try {

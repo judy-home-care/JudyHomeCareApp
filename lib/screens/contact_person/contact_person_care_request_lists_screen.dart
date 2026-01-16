@@ -1313,6 +1313,7 @@ class _ContactPersonCareRequestListsScreenState
               builder: (context) => CarePaymentScreen(
                 careRequest: careRequest,
                 assessmentFee: assessmentFee,
+                patientId: widget.selectedPatient.id,
               ),
             ),
           );
@@ -1376,6 +1377,7 @@ class _ContactPersonCareRequestListsScreenState
               careRequest: careRequest,
               assessmentFee: carePaymentAmount,
               isCarePayment: true,
+              patientId: widget.selectedPatient.id,
             ),
           ),
         );
@@ -1666,6 +1668,7 @@ class _ContactPersonCareRequestListsScreenState
       key: ValueKey(refreshKey),
       request: request,
       isContactPerson: true,
+      patientId: widget.selectedPatient.id,
       onTap: () => _showRequestDetailModal(request),
       onPaymentComplete: () {
         _loadCareRequests(refresh: true, forceRefresh: true);

@@ -12,6 +12,8 @@ class TabbedCareRequestCard extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback onPaymentComplete;
   final bool isContactPerson;
+  /// Patient ID for contact person paying on behalf of patient
+  final int? patientId;
 
   const TabbedCareRequestCard({
     Key? key,
@@ -19,6 +21,7 @@ class TabbedCareRequestCard extends StatefulWidget {
     required this.onTap,
     required this.onPaymentComplete,
     this.isContactPerson = false,
+    this.patientId,
   }) : super(key: key);
 
   @override
@@ -39,6 +42,17 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
       return _contactPersonService.hasInstallmentPayments(widget.request);
     }
     return _careRequestService.hasInstallmentPayments(widget.request);
+  }
+
+  /// Get count of pending installments that need payment
+  int _getPendingInstallmentsCount() {
+    if (_installmentsData == null) return 0;
+
+    // Count pending or overdue installments
+    return _installmentsData!.installments.where((i) {
+      final status = i.status.toLowerCase();
+      return status == 'pending' || status == 'overdue';
+    }).length;
   }
 
   @override
@@ -249,6 +263,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                       index: 1,
                       label: 'Payment',
                       icon: Icons.payment_outlined,
+                      badgeCount: (needsPayment ? 1 : 0) + _getPendingInstallmentsCount(),
                     ),
                   ),
                 ],
@@ -282,8 +297,95 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
     required int index,
     required String label,
     required IconData icon,
+    int badgeCount = 0,
   }) {
     final isSelected = _selectedTabIndex == index;
+    final showBadge = badgeCount > 0 && !isSelected;
+
+    Widget buttonContent = Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      margin: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.white : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 4,
+                  offset: const Offset(0, 1),
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Icon with optional badge
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected
+                    ? const Color(0xFF199A8E)
+                    : Colors.grey[600],
+              ),
+              // Badge with count
+              if (showBadge)
+                Positioned(
+                  top: -8,
+                  right: -10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                    constraints: const BoxConstraints(minWidth: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4757),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: const Color(0xFFF5F5F5),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Text(
+                      '$badgeCount',
+                      style: const TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              color: isSelected
+                  ? const Color(0xFF199A8E)
+                  : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Wrap with tooltip if there are pending payments
+    if (showBadge) {
+      buttonContent = Tooltip(
+        message: badgeCount == 1
+            ? 'Tap to pay'
+            : 'Tap to pay ($badgeCount pending)',
+        preferBelow: false,
+        child: buttonContent,
+      );
+    }
 
     return GestureDetector(
       onTap: () {
@@ -291,46 +393,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
           _selectedTabIndex = index;
         });
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        margin: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.white : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 4,
-                    offset: const Offset(0, 1),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: isSelected
-                  ? const Color(0xFF199A8E)
-                  : Colors.grey[600],
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected
-                    ? const Color(0xFF199A8E)
-                    : Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
+      child: buttonContent,
     );
   }
 
@@ -539,21 +602,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               ),
             ),
           ),
-          if (hasInstallments) const SizedBox(height: 4),
         ],
-
-        // Installments section
-        if (hasInstallments)
-          InstallmentSection(
-            careRequest: request,
-            isContactPerson: widget.isContactPerson,
-            onPaymentComplete: () {
-              // Reload this card's summary first
-              _loadInstallmentsSummary();
-              // Then notify parent to refresh
-              widget.onPaymentComplete();
-            },
-          ),
 
         // No payment info message
         if (!needsPayment && !hasInstallments)
@@ -606,6 +655,11 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
           ),
         ),
       );
+    }
+
+    // Show installment plan info when first payment is not completed
+    if (_installmentsData != null && !_installmentsData!.firstPaymentCompleted) {
+      return _buildInstallmentPlanPending();
     }
 
     final summary = _installmentsData?.summary;
@@ -690,23 +744,25 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
         ? progressPercentage / 100 // API returns percentage (e.g., 25), we need fraction (e.g., 0.25)
         : (total > 0 ? (paid / total) : 0.0);
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF199A8E).withOpacity(0.1),
-            const Color(0xFF199A8E).withOpacity(0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return GestureDetector(
+      onTap: () => _showAllInstallmentsModal(context),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              const Color(0xFF199A8E).withOpacity(0.1),
+              const Color(0xFF199A8E).withOpacity(0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFF199A8E).withOpacity(0.3),
+          ),
         ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF199A8E).withOpacity(0.3),
-        ),
-      ),
-      child: Column(
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
@@ -897,9 +953,668 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               ),
             ),
           ],
+
+          // View Installments button
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: () => _showAllInstallmentsModal(context),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF199A8E).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFF199A8E).withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.view_list,
+                    size: 16,
+                    color: Color(0xFF199A8E),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'View All Installments',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF199A8E),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 12,
+                    color: Color(0xFF199A8E),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInstallmentPlanPending() {
+    // Calculate total from installments
+    double total = 0;
+    String currency = 'GHS';
+
+    if (_installmentsData != null) {
+      for (var i in _installmentsData!.installments) {
+        total += i.amount;
+        currency = i.currency;
+      }
+      for (var i in _installmentsData!.completedPayments) {
+        total += i.amount;
+      }
+    }
+
+    final formattedTotal = '$currency ${total.toStringAsFixed(2)}';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFFF9A00).withOpacity(0.1),
+            const Color(0xFFFF9A00).withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFFFF9A00).withOpacity(0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9A00).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.payments_outlined,
+                  size: 16,
+                  color: Color(0xFFFF9A00),
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Installment Plan Available',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFF9A00),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Pending',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // Total Amount
+          if (total > 0) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Total Care Payment',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  formattedTotal,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+
+          // Info message
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF3E0),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: Colors.orange[700],
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Complete initial payment to activate installment plan',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.orange[800],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _showAllInstallmentsModal(BuildContext context) {
+    if (_installmentsData == null) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (context, scrollController) => Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'All Installments',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              // Completed payments header
+              if (_installmentsData!.completedPayments.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.check_circle,
+                        size: 16,
+                        color: Color(0xFF199A8E),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Completed Payments',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+              // List
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    // Completed payments
+                    ..._installmentsData!.completedPayments.map((installment) =>
+                      _buildCompletedInstallmentItem(installment)),
+
+                    // Pending payments
+                    ...(() {
+                      final actualPendingItems = _installmentsData!.installments
+                          .where((installment) => !installment.isPaid)
+                          .toList();
+
+                      return [
+                        if (_installmentsData!.completedPayments.isNotEmpty &&
+                            actualPendingItems.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.pending_outlined,
+                                size: 16,
+                                color: Color(0xFFFF9A00),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Pending Payments',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey[800],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // Pending items
+                        ...actualPendingItems.map((installment) => _buildPendingInstallmentItem(installment)),
+                      ];
+                    })(),
+
+                    // Refunded payments
+                    if (_installmentsData!.refundedPayments.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.refresh,
+                            size: 16,
+                            color: Colors.grey[500],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Refunded',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      ..._installmentsData!.refundedPayments.map((installment) =>
+                        _buildRefundedInstallmentItem(installment)),
+                    ],
+
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompletedInstallmentItem(Installment installment) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF199A8E).withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: Color(0xFF199A8E),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.check,
+              size: 16,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  installment.label,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                if (installment.paidAt != null)
+                  Text(
+                    'Paid on ${_formatDate(installment.paidAt!)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Text(
+            installment.formattedAmount,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF199A8E),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRefundedInstallmentItem(Installment installment) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.grey.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.refresh,
+              size: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  installment.label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[600],
+                    decoration: TextDecoration.lineThrough,
+                  ),
+                ),
+                Text(
+                  'Refunded',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            installment.formattedAmount,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[500],
+              decoration: TextDecoration.lineThrough,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPendingInstallmentItem(Installment installment) {
+    final isOverdue = installment.isOverdue;
+    // Check if this is the next payable installment
+    final canPay = _installmentsData?.nextPayableInstallment?.id == installment.id;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: canPay
+              ? () {
+                  Navigator.pop(context); // Close bottom sheet
+                  _showPaymentSheet(context, installment);
+                }
+              : null,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isOverdue
+                  ? Colors.red.withOpacity(0.05)
+                  : Colors.grey.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isOverdue
+                    ? Colors.red.withOpacity(0.3)
+                    : Colors.grey.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: isOverdue
+                        ? Colors.red.withOpacity(0.1)
+                        : Colors.grey.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(
+                      '${installment.installmentNumber}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: isOverdue ? Colors.red : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        installment.label,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1A1A1A),
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          if (installment.dueDateFormatted != null) ...[
+                            Text(
+                              'Due: ${installment.dueDateFormatted}',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isOverdue ? Colors.red : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                          if (isOverdue) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.red,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                installment.dueStatusLabel ?? 'OVERDUE',
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ] else if (installment.isDueToday) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF9A00),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                installment.dueStatusLabel ?? 'Due Today',
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ] else if (installment.isDueSoon) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFF9A00),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                installment.dueStatusLabel ?? 'Due Soon',
+                                style: const TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      installment.formattedAmount,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isOverdue ? Colors.red : Colors.grey[800],
+                      ),
+                    ),
+                    if (canPay)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: isOverdue ? Colors.red : const Color(0xFF199A8E),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'Pay Now',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPaymentSheet(BuildContext context, Installment installment) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => InstallmentPaymentSheet(
+        careRequestId: widget.request.id,
+        installment: installment,
+        isContactPerson: widget.isContactPerson,
+        patientId: widget.patientId,
+      ),
+    );
+
+    // If payment was successful, refresh the data
+    if (result == true) {
+      _loadInstallmentsSummary();
+      widget.onPaymentComplete();
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year}';
   }
 
   Color _getUrgencyColor(String urgency) {

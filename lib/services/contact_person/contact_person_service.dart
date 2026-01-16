@@ -593,8 +593,8 @@ class ContactPersonService {
 
   // ==================== FEEDBACK ====================
 
-  /// Get feedback list
-  Future<List<dynamic>> getFeedbackList() async {
+  /// Get feedback list with structured response
+  Future<Map<String, dynamic>> getFeedbackList() async {
     try {
       final patientId = await _getPatientId();
       debugPrint('[ContactPersonService] Fetching feedback...');
@@ -603,34 +603,91 @@ class ContactPersonService {
         ApiConfig.contactPersonFeedbackEndpoint(patientId),
       );
 
-      return response['data'] ?? response['feedback'] ?? [];
+      return {
+        'success': response['success'] ?? true,
+        'data': response['data'] ?? response['feedback'] ?? [],
+        'total': response['total'] ?? 0,
+      };
     } catch (e) {
       debugPrint('[ContactPersonService] Error fetching feedback: $e');
       rethrow;
     }
   }
 
-  /// Submit feedback
-  Future<Map<String, dynamic>> submitFeedback(Map<String, dynamic> data) async {
+  /// Submit feedback for a nurse
+  Future<Map<String, dynamic>> submitFeedback({
+    required int nurseId,
+    int? scheduleId,
+    required int rating,
+    required String feedbackText,
+    required bool wouldRecommend,
+    String? careDate,
+  }) async {
     try {
       final patientId = await _getPatientId();
       debugPrint('[ContactPersonService] Submitting feedback...');
 
+      final body = {
+        'nurse_id': nurseId,
+        'rating': rating,
+        'feedback_text': feedbackText,
+        'would_recommend': wouldRecommend,
+        if (scheduleId != null) 'schedule_id': scheduleId,
+        if (careDate != null) 'care_date': careDate,
+      };
+
       final response = await _apiClient.post(
         ApiConfig.contactPersonFeedbackEndpoint(patientId),
-        body: data,
+        body: body,
         requiresAuth: true,
       );
 
-      return response;
+      return {
+        'success': response['success'] ?? false,
+        'message': response['message'] ?? 'Feedback submitted successfully',
+        'data': response['data'],
+      };
     } catch (e) {
       debugPrint('[ContactPersonService] Error submitting feedback: $e');
       rethrow;
     }
   }
 
-  /// Get nurses for feedback
-  Future<List<dynamic>> getNursesForFeedback() async {
+  /// Submit general feedback (not tied to a specific nurse)
+  Future<Map<String, dynamic>> submitGeneralFeedback({
+    required int rating,
+    required String feedbackText,
+    required bool wouldRecommend,
+  }) async {
+    try {
+      final patientId = await _getPatientId();
+      debugPrint('[ContactPersonService] Submitting general feedback...');
+
+      final body = {
+        'rating': rating,
+        'feedback_text': feedbackText,
+        'would_recommend': wouldRecommend,
+      };
+
+      final response = await _apiClient.post(
+        ApiConfig.contactPersonFeedbackEndpoint(patientId),
+        body: body,
+        requiresAuth: true,
+      );
+
+      return {
+        'success': response['success'] ?? false,
+        'message': response['message'] ?? 'Feedback submitted successfully',
+        'data': response['data'],
+      };
+    } catch (e) {
+      debugPrint('[ContactPersonService] Error submitting general feedback: $e');
+      rethrow;
+    }
+  }
+
+  /// Get nurses for feedback with structured response
+  Future<Map<String, dynamic>> getNursesForFeedback() async {
     try {
       final patientId = await _getPatientId();
       debugPrint('[ContactPersonService] Fetching nurses for feedback...');
@@ -639,7 +696,11 @@ class ContactPersonService {
         ApiConfig.contactPersonFeedbackNursesEndpoint(patientId),
       );
 
-      return response['data'] ?? response['nurses'] ?? [];
+      return {
+        'success': response['success'] ?? true,
+        'nurses': response['data'] ?? response['nurses'] ?? [],
+        'total': response['total'] ?? 0,
+      };
     } catch (e) {
       debugPrint('[ContactPersonService] Error fetching nurses: $e');
       rethrow;
