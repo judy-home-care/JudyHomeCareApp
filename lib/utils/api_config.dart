@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 class ApiConfig {
   // Base URL - can be changed based on environment
   static const String _localBaseUrl = 'http://localhost:8000';
-  static const String _productionBaseUrl = 'https://convivially-peskier-jayda.ngrok-free.dev'; // Replace with your production URL
+  static const String _productionBaseUrl = 'https://apps.judyscareagency.com'; // Replace with your production URL
 
   // Get base URL based on environment
   static String get baseUrl {
