@@ -14,7 +14,8 @@ import '../messages/conversations_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'patient_notification_preferences.dart';
 import 'patient_faq_screen.dart';
-import 'help_patient_center.dart'; 
+import 'help_patient_center.dart';
+import 'payment_methods_screen.dart'; 
 
 class PatientAccountScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -380,6 +381,15 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
             badge: _walletInfo?.formattedBalance,
             onTap: () => _navigateToWallet(),
           ),
+          _buildDivider(),
+          _buildSettingTile(
+            icon: Icons.credit_card,
+            title: 'Payment Methods',
+            subtitle: 'Manage your payment options',
+            iconColor: const Color(0xFF6C63FF),
+            iconBg: const Color(0xFFEDE9FF),
+            onTap: () => _navigateToPaymentMethods(),
+          ),
         ],
       ),
     );
@@ -396,6 +406,15 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
     );
     // Refresh wallet info when returning
     _loadWalletInfo();
+  }
+
+  void _navigateToPaymentMethods() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PaymentMethodsScreen(),
+      ),
+    );
   }
 
   Widget _buildMessagesSection() {

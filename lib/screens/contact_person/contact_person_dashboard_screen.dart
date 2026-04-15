@@ -1006,6 +1006,19 @@ class ContactPersonDashboardScreenState
     );
   }
 
+  /// Parse a shift start time like "08:00 PM" into a DateTime anchored to [reference].
+  DateTime? _parseShiftStart(String time, DateTime reference) {
+    if (time.isEmpty) return null;
+    final match = RegExp(r'^\s*(\d{1,2}):(\d{2})\s*([APap][Mm])?\s*$').firstMatch(time);
+    if (match == null) return null;
+    var hour = int.tryParse(match.group(1) ?? '') ?? 0;
+    final minute = int.tryParse(match.group(2) ?? '') ?? 0;
+    final meridiem = match.group(3)?.toUpperCase();
+    if (meridiem == 'PM' && hour < 12) hour += 12;
+    if (meridiem == 'AM' && hour == 12) hour = 0;
+    return DateTime(reference.year, reference.month, reference.day, hour, minute);
+  }
+
   /// Check if today falls within the schedule's date range
   bool _isTodayWithinSchedule(ScheduleVisit visit) {
     // First check the simple case
@@ -1038,14 +1051,38 @@ class ContactPersonDashboardScreenState
         .toList();
 
     final upcomingVisits = todayVisits
-        .where((visit) =>
-            visit.status.toLowerCase() != 'completed' &&
-            visit.status.toLowerCase() != 'cancelled')
+        .where((visit) {
+          final status = visit.status.toLowerCase();
+          if (visit.isTimerRunning) return status != 'completed';
+          return status != 'completed' && status != 'cancelled';
+        })
         .toList();
 
     final completedVisits = todayVisits
         .where((visit) => visit.status.toLowerCase() == 'completed')
         .toList();
+
+    // Prefer an actively-running shift, then the one whose start time is
+    // closest to now — otherwise a morning shift can sit first in the list
+    // and hide the night shift that is actually active.
+    int visitPriority(ScheduleVisit v) {
+      if (v.isTimerRunning) return 0;
+      if (v.status.toLowerCase() == 'in_progress') return 1;
+      return 2;
+    }
+
+    int minutesFromNow(ScheduleVisit v) {
+      final now = DateTime.now();
+      final parsed = _parseShiftStart(v.time, now);
+      if (parsed == null) return 1 << 30;
+      return parsed.difference(now).inMinutes.abs();
+    }
+
+    upcomingVisits.sort((a, b) {
+      final byPriority = visitPriority(a).compareTo(visitPriority(b));
+      if (byPriority != 0) return byPriority;
+      return minutesFromNow(a).compareTo(minutesFromNow(b));
+    });
 
     final visitToShow = upcomingVisits.isNotEmpty
         ? upcomingVisits.first
@@ -1106,7 +1143,8 @@ class ContactPersonDashboardScreenState
     bool isCompleted = visit.status.toLowerCase() == 'completed';
     bool isInProgress = visit.status.toLowerCase() == 'in_progress' ||
                         visit.status.toLowerCase() == 'in-progress' ||
-                        visit.status.toLowerCase() == 'inprogress';
+                        visit.status.toLowerCase() == 'inprogress' ||
+                        (visit.isTimerRunning && !isCompleted);
 
     return GestureDetector(
       onTap: () => _showScheduleDetailModal(visit),

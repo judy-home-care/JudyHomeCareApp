@@ -260,7 +260,11 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
   /// [fromDetailSheet] indicates if this is called from the detail sheet (2 sheets open) vs card (1 sheet open)
   Future<void> _navigateToRelatedScreen(NotificationItem notification, {bool fromDetailSheet = false}) async {
     final notifiableType = notification.notifiableType;
-    final userType = notification.userType.toLowerCase();
+    // Route based on the currently-authenticated user's role, not the
+    // notification's user_type field (which may reflect the progress note's
+    // owning patient rather than the actual recipient).
+    final currentUserType = (await _storage.getUserType())?.toLowerCase();
+    final userType = currentUserType ?? notification.userType.toLowerCase();
 
     if (notifiableType == null) {
       _showErrorMessage('Unable to navigate - no related item');
@@ -347,10 +351,24 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
         if (userType == 'patient') {
           targetScreen = const ProgressNoteScreen();
         } else if (userType == 'contact_person') {
-          // Get patient ID from notification data or stored data
-          final patientId = _getPatientIdFromData(notification, userData);
+          // notifiableId here is the ProgressNote id, not a patient id, so
+          // resolve the patient from notification.data or the contact
+          // person's currently selected patient.
+          int? patientId;
+          if (notification.data != null) {
+            final raw = notification.data!['patient_id'] ?? notification.data!['patientId'];
+            if (raw is int) {
+              patientId = raw;
+            } else if (raw != null) {
+              patientId = int.tryParse(raw.toString());
+            }
+          }
+          final cpData = _getContactPersonData(userData);
+          patientId ??= cpData?['selectedPatient']?.id as int?;
           if (patientId != null) {
             targetScreen = ContactPersonProgressNotesScreen(patientId: patientId);
+          } else {
+            debugPrint('[Notifications] ProgressNote tap: no patientId resolved');
           }
         }
         break;

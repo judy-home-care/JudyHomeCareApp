@@ -349,14 +349,15 @@ class ContactPersonSchedulesScreenState
     final today = DateTime(now.year, now.month, now.day);
 
     final filtered = _schedules.where((schedule) {
-      final scheduleDate =
-          DateTime(schedule.date.year, schedule.date.month, schedule.date.day);
+      final effectiveEnd = schedule.endDate ?? schedule.date;
+      final endDateOnly =
+          DateTime(effectiveEnd.year, effectiveEnd.month, effectiveEnd.day);
 
       bool matchesTab = true;
       if (_selectedTab == 'upcoming') {
         matchesTab = !schedule.isCompleted &&
-            (scheduleDate.isAfter(today) ||
-                scheduleDate.isAtSameMomentAs(today));
+            (endDateOnly.isAfter(today) ||
+                endDateOnly.isAtSameMomentAs(today));
       } else if (_selectedTab == 'completed') {
         matchesTab = schedule.isCompleted;
       }
@@ -378,9 +379,11 @@ class ContactPersonSchedulesScreenState
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return _schedules.where((s) {
-      final scheduleDate = DateTime(s.date.year, s.date.month, s.date.day);
+      final effectiveEnd = s.endDate ?? s.date;
+      final endDateOnly =
+          DateTime(effectiveEnd.year, effectiveEnd.month, effectiveEnd.day);
       return !s.isCompleted &&
-          (scheduleDate.isAfter(today) || scheduleDate.isAtSameMomentAs(today));
+          (endDateOnly.isAfter(today) || endDateOnly.isAtSameMomentAs(today));
     }).length;
   }
 

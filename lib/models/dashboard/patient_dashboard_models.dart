@@ -67,6 +67,7 @@ class ScheduleVisit {
   final String assignmentDuration;
   final String? timeCompleted;
   final DateTime? timerStartedAt;
+  final bool isTimerRunning;
   final String status;
   final String carePlanTitle;
   final String careType;
@@ -88,6 +89,7 @@ class ScheduleVisit {
     required this.assignmentDuration,
     this.timeCompleted,
     this.timerStartedAt,
+    this.isTimerRunning = false,
     required this.status,
     required this.carePlanTitle,
     required this.careType,
@@ -130,6 +132,8 @@ class ScheduleVisit {
       assignmentDuration: json['assignmentDuration'] ?? '',
       timeCompleted: json['timeCompleted'],
       timerStartedAt: _parseTimerStartedAt(json),
+      isTimerRunning: json['is_timer_running'] == true ||
+          json['isTimerRunning'] == true,
       status: json['status'] ?? 'scheduled',
       carePlanTitle: json['carePlanTitle'] ?? '',
       careType: json['careType'] ?? '',
