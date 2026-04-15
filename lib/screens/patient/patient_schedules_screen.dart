@@ -574,12 +574,13 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
     final today = DateTime(now.year, now.month, now.day);
     
     final filtered = _schedules.where((schedule) {
-      final scheduleDate = DateTime(schedule.date.year, schedule.date.month, schedule.date.day);
-      
+      final effectiveEnd = schedule.endDate ?? schedule.date;
+      final endDateOnly = DateTime(effectiveEnd.year, effectiveEnd.month, effectiveEnd.day);
+
       bool matchesTab = true;
       if (_selectedTab == 'upcoming') {
-        matchesTab = !schedule.isCompleted && 
-                    (scheduleDate.isAfter(today) || scheduleDate.isAtSameMomentAs(today));
+        matchesTab = !schedule.isCompleted &&
+                    (endDateOnly.isAfter(today) || endDateOnly.isAtSameMomentAs(today));
       } else if (_selectedTab == 'completed') {
         matchesTab = schedule.isCompleted;
       }
@@ -603,8 +604,9 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     return _schedules.where((s) {
-      final scheduleDate = DateTime(s.date.year, s.date.month, s.date.day);
-      return !s.isCompleted && (scheduleDate.isAfter(today) || scheduleDate.isAtSameMomentAs(today));
+      final effectiveEnd = s.endDate ?? s.date;
+      final endDateOnly = DateTime(effectiveEnd.year, effectiveEnd.month, effectiveEnd.day);
+      return !s.isCompleted && (endDateOnly.isAfter(today) || endDateOnly.isAtSameMomentAs(today));
     }).length;
   }
   

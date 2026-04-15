@@ -5,8 +5,14 @@ class ApiConfig {
   static const String _localBaseUrl = 'http://localhost:8000';
   static const String _productionBaseUrl = 'https://apps.judyscareagency.com'; // Replace with your production URL
 
+  static const String _environment =
+      String.fromEnvironment('ENVIRONMENT', defaultValue: '');
+
   // Get base URL based on environment
   static String get baseUrl {
+    if (_environment == 'production') {
+      return _productionBaseUrl;
+    }
     if (kDebugMode) {
       // For Android emulator, use 10.0.2.2 instead of localhost
       if (defaultTargetPlatform == TargetPlatform.android) {

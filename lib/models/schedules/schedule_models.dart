@@ -242,14 +242,14 @@ class ScheduleItem {
       date: json['date'] != null
           ? DateTime.parse(json['date'] as String)
           : DateTime.now(),
-      startDate: json['startDate'] != null
-          ? DateTime.tryParse(json['startDate'].toString())
+      startDate: (json['startDate'] ?? json['start_date']) != null
+          ? DateTime.tryParse((json['startDate'] ?? json['start_date']).toString())
           : null,
-      endDate: json['endDate'] != null
-          ? DateTime.tryParse(json['endDate'].toString())
+      endDate: (json['endDate'] ?? json['end_date']) != null
+          ? DateTime.tryParse((json['endDate'] ?? json['end_date']).toString())
           : null,
-      startDateDisplay: json['startDateDisplay']?.toString(),
-      endDateDisplay: json['endDateDisplay']?.toString(),
+      startDateDisplay: (json['startDateDisplay'] ?? json['start_date_display'])?.toString(),
+      endDateDisplay: (json['endDateDisplay'] ?? json['end_date_display'])?.toString(),
       startTime: json['startTime']?.toString() ?? '00:00',
       endTime: json['endTime']?.toString() ?? '00:00',
       shiftType: json['shiftType']?.toString() ??
