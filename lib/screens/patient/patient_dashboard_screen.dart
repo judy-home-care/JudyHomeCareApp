@@ -2066,7 +2066,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
             children: [
                 _buildActionTile(
                   icon: Icons.medical_services_outlined,
-                  title: 'Request Care',
+                  title: 'Pay for Care',
                   gradient: const LinearGradient(
                     colors: [Color(0xFF6C63FF), Color(0xFF8B84FF)],
                   ),

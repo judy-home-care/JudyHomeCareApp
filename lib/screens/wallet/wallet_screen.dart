@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../utils/app_colors.dart';
+import '../../utils/api_config.dart';
+import '../../services/file_download_service.dart';
 import '../../services/wallet_service.dart';
 import '../../models/wallet/wallet_models.dart';
 import 'wallet_deposit_screen.dart';
@@ -192,6 +194,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     slivers: [
                       SliverToBoxAdapter(child: _buildBalanceCard()),
                       SliverToBoxAdapter(child: _buildFilterTabs()),
+                      SliverToBoxAdapter(child: _buildDownloadStatementSection()),
                       SliverToBoxAdapter(child: _buildTransactionHeader()),
                       _buildTransactionList(),
                       if (_isLoadingMore)
@@ -422,6 +425,171 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDownloadStatementSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade200),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryGreen.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.download_rounded,
+                  color: AppColors.primaryGreen,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Download Statement',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Export your transaction records as a PDF',
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _StatementDateButton(
+                  label: 'This Month',
+                  icon: Icons.calendar_today,
+                  onTap: () {
+                    final now = DateTime.now();
+                    final from = DateTime(now.year, now.month, 1);
+                    _downloadStatement(from, now);
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _StatementDateButton(
+                  label: 'Last 3 Months',
+                  icon: Icons.date_range,
+                  onTap: () {
+                    final now = DateTime.now();
+                    final from = DateTime(now.year, now.month - 3, now.day);
+                    _downloadStatement(from, now);
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _showCustomDateRangePicker,
+              icon: const Icon(Icons.tune, size: 18),
+              label: const Text('Custom Date Range'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primaryGreen,
+                side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.4)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCustomDateRangePicker() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: now,
+      initialDateRange: DateTimeRange(
+        start: DateTime(now.year, now.month, 1),
+        end: now,
+      ),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.primaryGreen,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked != null) {
+      _downloadStatement(picked.start, picked.end);
+    }
+  }
+
+  void _downloadStatement(DateTime from, DateTime to) async {
+    final dateFormatter = DateFormat('yyyy-MM-dd');
+    final fromStr = dateFormatter.format(from);
+    final toStr = dateFormatter.format(to);
+
+    String endpoint = '${ApiConfig.walletStatementDownloadEndpoint}?from_date=$fromStr&to_date=$toStr';
+    if (widget.patientId != null) {
+      endpoint += '&patient_id=${widget.patientId}';
+    }
+
+    final fileName = 'wallet_statement_${fromStr}_to_$toStr.pdf';
+    final downloader = FileDownloadService();
+    await downloader.downloadAndShare(
+      endpoint,
+      fileName: fileName,
+      context: context,
+    );
+  }
+
+  void _downloadTransactionReceipt(WalletTransaction transaction) async {
+    String endpoint = ApiConfig.walletTransactionReceiptEndpoint(transaction.id);
+    if (widget.patientId != null) {
+      endpoint += '?patient_id=${widget.patientId}';
+    }
+
+    final fileName = 'receipt_${transaction.reference}.pdf';
+    final downloader = FileDownloadService();
+    await downloader.downloadAndShare(
+      endpoint,
+      fileName: fileName,
+      context: context,
     );
   }
 
@@ -764,29 +932,79 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            // Close button
+            // Action buttons
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              child: Column(
+                children: [
+                  if (transaction.isCompleted)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _downloadTransactionReceipt(transaction);
+                        },
+                        icon: const Icon(Icons.download, size: 20),
+                        label: const Text(
+                          'Download Receipt',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryGreen,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
+                  if (transaction.isCompleted) const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: transaction.isCompleted
+                        ? OutlinedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.grey.shade700,
+                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Close',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () => Navigator.pop(context),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryGreen,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: const Text(
+                              'Close',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                   ),
-                  child: const Text(
-                    'Close',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
+                ],
               ),
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom),
@@ -854,5 +1072,53 @@ class _WalletScreenState extends State<WalletScreen> {
       default:
         return Colors.grey;
     }
+  }
+}
+
+class _StatementDateButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _StatementDateButton({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+          decoration: BoxDecoration(
+            color: AppColors.primaryGreen.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppColors.primaryGreen.withOpacity(0.2),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 16, color: AppColors.primaryGreen),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryGreen,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

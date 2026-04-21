@@ -158,6 +158,36 @@ class ApiClient {
     }
   }
 
+  // Download file (returns raw bytes)
+  Future<http.Response> downloadRaw(
+    String endpoint, {
+    Map<String, String>? headers,
+    bool requiresAuth = true,
+  }) async {
+    try {
+      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+      final requestHeaders = await _buildHeaders(headers, requiresAuth);
+      // Accept any content type for file downloads
+      requestHeaders['Accept'] = '*/*';
+
+      final response = await _client
+          .get(url, headers: requestHeaders)
+          .timeout(const Duration(seconds: 30));
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return response;
+      } else {
+        throw ApiError(
+          message: 'Download failed (${response.statusCode})',
+          statusCode: response.statusCode,
+        );
+      }
+    } catch (e) {
+      if (e is ApiError) rethrow;
+      throw _handleError(e);
+    }
+  }
+
   // Build headers with auth token if required
   Future<Map<String, String>> _buildHeaders(
     Map<String, String>? customHeaders,

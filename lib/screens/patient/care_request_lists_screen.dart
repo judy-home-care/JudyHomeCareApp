@@ -1629,7 +1629,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
         backgroundColor: const Color(0xFF199A8E),
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text(
-          'New Request',
+          'New Care Request',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w600,

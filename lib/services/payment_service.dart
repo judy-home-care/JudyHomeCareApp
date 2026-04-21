@@ -372,6 +372,43 @@ class PaymentService {
     }
   }
 
+  // ==================== INSTALLMENT RECEIPTS ====================
+
+  /// Get installment payment receipt (preview data)
+  Future<PaymentReceiptResponse> getInstallmentReceipt({
+    required int careRequestId,
+    required int paymentId,
+    bool isContactPerson = false,
+    int? patientId,
+  }) async {
+    try {
+      print('📡 [PaymentService] Fetching installment receipt...');
+
+      String endpoint;
+      if (isContactPerson && patientId != null) {
+        endpoint = ApiConfig.contactPersonInstallmentReceiptEndpoint(
+            patientId, careRequestId, paymentId);
+      } else {
+        endpoint = ApiConfig.installmentReceiptEndpoint(careRequestId, paymentId);
+      }
+
+      final response = await _apiClient.get(endpoint, requiresAuth: true);
+
+      if (response['success'] == true) {
+        print('✅ [PaymentService] Installment receipt received');
+        return PaymentReceiptResponse.fromJson(response);
+      } else {
+        throw PaymentException(
+          message: response['message'] ?? 'Failed to fetch installment receipt',
+        );
+      }
+    } catch (e) {
+      print('💥 [PaymentService] Error fetching installment receipt: $e');
+      if (e is PaymentException) rethrow;
+      throw PaymentException(message: 'An unexpected error occurred: $e');
+    }
+  }
+
   // ==================== CONVENIENCE METHODS ====================
 
   /// Check if payment is for assessment fee

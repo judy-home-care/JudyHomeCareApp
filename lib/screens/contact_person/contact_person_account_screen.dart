@@ -8,6 +8,7 @@ import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../messages/conversations_screen.dart';
 import '../password_security/password_security.dart';
+import '../expenses/expenses_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'patient_selector_screen.dart';
 import '../auth/login_screen.dart';
@@ -113,6 +114,7 @@ class _ContactPersonAccountScreenState
                 children: [
                   _buildCurrentViewingSection(),
                   _buildWalletSection(),
+                  _buildExpensesSection(),
                   _buildAccountSettings(),
                   _buildMessagesSection(),
                   _buildLinkedPatientsSection(),
@@ -522,6 +524,60 @@ class _ContactPersonAccountScreenState
     if (result == true || result == null) {
       _loadWalletInfo();
     }
+  }
+
+  Widget _buildExpensesSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'Expenses',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          _buildSettingTile(
+            icon: Icons.receipt_long_outlined,
+            title: 'Patient Expenses',
+            subtitle: 'View expense records and download receipts',
+            iconColor: const Color(0xFF6C63FF),
+            iconBg: const Color(0xFFEDE9FF),
+            onTap: () => _navigateToExpenses(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToExpenses() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ExpensesScreen(
+          patientId: widget.selectedPatient.id,
+          patientName: widget.selectedPatient.name,
+        ),
+      ),
+    );
   }
 
   Widget _buildAccountSettings() {

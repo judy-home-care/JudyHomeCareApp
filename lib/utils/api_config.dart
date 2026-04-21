@@ -168,7 +168,30 @@ static String careRequestInstallmentsEndpoint(int requestId) =>
 static String payInstallmentEndpoint(int requestId, int paymentId) =>
     '$mobilePrefix/care-requests/$requestId/installments/$paymentId/pay';
 
+/// Get installment payment receipt
+static String installmentReceiptEndpoint(int requestId, int paymentId) =>
+    '$mobilePrefix/care-requests/$requestId/installments/$paymentId/receipt';
+
+/// Download installment payment receipt as PDF
+static String installmentReceiptDownloadEndpoint(int requestId, int paymentId) =>
+    '$mobilePrefix/care-requests/$requestId/installments/$paymentId/receipt/download';
+
 // ==================== END CARE REQUEST ENDPOINTS ====================
+
+// ==================== EXPENSE ENDPOINTS ====================
+
+/// Get patient expenses (paginated)
+static String get patientExpensesEndpoint => '$mobilePrefix/patient/expenses';
+
+/// Get single expense detail
+static String patientExpenseDetailEndpoint(int expenseId) =>
+    '$mobilePrefix/patient/expenses/$expenseId';
+
+/// Download expense receipt as PDF
+static String patientExpenseReceiptEndpoint(int expenseId) =>
+    '$mobilePrefix/patient/expenses/$expenseId/receipt';
+
+// ==================== END EXPENSE ENDPOINTS ====================
 
   // Incident Report endpoints
   static const String incidentsEndpoint = '/api/mobile/nurse/incidents';
@@ -299,6 +322,13 @@ static String get walletPayEndpoint => '$walletPrefix/pay';
 
 /// Get wallet transaction history
 static String get walletTransactionsEndpoint => '$walletPrefix/transactions';
+
+/// Download single transaction receipt
+static String walletTransactionReceiptEndpoint(int transactionId) =>
+    '$walletPrefix/transactions/$transactionId/receipt';
+
+/// Download wallet statement (PDF) for a date range
+static String get walletStatementDownloadEndpoint => '$walletPrefix/statement/download';
 
 // ==================== END WALLET ENDPOINTS ====================
 
@@ -445,6 +475,23 @@ static String get walletTransactionsEndpoint => '$walletPrefix/transactions';
 
   static String contactPersonPayInstallmentEndpoint(int patientId, int requestId, int paymentId) =>
       '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/installments/$paymentId/pay';
+
+  // Installment Receipts
+  static String contactPersonInstallmentReceiptEndpoint(int patientId, int requestId, int paymentId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/installments/$paymentId/receipt';
+
+  static String contactPersonInstallmentReceiptDownloadEndpoint(int patientId, int requestId, int paymentId) =>
+      '$contactPersonPrefix/patient/$patientId/care-requests/$requestId/installments/$paymentId/receipt/download';
+
+  // Expenses
+  static String contactPersonExpensesEndpoint(int patientId) =>
+      '$contactPersonPrefix/patient/$patientId/expenses';
+
+  static String contactPersonExpenseDetailEndpoint(int patientId, int expenseId) =>
+      '$contactPersonPrefix/patient/$patientId/expenses/$expenseId';
+
+  static String contactPersonExpenseReceiptEndpoint(int patientId, int expenseId) =>
+      '$contactPersonPrefix/patient/$patientId/expenses/$expenseId/receipt';
 
   // Feedback
   static String contactPersonFeedbackEndpoint(int patientId) =>

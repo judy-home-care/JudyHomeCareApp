@@ -11,6 +11,7 @@ import '../transport/transport_request_screen.dart';
 import '../help_center.dart';
 import '../onboarding/login_signup_screen.dart';
 import '../messages/conversations_screen.dart';
+import '../expenses/expenses_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'patient_notification_preferences.dart';
 import 'patient_faq_screen.dart';
@@ -113,6 +114,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                 children: [
                   _buildAccountSettings(),
                   _buildWalletSection(),
+                  _buildExpensesSection(),
                   _buildMessagesSection(),
                   _buildServicesSection(),
                   _buildHelpSection(),
@@ -413,6 +415,57 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
       context,
       MaterialPageRoute(
         builder: (context) => const PaymentMethodsScreen(),
+      ),
+    );
+  }
+
+  Widget _buildExpensesSection() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'Expenses',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          _buildSettingTile(
+            icon: Icons.receipt_long_outlined,
+            title: 'My Expenses',
+            subtitle: 'View expense records and download receipts',
+            iconColor: const Color(0xFF6C63FF),
+            iconBg: const Color(0xFFEDE9FF),
+            onTap: () => _navigateToExpenses(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _navigateToExpenses() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ExpensesScreen(),
       ),
     );
   }

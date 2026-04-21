@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/care_request/care_request_models.dart';
+import '../../../models/payment/payment_models.dart';
 import '../../../services/care_request_service.dart';
 import '../../../services/contact_person/contact_person_service.dart';
+import '../../../services/file_download_service.dart';
+import '../../../services/payment_service.dart';
+import '../../../utils/api_config.dart';
 import '../../../utils/string_utils.dart';
 import 'installment_section.dart';
 
@@ -1308,55 +1312,370 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: const Color(0xFF199A8E).withOpacity(0.2)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: const BoxDecoration(
-              color: Color(0xFF199A8E),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.check,
-              size: 16,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  installment.label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1A1A1A),
-                  ),
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF199A8E),
+                  shape: BoxShape.circle,
                 ),
-                if (installment.paidAt != null)
-                  Text(
-                    'Paid on ${_formatDate(installment.paidAt!)}',
+                child: const Icon(
+                  Icons.check,
+                  size: 16,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      installment.label,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
+                      ),
+                    ),
+                    if (installment.paidAt != null)
+                      Text(
+                        'Paid on ${_formatDate(installment.paidAt!)}',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Text(
+                installment.formattedAmount,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF199A8E),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              const SizedBox(width: 44), // Align with text above
+              Expanded(
+                child: Row(
+                  children: [
+                    _buildReceiptButton(
+                      icon: Icons.visibility_outlined,
+                      label: 'Preview',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _previewReceipt(installment);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _buildReceiptButton(
+                      icon: Icons.download_outlined,
+                      label: 'Download',
+                      onTap: () {
+                        Navigator.pop(context);
+                        _downloadReceipt(installment);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReceiptButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF199A8E).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+            color: const Color(0xFF199A8E).withOpacity(0.2),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: const Color(0xFF199A8E)),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF199A8E),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _previewReceipt(Installment installment) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Text('Loading receipt...'),
+          ],
+        ),
+        backgroundColor: const Color(0xFF199A8E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 10),
+      ),
+    );
+
+    try {
+      final paymentService = PaymentService();
+      final response = await paymentService.getInstallmentReceipt(
+        careRequestId: widget.request.id,
+        paymentId: installment.id,
+        isContactPerson: widget.isContactPerson,
+        patientId: widget.patientId,
+      );
+
+      scaffoldMessenger.clearSnackBars();
+
+      if (!mounted) return;
+
+      if (response.success && response.data != null) {
+        _showReceiptPreviewModal(response.data!);
+      } else {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(response.message.isNotEmpty
+                ? response.message
+                : 'Failed to load receipt'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (e) {
+      scaffoldMessenger.clearSnackBars();
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error loading receipt: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+  }
+
+  void _showReceiptPreviewModal(PaymentReceipt receipt) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(24),
+            topRight: Radius.circular(24),
+          ),
+        ),
+        child: Column(
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Header
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Payment Receipt',
                     style: TextStyle(
-                      fontSize: 11,
-                      color: Colors.grey[600],
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF1A1A1A),
                     ),
                   ),
-              ],
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+            ),
+            // Receipt content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    // Receipt header
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFF199A8E).withOpacity(0.1),
+                            const Color(0xFF199A8E).withOpacity(0.05),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            color: Color(0xFF199A8E),
+                            size: 48,
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Payment Successful',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF199A8E),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '${receipt.currency} ${receipt.totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1A1A1A),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Receipt details
+                    _buildReceiptDetailRow('Receipt No.', receipt.receiptNumber),
+                    _buildReceiptDetailRow('Reference', receipt.referenceNumber),
+                    _buildReceiptDetailRow('Date', DateFormat('MMM d, yyyy • h:mm a').format(receipt.paymentDate)),
+                    _buildReceiptDetailRow('Patient', receipt.patientName),
+                    _buildReceiptDetailRow('Payment Type', receipt.paymentType),
+                    _buildReceiptDetailRow('Payment Method', receipt.paymentMethod),
+                    const Divider(height: 24),
+                    _buildReceiptDetailRow('Amount', '${receipt.currency} ${receipt.amount.toStringAsFixed(2)}'),
+                    if (receipt.taxAmount > 0)
+                      _buildReceiptDetailRow('Tax', '${receipt.currency} ${receipt.taxAmount.toStringAsFixed(2)}'),
+                    _buildReceiptDetailRow(
+                      'Total',
+                      '${receipt.currency} ${receipt.totalAmount.toStringAsFixed(2)}',
+                      isBold: true,
+                    ),
+                    if (receipt.description != null && receipt.description!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      _buildReceiptDetailRow('Description', receipt.description!),
+                    ],
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReceiptDetailRow(String label, String value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
             ),
           ),
-          Text(
-            installment.formattedAmount,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF199A8E),
+          const SizedBox(width: 16),
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                color: const Color(0xFF1A1A1A),
+              ),
+              textAlign: TextAlign.end,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  void _downloadReceipt(Installment installment) async {
+    _downloadReceiptFile(installment.id);
+  }
+
+  void _downloadReceiptFile(int paymentId) async {
+    String endpoint;
+    if (widget.isContactPerson && widget.patientId != null) {
+      endpoint = ApiConfig.contactPersonInstallmentReceiptDownloadEndpoint(
+          widget.patientId!, widget.request.id, paymentId);
+    } else {
+      endpoint = ApiConfig.installmentReceiptDownloadEndpoint(
+          widget.request.id, paymentId);
+    }
+
+    final fileName = 'installment_receipt_${widget.request.id}_$paymentId.pdf';
+    final downloader = FileDownloadService();
+    await downloader.downloadAndShare(
+      endpoint,
+      fileName: fileName,
+      context: context,
     );
   }
 
