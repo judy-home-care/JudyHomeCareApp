@@ -84,10 +84,17 @@ class FileDownloadService {
 
       scaffoldMessenger.clearSnackBars();
 
+      // Get the render box for sharePositionOrigin (required on iPad)
+      final box = context.findRenderObject() as RenderBox?;
+      final shareOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
       // Open the share sheet so the user can save / share / preview
       await Share.shareXFiles(
         [XFile(file.path)],
         subject: fileName,
+        sharePositionOrigin: shareOrigin,
       );
 
       return file;
