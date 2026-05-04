@@ -17,6 +17,8 @@ class Expense {
   final List<ExpenseItem> items;
   final ExpenseCreator? createdByRelation;
   final ExpenseWalletTransaction? walletTransaction;
+  final List<ExpenseReceipt> receipts;
+  final int receiptsCount;
 
   Expense({
     required this.id,
@@ -35,9 +37,16 @@ class Expense {
     required this.items,
     this.createdByRelation,
     this.walletTransaction,
+    this.receipts = const [],
+    this.receiptsCount = 0,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
+    final receiptsList = (json['receipts'] as List<dynamic>?)
+            ?.map((e) => ExpenseReceipt.fromJson(e))
+            .toList() ??
+        [];
+
     return Expense(
       id: json['id'] ?? 0,
       patientId: json['patient_id'] ?? 0,
@@ -66,11 +75,16 @@ class Expense {
       walletTransaction: json['wallet_transaction'] != null
           ? ExpenseWalletTransaction.fromJson(json['wallet_transaction'])
           : null,
+      receipts: receiptsList,
+      receiptsCount: json['receipts_count'] is int
+          ? json['receipts_count']
+          : receiptsList.length,
     );
   }
 
   bool get isCompleted => status == 'completed';
   bool get isCancelled => status == 'cancelled';
+  bool get hasReceipts => receipts.isNotEmpty || receiptsCount > 0;
 
   static double _parseDouble(dynamic value) {
     if (value == null) return 0.0;
@@ -109,6 +123,59 @@ class ExpenseItem {
           ? DateTime.tryParse(json['created_at'])
           : null,
     );
+  }
+}
+
+class ExpenseReceipt {
+  final int id;
+  final int expenseId;
+  final int? uploadedBy;
+  final String filePath;
+  final String? originalFilename;
+  final String? mimeType;
+  final int? fileSize;
+  final String url;
+  final bool isImage;
+  final DateTime? createdAt;
+
+  ExpenseReceipt({
+    required this.id,
+    required this.expenseId,
+    this.uploadedBy,
+    required this.filePath,
+    this.originalFilename,
+    this.mimeType,
+    this.fileSize,
+    required this.url,
+    required this.isImage,
+    this.createdAt,
+  });
+
+  factory ExpenseReceipt.fromJson(Map<String, dynamic> json) {
+    return ExpenseReceipt(
+      id: json['id'] ?? 0,
+      expenseId: json['expense_id'] ?? 0,
+      uploadedBy: json['uploaded_by'] is int ? json['uploaded_by'] : null,
+      filePath: json['file_path'] ?? '',
+      originalFilename: json['original_filename'],
+      mimeType: json['mime_type'],
+      fileSize: json['file_size'] is int ? json['file_size'] : null,
+      url: json['url'] ?? '',
+      isImage: json['is_image'] ?? false,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'])
+          : null,
+    );
+  }
+
+  String get displayName => originalFilename ?? 'Receipt';
+
+  String get formattedFileSize {
+    if (fileSize == null) return '';
+    final size = fileSize!;
+    if (size < 1024) return '$size B';
+    if (size < 1024 * 1024) return '${(size / 1024).toStringAsFixed(1)} KB';
+    return '${(size / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }
 

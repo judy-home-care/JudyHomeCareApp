@@ -1,5 +1,10 @@
+import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../models/expense/expense_models.dart';
 import '../../services/expense_service.dart';
 import '../../services/file_download_service.dart';
@@ -470,6 +475,22 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ],
                       ),
                     ],
+                    if (expense.hasReceipts) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.image_outlined,
+                              size: 12, color: Colors.grey.shade500),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${expense.receipts.isNotEmpty ? expense.receipts.length : expense.receiptsCount} receipt${(expense.receipts.isNotEmpty ? expense.receipts.length : expense.receiptsCount) == 1 ? '' : 's'}',
+                            style: TextStyle(
+                                fontSize: 11, color: Colors.grey.shade500),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ],
@@ -776,6 +797,42 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         ],
                       ),
                     ),
+
+                    // Receipts section
+                    if (expense.receipts.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Text(
+                            'Receipts',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF6C63FF).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${expense.receipts.length}',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF6C63FF),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildReceiptsGrid(expense.receipts),
+                    ],
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -819,6 +876,125 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     );
   }
 
+  Widget _buildReceiptsGrid(List<ExpenseReceipt> receipts) {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 8,
+        mainAxisSpacing: 8,
+        childAspectRatio: 1,
+      ),
+      itemCount: receipts.length,
+      itemBuilder: (context, index) {
+        final receipt = receipts[index];
+        return _buildReceiptThumbnail(receipt, receipts, index);
+      },
+    );
+  }
+
+  Widget _buildReceiptThumbnail(
+      ExpenseReceipt receipt, List<ExpenseReceipt> allReceipts, int index) {
+    return GestureDetector(
+      onTap: () => _openReceipt(receipt, allReceipts, index),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFB),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: receipt.isImage
+              ? CachedNetworkImage(
+                  imageUrl: receipt.url,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Container(
+                    color: Colors.grey.shade100,
+                    child: const Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFF6C63FF),
+                        ),
+                      ),
+                    ),
+                  ),
+                  errorWidget: (context, url, error) => _buildReceiptFileTile(receipt),
+                )
+              : _buildReceiptFileTile(receipt),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReceiptFileTile(ExpenseReceipt receipt) {
+    final isPdf = receipt.mimeType?.contains('pdf') == true ||
+        receipt.originalFilename?.toLowerCase().endsWith('.pdf') == true;
+
+    return Container(
+      color: const Color(0xFFF8FAFB),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isPdf ? Icons.picture_as_pdf : Icons.insert_drive_file_outlined,
+            size: 32,
+            color: isPdf ? Colors.red.shade400 : const Color(0xFF6C63FF),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            receipt.displayName,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade700,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openReceipt(
+      ExpenseReceipt receipt, List<ExpenseReceipt> allReceipts, int index) {
+    if (receipt.isImage) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => _ReceiptImageViewer(
+            receipts: allReceipts.where((r) => r.isImage).toList(),
+            initialIndex:
+                allReceipts.where((r) => r.isImage).toList().indexOf(receipt),
+          ),
+        ),
+      );
+    } else {
+      // For non-images (PDFs, etc), download and share
+      _downloadReceiptFile(receipt);
+    }
+  }
+
+  void _downloadReceiptFile(ExpenseReceipt receipt) async {
+    // Strip the base URL to get the relative path the FileDownloadService expects.
+    // The receipt URL is a full URL like "https://apps.judyscareagency.com/storage/..."
+    // FileDownloadService.downloadAndShare prepends ApiConfig.baseUrl so we need
+    // a path. If the URL is on the same host, we can use the path. Otherwise,
+    // we need to use the full URL directly via the http package.
+    await _RemoteFileShare.shareUrl(
+      url: receipt.url,
+      fileName: receipt.displayName,
+      context: context,
+    );
+  }
+
   Widget _buildDetailRow(String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -858,5 +1034,182 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       fileName: fileName,
       context: context,
     );
+  }
+}
+
+/// Full-screen image viewer for receipt images, supporting swipe between multiple
+/// images via PageView and pinch-to-zoom via InteractiveViewer.
+class _ReceiptImageViewer extends StatefulWidget {
+  final List<ExpenseReceipt> receipts;
+  final int initialIndex;
+
+  const _ReceiptImageViewer({
+    required this.receipts,
+    required this.initialIndex,
+  });
+
+  @override
+  State<_ReceiptImageViewer> createState() => _ReceiptImageViewerState();
+}
+
+class _ReceiptImageViewerState extends State<_ReceiptImageViewer> {
+  late PageController _pageController;
+  late int _currentIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(
+          widget.receipts.length > 1
+              ? '${_currentIndex + 1} of ${widget.receipts.length}'
+              : 'Receipt',
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () => _RemoteFileShare.shareUrl(
+              url: widget.receipts[_currentIndex].url,
+              fileName: widget.receipts[_currentIndex].displayName,
+              context: context,
+            ),
+            tooltip: 'Share',
+          ),
+        ],
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: widget.receipts.length,
+        onPageChanged: (index) => setState(() => _currentIndex = index),
+        itemBuilder: (context, index) {
+          final receipt = widget.receipts[index];
+          return InteractiveViewer(
+            minScale: 1,
+            maxScale: 4,
+            child: Center(
+              child: CachedNetworkImage(
+                imageUrl: receipt.url,
+                fit: BoxFit.contain,
+                placeholder: (context, url) => const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                ),
+                errorWidget: (context, url, error) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.broken_image_outlined,
+                          size: 64, color: Colors.white.withOpacity(0.5)),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Failed to load image',
+                        style: TextStyle(
+                            color: Colors.white.withOpacity(0.7),
+                            fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+/// Download a fully-qualified URL (e.g. storage CDN) and present the share sheet.
+class _RemoteFileShare {
+  static Future<void> shareUrl({
+    required String url,
+    required String fileName,
+    required BuildContext context,
+  }) async {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(width: 12),
+            Text('Loading receipt...'),
+          ],
+        ),
+        backgroundColor: const Color(0xFF6C63FF),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 30),
+      ),
+    );
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        scaffoldMessenger.clearSnackBars();
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text('Could not load receipt (${response.statusCode})'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        return;
+      }
+
+      final dir = await getTemporaryDirectory();
+      final file = File('${dir.path}/$fileName');
+      await file.writeAsBytes(response.bodyBytes);
+
+      scaffoldMessenger.clearSnackBars();
+
+      final box = context.findRenderObject() as RenderBox?;
+      final shareOrigin = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : null;
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: fileName,
+        sharePositionOrigin: shareOrigin,
+      );
+    } catch (e) {
+      scaffoldMessenger.clearSnackBars();
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
   }
 }
