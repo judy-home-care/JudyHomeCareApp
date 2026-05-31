@@ -132,6 +132,63 @@ class NursePatientService {
     }
   }
 
+  /// Get the vitals timeline for a patient — every reading recorded by any
+  /// nurse on the care team, grouped by day and paginated by day.
+  Future<VitalsTimelineResponse> getPatientVitals(
+    int patientId, {
+    int? page,
+    int? perPage,
+  }) async {
+    try {
+      final queryParams = <String, String>{};
+      if (page != null) queryParams['page'] = page.toString();
+      if (perPage != null) queryParams['per_page'] = perPage.toString();
+
+      var endpoint = ApiConfig.nursePatientVitalsEndpoint(patientId);
+      if (queryParams.isNotEmpty) {
+        final queryString = queryParams.entries
+            .map((e) =>
+                '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+            .join('&');
+        endpoint = '$endpoint?$queryString';
+      }
+
+      final response = await _apiClient.get(
+        endpoint,
+        requiresAuth: true,
+      );
+
+      if (response is! Map<String, dynamic>) {
+        throw NursePatientException(
+          message: 'Invalid response type',
+          statusCode: 0,
+        );
+      }
+
+      if (!response.containsKey('data')) {
+        throw NursePatientException(
+          message: 'Response missing "data" field',
+          statusCode: 0,
+        );
+      }
+
+      return VitalsTimelineResponse.fromJson(response);
+
+    } on ApiError catch (e) {
+      throw NursePatientException(
+        message: e.displayMessage,
+        statusCode: e.statusCode,
+      );
+    } on NursePatientException {
+      rethrow;
+    } catch (e) {
+      throw NursePatientException(
+        message: 'Failed to load vitals. Please try again.',
+        statusCode: 0,
+      );
+    }
+  }
+
   /// Create a new progress note for a patient
   Future<Map<String, dynamic>> createProgressNote({
     required int patientId,

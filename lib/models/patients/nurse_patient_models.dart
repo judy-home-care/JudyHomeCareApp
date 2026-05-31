@@ -949,3 +949,141 @@ class InitialAssessment {
     return text[0].toUpperCase() + text.substring(1);
   }
 }
+
+// ==================== VITALS TIMELINE MODELS ====================
+
+/// Top-level response for the patient vitals timeline endpoint.
+class VitalsTimelineResponse {
+  final bool success;
+  final String? patientName;
+  final int totalRecords;
+  final List<VitalsDay> days;
+  final VitalsPagination pagination;
+
+  VitalsTimelineResponse({
+    required this.success,
+    required this.patientName,
+    required this.totalRecords,
+    required this.days,
+    required this.pagination,
+  });
+
+  factory VitalsTimelineResponse.fromJson(Map<String, dynamic> json) {
+    final data = (json['data'] as Map<String, dynamic>?) ?? const {};
+    final patient = data['patient'] as Map<String, dynamic>?;
+    final daysJson = (data['days'] as List<dynamic>?) ?? const [];
+
+    return VitalsTimelineResponse(
+      success: json['success'] == true,
+      patientName: patient?['name']?.toString(),
+      totalRecords: (data['total_records'] as num?)?.toInt() ?? 0,
+      days: daysJson
+          .whereType<Map<String, dynamic>>()
+          .map(VitalsDay.fromJson)
+          .toList(),
+      pagination: VitalsPagination.fromJson(
+        (data['pagination'] as Map<String, dynamic>?) ?? const {},
+      ),
+    );
+  }
+}
+
+/// Pagination metadata for the vitals timeline (paginated by day).
+class VitalsPagination {
+  final int currentPage;
+  final int perPage;
+  final int totalDays;
+  final int lastPage;
+  final bool hasMore;
+
+  VitalsPagination({
+    required this.currentPage,
+    required this.perPage,
+    required this.totalDays,
+    required this.lastPage,
+    required this.hasMore,
+  });
+
+  factory VitalsPagination.fromJson(Map<String, dynamic> json) {
+    return VitalsPagination(
+      currentPage: (json['current_page'] as num?)?.toInt() ?? 1,
+      perPage: (json['per_page'] as num?)?.toInt() ?? 14,
+      totalDays: (json['total_days'] as num?)?.toInt() ?? 0,
+      lastPage: (json['last_page'] as num?)?.toInt() ?? 1,
+      hasMore: json['has_more'] == true,
+    );
+  }
+}
+
+/// A single day in the timeline, with all readings recorded that day.
+class VitalsDay {
+  final String date;
+  final String dateDisplay;
+  final String dayLabel;
+  final bool isToday;
+  final int recordsCount;
+  final List<VitalsRecord> records;
+
+  VitalsDay({
+    required this.date,
+    required this.dateDisplay,
+    required this.dayLabel,
+    required this.isToday,
+    required this.recordsCount,
+    required this.records,
+  });
+
+  factory VitalsDay.fromJson(Map<String, dynamic> json) {
+    final recordsJson = (json['records'] as List<dynamic>?) ?? const [];
+    return VitalsDay(
+      date: json['date']?.toString() ?? '',
+      dateDisplay: json['date_display']?.toString() ?? '',
+      dayLabel: json['day_label']?.toString() ?? '',
+      isToday: json['is_today'] == true,
+      recordsCount: (json['records_count'] as num?)?.toInt() ?? recordsJson.length,
+      records: recordsJson
+          .whereType<Map<String, dynamic>>()
+          .map(VitalsRecord.fromJson)
+          .toList(),
+    );
+  }
+}
+
+/// A single vitals reading taken at a specific time by a specific nurse.
+class VitalsRecord {
+  final String id;
+  final String source; // 'progress_note' | 'assessment'
+  final String sourceLabel;
+  final String? timeDisplay;
+  final String? recordedAt;
+  final String? nurseName;
+  final bool isOwn;
+  final PatientVitals vitals;
+
+  VitalsRecord({
+    required this.id,
+    required this.source,
+    required this.sourceLabel,
+    required this.timeDisplay,
+    required this.recordedAt,
+    required this.nurseName,
+    required this.isOwn,
+    required this.vitals,
+  });
+
+  factory VitalsRecord.fromJson(Map<String, dynamic> json) {
+    final nurse = json['nurse'] as Map<String, dynamic>?;
+    return VitalsRecord(
+      id: json['id']?.toString() ?? '',
+      source: json['source']?.toString() ?? '',
+      sourceLabel: json['source_label']?.toString() ?? '',
+      timeDisplay: json['time_display']?.toString(),
+      recordedAt: json['recorded_at']?.toString(),
+      nurseName: nurse?['name']?.toString(),
+      isOwn: json['is_own'] == true,
+      vitals: PatientVitals.fromJson(
+        (json['vitals'] as Map<String, dynamic>?) ?? const {},
+      ),
+    );
+  }
+}

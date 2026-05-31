@@ -58,6 +58,10 @@ class ApiConfig {
   static String nursePatientDetailEndpoint(int patientId) =>
       '$nursePrefix/patients/$patientId';
 
+  // Get full vitals timeline for a patient (all nurses, grouped by day)
+  static String nursePatientVitalsEndpoint(int patientId) =>
+      '$nursePrefix/patients/$patientId/vitals';
+
   // Create progress note endpoint
   static const String progressNotesEndpoint = '$mobilePrefix/progress-notes';
 

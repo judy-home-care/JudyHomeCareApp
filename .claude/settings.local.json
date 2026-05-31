@@ -13,7 +13,10 @@
       "Bash(fvm flutter analyze:*)",
       "Bash(find:*)",
       "Bash(flutter pub get:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Read(//Users/qweqsbrako/Documents/Projects/JudyHomeCarePortal/**)",
+      "Bash(grep -A 100 'protected $fillable' /Users/qweqsbrako/Documents/Projects/JudyHomeCarePortal/app/Models/ProgressNote.php)",
+      "Bash(grep -E \"\\\\.dart$\")"
     ],
     "deny": [],
     "ask": []

@@ -7923,7 +7923,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -7967,6 +7967,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                   controller: _tabController,
                   children: [
                     widget.buildDetailsTab(patientDetail),
+                    PatientVitalsTab(patientId: patientDetail.id),
                     DailyProgressNoteForm(patientDetail: patientDetail),
                     StatefulBuilder(
                       builder: (context, setModalState) {
@@ -8112,19 +8113,27 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
         indicatorWeight: 3,
         labelColor: AppColors.primaryGreen,
         unselectedLabelColor: Colors.grey,
+        // With 5 tabs the cells are narrow; trim the default padding so the
+        // longer labels ("Daily Note", "Care Plan") fit without fade/clip.
+        labelPadding: const EdgeInsets.symmetric(horizontal: 2),
         labelStyle: const TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
-          letterSpacing: -0.2,
+          letterSpacing: -0.3,
         ),
         unselectedLabelStyle: const TextStyle(
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: FontWeight.w500,
+          letterSpacing: -0.3,
         ),
         tabs: const [
           Tab(
             icon: Icon(Icons.info_outline, size: 20),
             text: 'Details',
+          ),
+          Tab(
+            icon: Icon(Icons.favorite_outline, size: 20),
+            text: 'Vitals',
           ),
           Tab(
             icon: Icon(Icons.note_add_outlined, size: 20),
@@ -8138,6 +8147,671 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
             icon: Icon(Icons.history, size: 20),
             text: 'History',
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Vitals tab — shows every vitals reading recorded for the patient, across
+/// all nurses on the care team, grouped by day with the time and recording
+/// nurse for each reading.
+class PatientVitalsTab extends StatefulWidget {
+  final int patientId;
+
+  const PatientVitalsTab({Key? key, required this.patientId}) : super(key: key);
+
+  @override
+  State<PatientVitalsTab> createState() => _PatientVitalsTabState();
+}
+
+class _PatientVitalsTabState extends State<PatientVitalsTab> {
+  final _service = NursePatientService();
+
+  static const int _perPage = 14; // days per page
+
+  bool _isLoading = true;
+  bool _isLoadingMore = false;
+  String? _errorMessage;
+
+  // Accumulated days across all loaded pages.
+  final List<VitalsDay> _days = [];
+  int _totalRecords = 0;
+  VitalsPagination? _pagination;
+
+  final ScrollController _scrollController = ScrollController();
+
+  // Accordion: the date string of the single currently-expanded day.
+  // Defaults to today (or the most recent day) once data loads.
+  String? _expandedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _loadVitals();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Auto-load the next page as the user nears the bottom.
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300) {
+      _loadMore();
+    }
+  }
+
+  /// Pick which day should be open by default: today if present, else the
+  /// most recent day in the timeline.
+  void _setDefaultExpandedDate(List<VitalsDay> days) {
+    if (days.isEmpty) {
+      _expandedDate = null;
+      return;
+    }
+    final today = days.firstWhere(
+      (d) => d.isToday,
+      orElse: () => days.first,
+    );
+    _expandedDate = today.date;
+  }
+
+  void _toggleDay(VitalsDay day) {
+    setState(() {
+      // Accordion: tapping the open day closes it; tapping another opens it
+      // and collapses whatever was open before.
+      _expandedDate = _expandedDate == day.date ? null : day.date;
+    });
+  }
+
+  /// Initial load / pull-to-refresh — resets to the first page.
+  Future<void> _loadVitals() async {
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+    }
+
+    try {
+      final result = await _service.getPatientVitals(
+        widget.patientId,
+        page: 1,
+        perPage: _perPage,
+      );
+      if (!mounted) return;
+      setState(() {
+        _days
+          ..clear()
+          ..addAll(result.days);
+        _totalRecords = result.totalRecords;
+        _pagination = result.pagination;
+        _setDefaultExpandedDate(_days);
+        _isLoading = false;
+      });
+    } on NursePatientException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.message;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = 'Failed to load vitals. Please try again.';
+        _isLoading = false;
+      });
+    }
+  }
+
+  /// Append the next page of days.
+  Future<void> _loadMore() async {
+    final pagination = _pagination;
+    if (_isLoading || _isLoadingMore || pagination == null || !pagination.hasMore) {
+      return;
+    }
+
+    setState(() => _isLoadingMore = true);
+
+    try {
+      final result = await _service.getPatientVitals(
+        widget.patientId,
+        page: pagination.currentPage + 1,
+        perPage: _perPage,
+      );
+      if (!mounted) return;
+      setState(() {
+        // Guard against duplicate days if data shifts between requests.
+        final existing = _days.map((d) => d.date).toSet();
+        _days.addAll(result.days.where((d) => !existing.contains(d.date)));
+        _totalRecords = result.totalRecords;
+        _pagination = result.pagination;
+        _isLoadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoadingMore = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return _buildMessageState(
+        icon: Icons.error_outline,
+        iconColor: const Color(0xFFFF4757),
+        title: 'Something went wrong',
+        message: _errorMessage!,
+        showRetry: true,
+      );
+    }
+
+    if (_days.isEmpty) {
+      return RefreshIndicator(
+        color: AppColors.primaryGreen,
+        onRefresh: _loadVitals,
+        child: ListView(
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.18),
+            _buildMessageBody(
+              icon: Icons.favorite_outline,
+              iconColor: AppColors.primaryGreen,
+              title: 'No vitals recorded yet',
+              message:
+                  'Vitals recorded during visits will appear here, grouped by day.',
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Items: [summary header] + [day sections...] + [footer]
+    final itemCount = _days.length + 2;
+
+    return RefreshIndicator(
+      color: AppColors.primaryGreen,
+      onRefresh: _loadVitals,
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        itemCount: itemCount,
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _buildSummaryHeader();
+          }
+          if (index == itemCount - 1) {
+            return _buildListFooter();
+          }
+          return _buildDaySection(_days[index - 1]);
+        },
+      ),
+    );
+  }
+
+  Widget _buildListFooter() {
+    final pagination = _pagination;
+    if (pagination == null || !pagination.hasMore) {
+      return const SizedBox(height: 8);
+    }
+
+    if (_isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor:
+                  AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Manual fallback in case the auto-scroll trigger doesn't fire.
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: TextButton(
+          onPressed: _loadMore,
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.primaryGreen,
+          ),
+          child: const Text(
+            'Load more',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryHeader() {
+    final total = _totalRecords;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(
+              Icons.timeline,
+              color: AppColors.primaryGreen,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Vitals History',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '$total reading${total == 1 ? '' : 's'} from all care team members',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDaySection(VitalsDay day) {
+    final isExpanded = _expandedDate == day.date;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Day header (tappable — accordion)
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => _toggleDay(day),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: day.isToday
+                          ? AppColors.primaryGreen
+                          : AppColors.primaryGreen.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      day.isToday ? 'Today' : day.dateDisplay,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color:
+                            day.isToday ? Colors.white : AppColors.primaryGreen,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      day.isToday
+                          ? '${day.dayLabel} • ${day.dateDisplay}'
+                          : day.dayLabel,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    '${day.recordsCount} reading${day.recordsCount == 1 ? '' : 's'}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  AnimatedRotation(
+                    turns: isExpanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 20,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Records for the day — only when expanded
+        AnimatedCrossFade(
+          duration: const Duration(milliseconds: 200),
+          crossFadeState: isExpanded
+              ? CrossFadeState.showFirst
+              : CrossFadeState.showSecond,
+          firstChild: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 2),
+              ...day.records.map(_buildRecordCard),
+            ],
+          ),
+          secondChild: const SizedBox(width: double.infinity),
+        ),
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
+  Widget _buildRecordCard(VitalsRecord record) {
+    final isAssessment = record.source == 'assessment';
+    final accent =
+        isAssessment ? const Color(0xFF6C63FF) : AppColors.primaryGreen;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Card header: time, nurse, source
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+            decoration: BoxDecoration(
+              color: accent.withOpacity(0.05),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.access_time, size: 14, color: accent),
+                const SizedBox(width: 5),
+                Text(
+                  record.timeDisplay ?? '--:--',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: accent,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(width: 1, height: 12, color: Colors.grey[300]),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(Icons.person_outline,
+                          size: 13, color: Colors.grey[500]),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          record.nurseName ?? 'Unknown nurse',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[700],
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (record.isOwn) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryGreen.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: const Text(
+                            'You',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryGreen,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                if (isAssessment)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: accent.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      record.sourceLabel,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Vitals values
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: _buildVitalsWrap(record.vitals),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVitalsWrap(PatientVitals vitals) {
+    final chips = <Widget>[];
+
+    void addChip(IconData icon, String label, String? raw, String unit,
+        Color color) {
+      if (raw == null || raw.isEmpty || raw.toUpperCase() == 'N/A') return;
+      chips.add(_buildVitalChip(
+        icon: icon,
+        label: label,
+        value: unit.isEmpty ? raw : '$raw$unit',
+        color: color,
+      ));
+    }
+
+    addChip(Icons.favorite, 'Blood Pressure', vitals.bloodPressure, '',
+        const Color(0xFFFF4757));
+    addChip(Icons.monitor_heart, 'Pulse', vitals.pulse, ' bpm',
+        const Color(0xFFFF6B9D));
+    addChip(Icons.thermostat, 'Temp', vitals.temperature, '°C',
+        const Color(0xFFFF9A00));
+    addChip(Icons.air, 'SpO₂', vitals.spo2, '%', AppColors.primaryGreen);
+    addChip(Icons.air_rounded, 'Respiration', vitals.respiration, '/min',
+        const Color(0xFF2196F3));
+
+    if (chips.isEmpty) {
+      return Text(
+        'No vital values recorded',
+        style: TextStyle(
+          fontSize: 12,
+          fontStyle: FontStyle.italic,
+          color: Colors.grey[500],
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: chips,
+    );
+  }
+
+  Widget _buildVitalChip({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: 6),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 9,
+                  color: Colors.grey[600],
+                  fontWeight: FontWeight.w500,
+                  height: 1.1,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: color,
+                  height: 1.1,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMessageState({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String message,
+    bool showRetry = false,
+  }) {
+    return Center(
+      child: _buildMessageBody(
+        icon: icon,
+        iconColor: iconColor,
+        title: title,
+        message: message,
+        showRetry: showRetry,
+      ),
+    );
+  }
+
+  Widget _buildMessageBody({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String message,
+    bool showRetry = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 36, color: iconColor),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              color: Colors.grey[600],
+              height: 1.4,
+            ),
+          ),
+          if (showRetry) ...[
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _loadVitals,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('Try Again'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryGreen,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
