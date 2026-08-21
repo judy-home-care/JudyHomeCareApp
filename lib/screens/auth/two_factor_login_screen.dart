@@ -3,6 +3,7 @@ import 'package:local_auth/local_auth.dart';
 import '../../utils/app_colors.dart';
 import '../../services/auth/auth_service.dart';
 import '../nurse/nurse_main_screen.dart';
+import '../therapist/therapist_main_screen.dart';
 import '../patient/patient_main_screen.dart';
 
 class TwoFactorLoginScreen extends StatefulWidget {
@@ -548,6 +549,30 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
             'id': userData['id'].toString(),
             'role': userData['role'],
             'email': userData['email'],
+          },
+          initialIndex: 0,
+        );
+        break;
+        
+      case 'physiotherapist':
+      case 'speech_therapist':
+        destination = TherapistMainScreen(
+          therapistData: {
+            'name': userData['full_name'],
+            'firstName': userData['first_name'],
+            'lastName': userData['last_name'],
+            'phone': userData['phone'],
+            'gender': userData['gender'],
+            'dob': userData['date_of_birth'],
+            'avatar': userData['avatar_url'],
+            'ghanaCardNumber': userData['ghana_card_number'],
+            'licenseNumber': userData['license_number'],
+            'specialization': userData['specialization'],
+            'yearsOfExperience': userData['years_of_experience'],
+            'id': userData['id'].toString(),
+            'role': userData['role'],
+            'email': userData['email'],
+            'avatar_url': userData['avatar_url'],
           },
           initialIndex: 0,
         );

@@ -76,6 +76,9 @@ class AuthService {
         await _storage.saveTokenExpiry(loginResponse.data!.expiresAt);
         await _storage.saveRememberMe(request.rememberMe);
         await _storage.updateLastValidation();
+        // Persist the role so role-aware flows (notification deep links,
+        // therapist mode, etc.) can read it without re-parsing user data.
+        await _storage.saveUserType(loginResponse.data!.user.role);
         
         // ✅ CRITICAL: Register FCM token for newly logged-in user
         await _registerFcmTokenAfterLogin();

@@ -14,6 +14,8 @@ import '../../models/care_plans/care_plan_models.dart' show CarePlanEntry;
 import 'widgets/edit_progress_note_form.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
+import '../../utils/api_config.dart';
+import '../therapist/therapy_note_form.dart';
 
 /// Optimized Smart Refresh Nurse Patients Screen with:
 /// - Performance optimizations for low-end devices
@@ -49,6 +51,14 @@ class _NursePatientsScreenState extends State<NursePatientsScreen>
   final Set<int> _expandedNotes = {};
   final _nursePatientService = NursePatientService();
   final _searchController = TextEditingController();
+
+  // ---- Role awareness ----
+  // This screen is shared by nurses and therapists (physiotherapist /
+  // speech_therapist). Therapists hit the `/therapist` endpoint family and get
+  // a free-text "Session Note" tab instead of the nurse daily progress form.
+  String get _userRole => (widget.nurseData['role'] ?? 'nurse').toString();
+  bool get _isTherapist => _userRole == 'physiotherapist' || _userRole == 'speech_therapist';
+  String get _apiPrefix => ApiConfig.patientApiPrefixForRole(_userRole);
   final _scrollController = ScrollController();
   late TabController _tabController;
   
@@ -648,6 +658,7 @@ void _showErrorSnackBar(String message) {
         priority: _selectedFilter == 'All' ? null : _selectedFilter,
         page: _currentPage,
         perPage: _perPage,
+        apiPrefix: _apiPrefix,
       );
 
       if (mounted) {
@@ -730,6 +741,7 @@ void _showErrorSnackBar(String message) {
         priority: _selectedFilter == 'All' ? null : _selectedFilter,
         page: nextPage,
         perPage: _perPage,
+        apiPrefix: _apiPrefix,
       );
 
       if (mounted) {
@@ -1704,7 +1716,7 @@ String _formatTimeAgo(DateTime? dateTime) {
       ),
     );
 
-    _nursePatientService.getPatientDetail(patient.id).then((response) {
+    _nursePatientService.getPatientDetail(patient.id, apiPrefix: _apiPrefix).then((response) {
       Navigator.pop(context);
       _showPatientDetailsModal(response.data);
     }).catchError((error) {
@@ -1735,6 +1747,8 @@ void _showPatientDetailsModal(PatientDetail patientDetail) {
         buildCarePlanTab: _buildCarePlanTab,
         buildHistoryTab: _buildHistoryTab,
         onToggleTask: _toggleTaskCompletion,
+        userRole: _userRole,
+        apiPrefix: _apiPrefix,
       ),
     ),
   );
@@ -1992,6 +2006,7 @@ Future<void> _refreshPatientList() async {
       perPage: _perPage,
       search: _searchQuery.isNotEmpty ? _searchQuery : null,
       priority: null, // Don't filter by priority on refresh
+      apiPrefix: _apiPrefix,
     );
 
     if (mounted) {
@@ -3044,6 +3059,7 @@ Widget _buildCarePlanTab(PatientDetail patientDetail, StateSetter setModalState)
         onToggleTask: _toggleTaskCompletion,
         showNumber: false,
         planNumber: 1,
+        readOnly: _isTherapist,
       ),
     );
   }
@@ -3054,6 +3070,7 @@ Widget _buildCarePlanTab(PatientDetail patientDetail, StateSetter setModalState)
     patientDetail: patientDetail,
     modalSetState: setModalState,
     onToggleTask: _toggleTaskCompletion,
+    readOnly: _isTherapist,
   );
 }
 
@@ -3172,6 +3189,20 @@ Future<void> _toggleTaskCompletion(
   PatientDetail patientDetail,
   StateSetter setModalState,
 ) async {
+  // Therapists can view care plans but only nurses update care tasks.
+  if (_isTherapist) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Care plan tasks can only be updated by the nursing team.'),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    }
+    return;
+  }
   try {
     // Call API immediately
     final response = await _nursePatientService.toggleCareTaskCompletion(
@@ -3367,6 +3398,7 @@ Widget _buildHistoryTab(PatientDetail patientDetail) {
     expandedNotes: _expandedNotes,
     onEditProgressNote: _editProgressNote,
     buildComprehensiveNote: _buildComprehensiveHistoryNote,
+    userRole: _userRole,
   );
 }
 
@@ -3378,7 +3410,8 @@ Widget _buildComprehensiveHistoryNote(
   PatientDetail patientDetail,
 ) {
   final isExpanded = expandedNotes.contains(index);
-  final isAuthor = true;
+  // Only nurses edit nurse progress notes; therapists see them read-only.
+  final isAuthor = !_isTherapist;
   
   // Check if within 24 hours
   final createdAt = note.createdAt != null ? DateTime.parse(note.createdAt!) : null;
@@ -4202,6 +4235,7 @@ class SwipeableCarePlans extends StatefulWidget {
   final PatientDetail patientDetail;
   final StateSetter modalSetState;
   final Future<void> Function(int carePlanId, int taskIndex, bool isCompleted, PatientDetail patientDetail, StateSetter modalSetState) onToggleTask;
+  final bool readOnly;
 
   const SwipeableCarePlans({
     Key? key,
@@ -4209,6 +4243,7 @@ class SwipeableCarePlans extends StatefulWidget {
     required this.patientDetail,
     required this.modalSetState,
     required this.onToggleTask,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -4380,6 +4415,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                         onToggleTask: widget.onToggleTask,
                         showNumber: true,
                         planNumber: index + 1,
+                        readOnly: widget.readOnly,
                       ),
                     );
                   },
@@ -4477,6 +4513,10 @@ class CarePlanCard extends StatefulWidget {
   final int planNumber;
   final Future<void> Function(int carePlanId, int taskIndex, bool isCompleted, PatientDetail patientDetail, StateSetter modalSetState) onToggleTask;
 
+  /// When true (therapist view) the card is read-only: no "Add Nurse Entry"
+  /// section and care tasks cannot be toggled.
+  final bool readOnly;
+
   const CarePlanCard({
     Key? key,
     required this.carePlan,
@@ -4485,6 +4525,7 @@ class CarePlanCard extends StatefulWidget {
     required this.onToggleTask,
     this.showNumber = false,
     this.planNumber = 1,
+    this.readOnly = false,
   }) : super(key: key);
 
   @override
@@ -4792,6 +4833,8 @@ class _CarePlanCardState extends State<CarePlanCard> {
                 ],
                 
                 // ==================== NURSE ENTRY SECTION ====================
+                // Hidden for therapists (read-only care plan view)
+                if (!widget.readOnly) ...[
                 const SizedBox(height: 20),
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -4982,6 +5025,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                     ],
                   ),
                 ),
+                ],
               ],
             ),
           ),
@@ -7233,6 +7277,8 @@ class _HistoryTabContent extends StatefulWidget {
   final Set<int> expandedNotes;
   final void Function(ProgressNote note, PatientDetail patientDetail) onEditProgressNote;
   final Widget Function(ProgressNote note, int index, Set<int> expandedNotes, StateSetter setModalState, PatientDetail patientDetail) buildComprehensiveNote;
+  /// 'nurse' | 'physiotherapist' | 'speech_therapist'
+  final String userRole;
 
   const _HistoryTabContent({
     Key? key,
@@ -7240,6 +7286,7 @@ class _HistoryTabContent extends StatefulWidget {
     required this.expandedNotes,
     required this.onEditProgressNote,
     required this.buildComprehensiveNote,
+    this.userRole = 'nurse',
   }) : super(key: key);
 
   @override
@@ -7255,10 +7302,22 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
   bool _isLoadingEntries = false;
   String? _entriesError;
 
+  // Therapy notes filter: all | physiotherapy | speech_therapy
+  String _therapyFilter = 'all';
+  final Set<int> _expandedTherapyNotes = {};
+
+  bool get _isTherapist =>
+      widget.userRole == 'physiotherapist' || widget.userRole == 'speech_therapist';
+
   @override
   void initState() {
     super.initState();
-    _subTabController = TabController(length: 2, vsync: this);
+    // Therapists land on their own notes first; nurses on progress notes.
+    _subTabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: _isTherapist ? 2 : 0,
+    );
     _loadCarePlanEntries();
   }
 
@@ -7340,6 +7399,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
               tabs: const [
                 Tab(text: 'Progress Notes'),
                 Tab(text: 'Care Plan Entries'),
+                Tab(text: 'Therapy Notes'),
               ],
             ),
           ),
@@ -7351,10 +7411,289 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
               children: [
                 _buildProgressNotesContent(),
                 _buildCarePlanEntriesContent(),
+                _buildTherapyNotesContent(),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------
+  // Therapy Notes (Physiotherapy / Speech Therapy) — labelled by type
+  // ---------------------------------------------------------------------
+  Widget _buildTherapyNotesContent() {
+    final all = widget.patientDetail.therapyNotes;
+    final physioCount = all.where((n) => n.isPhysiotherapy).length;
+    final speechCount = all.where((n) => n.isSpeechTherapy).length;
+    final notes = _therapyFilter == 'all'
+        ? all
+        : all.where((n) => n.therapyType == _therapyFilter).toList();
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Therapy Session Notes',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Notes recorded by physiotherapists and speech therapists',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 12),
+          // Type filter chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildTherapyFilterChip('All', 'all', all.length, AppColors.primaryGreen),
+                const SizedBox(width: 8),
+                _buildTherapyFilterChip('Physiotherapy', 'physiotherapy', physioCount, const Color(0xFF0284C7)),
+                const SizedBox(width: 8),
+                _buildTherapyFilterChip('Speech Therapy', 'speech_therapy', speechCount, const Color(0xFFB45309)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (notes.isEmpty)
+            _buildEmptyState(
+              icon: Icons.psychology_alt_outlined,
+              title: _therapyFilter == 'all'
+                  ? 'No therapy notes yet'
+                  : 'No ${_therapyFilter == 'physiotherapy' ? 'physiotherapy' : 'speech therapy'} notes yet',
+              subtitle: _isTherapist
+                  ? 'Use the Session Note tab to record your first note'
+                  : 'Therapy session notes will appear here once recorded',
+            )
+          else
+            ...notes.map(_buildTherapyNoteCard),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTherapyFilterChip(String label, String value, int count, Color color) {
+    final selected = _therapyFilter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _therapyFilter = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? color : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: selected ? color : Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: selected ? Colors.white : const Color(0xFF1A1A1A),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+              decoration: BoxDecoration(
+                color: selected ? Colors.white.withOpacity(0.25) : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '$count',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: selected ? Colors.white : Colors.grey.shade700,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTherapyNoteCard(TherapyNote note) {
+    final isSpeech = note.isSpeechTherapy;
+    final accent = isSpeech ? const Color(0xFFB45309) : const Color(0xFF0284C7);
+    final accentBg = isSpeech ? const Color(0xFFFFF4E5) : const Color(0xFFE0F2FE);
+    final icon = isSpeech ? Icons.record_voice_over_outlined : Icons.accessibility_new_rounded;
+    final isExpanded = _expandedTherapyNotes.contains(note.id);
+    final isLong = note.note.length > 260;
+
+    String when = '';
+    final dt = note.sessionDateTime;
+    if (dt != null) {
+      when = DateFormat('EEE, MMM d, yyyy').format(dt) +
+          (note.sessionTime != null ? ' • ${DateFormat('h:mm a').format(dt)}' : '');
+    } else if (note.sessionDate != null) {
+      when = note.sessionDate!;
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header — labelled by therapy type
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [accentBg, accentBg.withOpacity(0.35)],
+                ),
+                border: Border(left: BorderSide(color: accent, width: 4)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: accent, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                note.title, // e.g. "Physiotherapy Note"
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1A1A1A),
+                                ),
+                              ),
+                            ),
+                            if (note.isOwn) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: accent.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'You',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                    color: accent,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          when,
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Body
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    note.note,
+                    maxLines: isExpanded ? null : 6,
+                    overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.5,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  if (isLong) ...[
+                    const SizedBox(height: 6),
+                    GestureDetector(
+                      onTap: () => setState(() {
+                        if (isExpanded) {
+                          _expandedTherapyNotes.remove(note.id);
+                        } else {
+                          _expandedTherapyNotes.add(note.id);
+                        }
+                      }),
+                      child: Text(
+                        isExpanded ? 'Show less' : 'Read more',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: accent,
+                        ),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.person_outline, size: 14, color: Colors.grey.shade500),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          [
+                            note.therapistName ?? note.therapyTypeLabel + ' therapist',
+                            if (note.therapistSpecialization != null &&
+                                note.therapistSpecialization!.isNotEmpty)
+                              note.therapistSpecialization!
+                                  .replaceAll('_', ' ')
+                                  .split(' ')
+                                  .map((w) => w.isEmpty ? w : w[0].toUpperCase() + w.substring(1))
+                                  .join(' '),
+                          ].join(' • '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -7899,6 +8238,12 @@ class PatientDetailsScreen extends StatefulWidget {
   final Widget Function(PatientDetail patientDetail) buildHistoryTab;
   final Future<void> Function(int carePlanId, int taskIndex, bool isCompleted, PatientDetail patientDetail, StateSetter modalSetState) onToggleTask;
 
+  /// 'nurse' (default) | 'physiotherapist' | 'speech_therapist'.
+  /// Therapists get a free-text "Session Note" tab instead of the nurse
+  /// daily progress form and use the `/therapist` endpoints.
+  final String userRole;
+  final String apiPrefix;
+
   const PatientDetailsScreen({
     Key? key,
     required this.patientDetail,
@@ -7908,7 +8253,11 @@ class PatientDetailsScreen extends StatefulWidget {
     required this.buildCarePlanTab,
     required this.buildHistoryTab,
     required this.onToggleTask,
+    this.userRole = 'nurse',
+    this.apiPrefix = ApiConfig.nursePrefix,
   }) : super(key: key);
+
+  bool get isTherapist => userRole == 'physiotherapist' || userRole == 'speech_therapist';
 
   @override
   State<PatientDetailsScreen> createState() => _PatientDetailsScreenState();
@@ -7919,6 +8268,9 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   late TabController _tabController;
 
   PatientDetail get patientDetail => widget.patientDetail;
+
+  /// Bumped whenever a therapy note is saved so the History tab rebuilds.
+  int _therapyNotesVersion = 0;
 
   @override
   void initState() {
@@ -7967,14 +8319,26 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                   controller: _tabController,
                   children: [
                     widget.buildDetailsTab(patientDetail),
-                    PatientVitalsTab(patientId: patientDetail.id),
-                    DailyProgressNoteForm(patientDetail: patientDetail),
+                    PatientVitalsTab(
+                      patientId: patientDetail.id,
+                      apiPrefix: widget.apiPrefix,
+                    ),
+                    widget.isTherapist
+                        ? TherapyNoteForm(
+                            patientDetail: patientDetail,
+                            therapistRole: widget.userRole,
+                            onNoteSaved: (_) => setState(() => _therapyNotesVersion++),
+                          )
+                        : DailyProgressNoteForm(patientDetail: patientDetail),
                     StatefulBuilder(
                       builder: (context, setModalState) {
                         return widget.buildCarePlanTab(patientDetail, setModalState);
                       },
                     ),
-                    widget.buildHistoryTab(patientDetail),
+                    KeyedSubtree(
+                      key: ValueKey('history-$_therapyNotesVersion'),
+                      child: widget.buildHistoryTab(patientDetail),
+                    ),
                   ],
                 ),
               ),
@@ -8077,11 +8441,15 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: _getPriorityColor(patientDetail.carePlan.priority),
+                        color: patientDetail.carePlansCount == 0
+                            ? Colors.grey.shade500
+                            : _getPriorityColor(patientDetail.carePlan.priority),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '${patientDetail.carePlan.priority} Priority',
+                        patientDetail.carePlansCount == 0
+                            ? (widget.isTherapist ? 'Therapy Patient' : 'No Care Plan')
+                            : '${patientDetail.carePlan.priority} Priority',
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -8126,24 +8494,27 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
           fontWeight: FontWeight.w500,
           letterSpacing: -0.3,
         ),
-        tabs: const [
-          Tab(
+        tabs: [
+          const Tab(
             icon: Icon(Icons.info_outline, size: 20),
             text: 'Details',
           ),
-          Tab(
+          const Tab(
             icon: Icon(Icons.favorite_outline, size: 20),
             text: 'Vitals',
           ),
           Tab(
-            icon: Icon(Icons.note_add_outlined, size: 20),
-            text: 'Daily Note',
+            icon: Icon(
+              widget.isTherapist ? Icons.edit_note_rounded : Icons.note_add_outlined,
+              size: 20,
+            ),
+            text: widget.isTherapist ? 'Daily Notes' : 'Daily Note',
           ),
-          Tab(
+          const Tab(
             icon: Icon(Icons.assignment_outlined, size: 20),
             text: 'Care Plan',
           ),
-          Tab(
+          const Tab(
             icon: Icon(Icons.history, size: 20),
             text: 'History',
           ),
@@ -8158,8 +8529,14 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 /// nurse for each reading.
 class PatientVitalsTab extends StatefulWidget {
   final int patientId;
+  /// `/api/mobile/nurse` (default) or `/api/mobile/therapist`
+  final String apiPrefix;
 
-  const PatientVitalsTab({Key? key, required this.patientId}) : super(key: key);
+  const PatientVitalsTab({
+    Key? key,
+    required this.patientId,
+    this.apiPrefix = ApiConfig.nursePrefix,
+  }) : super(key: key);
 
   @override
   State<PatientVitalsTab> createState() => _PatientVitalsTabState();
@@ -8243,6 +8620,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
         widget.patientId,
         page: 1,
         perPage: _perPage,
+        apiPrefix: widget.apiPrefix,
       );
       if (!mounted) return;
       setState(() {
@@ -8283,6 +8661,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
         widget.patientId,
         page: pagination.currentPage + 1,
         perPage: _perPage,
+        apiPrefix: widget.apiPrefix,
       );
       if (!mounted) return;
       setState(() {

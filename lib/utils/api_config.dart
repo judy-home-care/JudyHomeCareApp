@@ -62,6 +62,38 @@ class ApiConfig {
   static String nursePatientVitalsEndpoint(int patientId) =>
       '$nursePrefix/patients/$patientId/vitals';
 
+  // ==================== THERAPIST (Physiotherapist / Speech Therapist) ====================
+  // Therapists only see patients assigned to them on the admin portal. The
+  // endpoints mirror the nurse ones so the same patient screens can be reused.
+  static const String therapistPrefix = '/api/mobile/therapist';
+  static const String therapistMobileDashboardEndpoint = '$therapistPrefix/dashboard';
+  static const String therapistPatientsEndpoint = '$therapistPrefix/patients';
+
+  static String therapistPatientDetailEndpoint(int patientId) =>
+      '$therapistPrefix/patients/$patientId';
+
+  static String therapistPatientVitalsEndpoint(int patientId) =>
+      '$therapistPrefix/patients/$patientId/vitals';
+
+  // Therapy session notes (free text) for a patient
+  static String therapistPatientTherapyNotesEndpoint(int patientId) =>
+      '$therapistPrefix/patients/$patientId/therapy-notes';
+
+  static String therapistTherapyNoteEndpoint(int noteId) =>
+      '$therapistPrefix/therapy-notes/$noteId';
+
+  /// Resolve the patient-API prefix for a role. Nurses use `/nurse`, therapists
+  /// (physiotherapist / speech_therapist) use `/therapist`.
+  static String patientApiPrefixForRole(String? role) {
+    switch (role) {
+      case 'physiotherapist':
+      case 'speech_therapist':
+        return therapistPrefix;
+      default:
+        return nursePrefix;
+    }
+  }
+
   // Create progress note endpoint
   static const String progressNotesEndpoint = '$mobilePrefix/progress-notes';
 

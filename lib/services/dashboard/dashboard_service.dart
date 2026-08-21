@@ -1,5 +1,6 @@
 import '../../models/dashboard/nurse_dashboard_models.dart';
 import '../../models/dashboard/patient_dashboard_models.dart';
+import '../../models/dashboard/therapist_dashboard_models.dart';
 import '../../utils/api_client.dart';
 import '../../utils/api_config.dart';
 import '../app_version_service.dart';
@@ -46,6 +47,29 @@ class DashboardService {
         );
       } else {
         throw Exception('Failed to load dashboard data');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Get therapist (physiotherapist / speech therapist) mobile dashboard
+  Future<DashboardResponse<TherapistDashboardData>> getTherapistMobileDashboard() async {
+    try {
+      final response = await _apiClient.get(
+        ApiConfig.therapistMobileDashboardEndpoint,
+        requiresAuth: true,
+      );
+
+      if (response['success'] == true && response['data'] != null) {
+        return DashboardResponse(
+          data: TherapistDashboardData.fromJson(
+            Map<String, dynamic>.from(response['data']),
+          ),
+          versionRequirement: _extractVersionInfo(response),
+        );
+      } else {
+        throw Exception('Failed to load therapist dashboard data');
       }
     } catch (e) {
       rethrow;

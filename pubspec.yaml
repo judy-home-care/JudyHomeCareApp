@@ -1,7 +1,7 @@
 name: Judy_Home_HealthCare
 description: "Home HealthCare Service"
 publish_to: 'none'
-version: 1.0.7+18
+version: 1.0.9+20
 
 environment:
   sdk: ^3.9.0

@@ -14,6 +14,7 @@ import 'models/auth/auth_models.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/nurse/nurse_main_screen.dart';
+import 'screens/therapist/therapist_main_screen.dart';
 import 'screens/patient/patient_main_screen.dart';
 import 'screens/contact_person/patient_selector_screen.dart';
 import 'screens/contact_person/contact_person_main_screen.dart';
@@ -366,6 +367,31 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
             'id': user.id.toString(),
             'role': user.role,
             'email': user.email,
+          },
+          initialIndex: 0,
+        );
+        break;
+
+      case 'physiotherapist':
+      case 'speech_therapist':
+        print('📍 Navigating to therapist main screen (${user.role})');
+        dashboardScreen = TherapistMainScreen(
+          therapistData: {
+            'name': user.fullName,
+            'firstName': user.firstName,
+            'lastName': user.lastName,
+            'phone': user.phone,
+            'gender': user.gender,
+            'dob': user.dateOfBirth,
+            'avatar': user.avatarUrl,
+            'ghanaCardNumber': user.ghanaCardNumber,
+            'licenseNumber': user.licenseNumber,
+            'specialization': user.specialization,
+            'yearsOfExperience': user.yearsOfExperience,
+            'id': user.id.toString(),
+            'role': user.role,
+            'email': user.email,
+            'avatar_url': user.avatarUrl,
           },
           initialIndex: 0,
         );

@@ -9,6 +9,7 @@ import '../nurse/nurse_dashboard_screen.dart';
 import '../patient/patient_dashboard_screen.dart';
 import 'sign_up_screen.dart';
 import '../nurse/nurse_main_screen.dart';
+import '../therapist/therapist_main_screen.dart';
 import '../patient/patient_main_screen.dart';
 import '../contact_person/contact_person_main_screen.dart';
 import '../contact_person/patient_selector_screen.dart';
@@ -346,6 +347,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
       case 'contact_person':
         _handleContactPersonLogin(user);
+        break;
+
+      case 'physiotherapist':
+      case 'speech_therapist':
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => TherapistMainScreen(
+              therapistData: {
+                'name': user.fullName,
+                'firstName': user.firstName,
+                'lastName': user.lastName,
+                'phone': user.phone,
+                'gender': user.gender,
+                'dob': user.dateOfBirth,
+                'avatar': user.avatarUrl,
+                'ghanaCardNumber': user.ghanaCardNumber,
+                'licenseNumber': user.licenseNumber,
+                'specialization': user.specialization,
+                'yearsOfExperience': user.yearsOfExperience,
+                'id': user.id.toString(),
+                'role': user.role,
+                'email': user.email,
+                'avatar_url': user.avatarUrl,
+              },
+              initialIndex: 0,
+            ),
+            transitionDuration: const Duration(milliseconds: 300),
+          ),
+        );
         break;
 
       case 'doctor':

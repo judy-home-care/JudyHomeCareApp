@@ -295,8 +295,13 @@ class PatientDetail {
   final Doctor? doctor;
   final PatientVitals? vitals;
   final List<ProgressNote> recentNotes;
+  /// Therapy session notes (physiotherapy / speech therapy) for this patient.
+  /// Mutable so a newly-saved note can be shown immediately without a refetch.
+  final List<TherapyNote> therapyNotes;
   final List<Schedule> schedules;
   final InitialAssessment? initialAssessment;
+  /// Present only when viewed by a therapist — their assignment to this patient.
+  final TherapistAssignmentInfo? assignment;
 
   PatientDetail({
     required this.id,
@@ -316,9 +321,11 @@ class PatientDetail {
     this.doctor,
     this.vitals,
     required this.recentNotes,
+    List<TherapyNote>? therapyNotes,
     required this.schedules,
     this.initialAssessment,
-  });
+    this.assignment,
+  }) : therapyNotes = therapyNotes ?? [];
 
   factory PatientDetail.fromJson(Map<String, dynamic> json) {
     try {
@@ -422,12 +429,20 @@ class PatientDetail {
                 ?.map((e) => ProgressNote.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
+        therapyNotes: (json['therapyNotes'] as List<dynamic>?)
+                ?.whereType<Map>()
+                .map((e) => TherapyNote.fromJson(Map<String, dynamic>.from(e)))
+                .toList() ??
+            [],
         schedules: (json['schedules'] as List<dynamic>?)
                 ?.map((e) => Schedule.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
         initialAssessment: json['initial_assessment'] != null && json['initial_assessment'] is Map
             ? InitialAssessment.fromJson(json['initial_assessment'] as Map<String, dynamic>)
+            : null,
+        assignment: json['assignment'] != null && json['assignment'] is Map
+            ? TherapistAssignmentInfo.fromJson(Map<String, dynamic>.from(json['assignment']))
             : null,
       );
     } catch (e, stackTrace) {
@@ -1086,4 +1101,155 @@ class VitalsRecord {
       ),
     );
   }
+}
+
+// ============================================================================
+// THERAPY NOTES (Physiotherapy / Speech Therapy)
+// ============================================================================
+
+/// The therapist's assignment to a patient (only present for therapist views)
+class TherapistAssignmentInfo {
+  final int id;
+  final String therapistType; // physiotherapist | speech_therapist
+  final String therapistTypeLabel;
+  final String? assignedAt;
+  final String? notes;
+
+  TherapistAssignmentInfo({
+    required this.id,
+    required this.therapistType,
+    required this.therapistTypeLabel,
+    this.assignedAt,
+    this.notes,
+  });
+
+  factory TherapistAssignmentInfo.fromJson(Map<String, dynamic> json) {
+    return TherapistAssignmentInfo(
+      id: json['id'] is int ? json['id'] : int.tryParse('${json['id']}') ?? 0,
+      therapistType: json['therapist_type']?.toString() ?? '',
+      therapistTypeLabel: json['therapist_type_label']?.toString() ?? 'Therapist',
+      assignedAt: json['assigned_at']?.toString(),
+      notes: json['notes']?.toString(),
+    );
+  }
+}
+
+/// A free-text therapy session note recorded by a physiotherapist or speech
+/// therapist. Shown in the patient's History labelled by therapy type.
+class TherapyNote {
+  final int id;
+  final int patientId;
+  final int therapistId;
+  final String therapyType; // physiotherapy | speech_therapy
+  final String therapyTypeLabel; // "Physiotherapy" | "Speech Therapy"
+  final String? sessionDate; // yyyy-MM-dd
+  final String? sessionTime; // HH:mm
+  final String note;
+  final String? therapistName;
+  final String? therapistRole;
+  final String? therapistSpecialization;
+  final bool isOwn;
+  final bool isEditable;
+  final String? createdAt;
+  final String? updatedAt;
+
+  TherapyNote({
+    required this.id,
+    required this.patientId,
+    required this.therapistId,
+    required this.therapyType,
+    required this.therapyTypeLabel,
+    this.sessionDate,
+    this.sessionTime,
+    required this.note,
+    this.therapistName,
+    this.therapistRole,
+    this.therapistSpecialization,
+    this.isOwn = false,
+    this.isEditable = false,
+    this.createdAt,
+    this.updatedAt,
+  });
+
+  bool get isSpeechTherapy => therapyType == 'speech_therapy';
+  bool get isPhysiotherapy => therapyType == 'physiotherapy';
+
+  /// e.g. "Physiotherapy Note" / "Speech Therapy Note"
+  String get title => '$therapyTypeLabel Note';
+
+  DateTime? get sessionDateTime {
+    if (sessionDate == null) return null;
+    try {
+      final date = DateTime.parse(sessionDate!);
+      if (sessionTime != null && sessionTime!.contains(':')) {
+        final parts = sessionTime!.split(':');
+        final h = int.tryParse(parts[0]) ?? 0;
+        final m = int.tryParse(parts[1]) ?? 0;
+        return DateTime(date.year, date.month, date.day, h, m);
+      }
+      return date;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  factory TherapyNote.fromJson(Map<String, dynamic> json) {
+    int parseInt(dynamic v) {
+      if (v == null) return 0;
+      if (v is int) return v;
+      return int.tryParse(v.toString()) ?? 0;
+    }
+
+    String? str(dynamic v) => v?.toString();
+
+    final therapist = json['therapist'];
+    final therapistMap = therapist is Map ? Map<String, dynamic>.from(therapist) : null;
+
+    final type = str(json['therapy_type']) ?? '';
+    final label = str(json['therapy_type_label']) ??
+        (type == 'speech_therapy'
+            ? 'Speech Therapy'
+            : type == 'physiotherapy'
+                ? 'Physiotherapy'
+                : 'Therapy');
+
+    return TherapyNote(
+      id: parseInt(json['id']),
+      patientId: parseInt(json['patient_id']),
+      therapistId: parseInt(json['therapist_id']),
+      therapyType: type,
+      therapyTypeLabel: label,
+      sessionDate: str(json['session_date']),
+      sessionTime: str(json['session_time']),
+      note: str(json['note']) ?? '',
+      therapistName: therapistMap != null ? str(therapistMap['name']) : null,
+      therapistRole: therapistMap != null ? str(therapistMap['role']) : null,
+      therapistSpecialization:
+          therapistMap != null ? str(therapistMap['specialization']) : null,
+      isOwn: json['is_own'] == true,
+      isEditable: json['is_editable'] == true,
+      createdAt: str(json['created_at']),
+      updatedAt: str(json['updated_at']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'patient_id': patientId,
+        'therapist_id': therapistId,
+        'therapy_type': therapyType,
+        'therapy_type_label': therapyTypeLabel,
+        'session_date': sessionDate,
+        'session_time': sessionTime,
+        'note': note,
+        'therapist': {
+          'name': therapistName,
+          'role': therapistRole,
+          'specialization': therapistSpecialization,
+        },
+        'is_own': isOwn,
+        'is_editable': isEditable,
+        'created_at': createdAt,
+        'updated_at': updatedAt,
+      };
 }
