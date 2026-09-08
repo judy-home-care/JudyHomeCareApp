@@ -11,6 +11,7 @@ import '../../models/care_request/care_request_models.dart';
 import '../../models/wallet/wallet_models.dart';
 import '../wallet/wallet_deposit_screen.dart';
 import '../../utils/app_colors.dart';
+import '../patient/widgets/autopay_prompt.dart';
 
 class CarePaymentScreen extends StatefulWidget {
   final CareRequest careRequest;
@@ -671,9 +672,16 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  final screenContext = this.context;
                   Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).pop(true); // Return to care request list
+                  // Offer to save this card for automatic debits (card payments only)
+                  if (screenContext.mounted) {
+                    await maybePromptForAutopay(screenContext);
+                  }
+                  if (screenContext.mounted) {
+                    Navigator.of(screenContext).pop(true); // Return to care request list
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF199A8E),

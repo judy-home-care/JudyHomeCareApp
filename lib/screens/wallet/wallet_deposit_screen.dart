@@ -1,6 +1,7 @@
 // lib/screens/wallet/wallet_deposit_screen.dart
 
 import 'dart:developer';
+import '../patient/widgets/autopay_prompt.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../utils/app_colors.dart';
@@ -268,9 +269,16 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  final screenContext = this.context;
                   Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).pop(true); // Return to wallet screen
+                  // Offer to save this card for automatic debits (card payments only)
+                  if (screenContext.mounted) {
+                    await maybePromptForAutopay(screenContext);
+                  }
+                  if (screenContext.mounted) {
+                    Navigator.of(screenContext).pop(true); // Return to wallet screen
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,

@@ -116,6 +116,19 @@ class ApiConfig {
   static String scheduleRescheduleRequestEndpoint(int scheduleId) =>
       '$mobilePrefix/schedules/$scheduleId/request-reschedule';
 
+  // ==================== SAVED CARDS / AUTO-PAY ====================
+
+  static const String patientPaymentMethodsEndpoint = '$mobilePrefix/patient/payment-methods';
+
+  static String patientPaymentMethodAutopayEndpoint(int methodId) =>
+      '$mobilePrefix/patient/payment-methods/$methodId/autopay';
+
+  static String patientPaymentMethodDeleteEndpoint(int methodId) =>
+      '$mobilePrefix/patient/payment-methods/$methodId';
+
+  static String patientPaymentMethodDismissPromptEndpoint(int methodId) =>
+      '$mobilePrefix/patient/payment-methods/$methodId/dismiss-autopay-prompt';
+
   // ==================== CARE PLAN ENDPOINTS ====================
   
   // Get all care plans (supports pagination)

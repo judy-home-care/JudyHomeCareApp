@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
+import 'widgets/saved_cards_autopay_section.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({Key? key}) : super(key: key);
@@ -94,6 +95,9 @@ class PaymentMethodsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
+
+            // Saved cards + auto-pay consent
+            const SavedCardsAutopaySection(),
 
             // Payment Methods List
             Padding(
