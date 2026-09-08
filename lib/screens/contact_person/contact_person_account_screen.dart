@@ -8,6 +8,7 @@ import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import '../messages/conversations_screen.dart';
 import '../password_security/password_security.dart';
+import '../patient/patient_notification_preferences.dart';
 import '../expenses/expenses_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'patient_selector_screen.dart';
@@ -610,6 +611,15 @@ class _ContactPersonAccountScreenState
             ),
           ),
           _buildSettingTile(
+            icon: Icons.notifications_outlined,
+            title: 'Notification Preferences',
+            subtitle: 'Choose how and when we notify you',
+            iconColor: const Color(0xFFFF9A00),
+            iconBg: const Color(0xFFFFF4E5),
+            onTap: () => _navigateToNotificationPreferences(),
+          ),
+          _buildDivider(),
+          _buildSettingTile(
             icon: Icons.lock_outline,
             title: 'Password & Security',
             subtitle: 'Change password and security settings',
@@ -618,6 +628,28 @@ class _ContactPersonAccountScreenState
             onTap: () => _navigateToPasswordSecurity(),
           ),
         ],
+      ),
+    );
+  }
+
+  void _navigateToNotificationPreferences() {
+    // Contact persons use the same preferences screen as patients — the
+    // Health & Care toggles (appointment / progress-note reminders) gate the
+    // patient updates that get forwarded to them.
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PatientNotificationPreferencesScreen(
+          userData: {
+            'id': widget.contactPerson.id.toString(),
+            'name': widget.contactPerson.name,
+            'email': widget.contactPerson.email,
+            'phone': widget.contactPerson.phone,
+            'avatar': widget.contactPerson.avatar,
+            'role': 'contact_person',
+            'type': 'contact_person',
+          },
+        ),
       ),
     );
   }

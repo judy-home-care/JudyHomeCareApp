@@ -24,7 +24,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
   bool _appointmentReminders = true;
   bool _medicationReminders = true;
   bool _vitalsTracking = true;
-  bool _healthTips = false;
+  bool _progressNoteReminders = true;
   
   // Communication notifications
   bool _nurseMessages = true;
@@ -69,7 +69,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
             _appointmentReminders = prefs['appointment_reminders'] ?? true;
             _medicationReminders = prefs['medication_reminders'] ?? true;
             _vitalsTracking = prefs['vitals_tracking'] ?? true;
-            _healthTips = prefs['health_tips'] ?? false;
+            _progressNoteReminders = prefs['progress_note_reminders'] ?? true;
             _nurseMessages = prefs['nurse_messages'] ?? true;
             _doctorMessages = prefs['doctor_messages'] ?? true;
             _transportUpdates = prefs['transport_updates'] ?? true;
@@ -422,11 +422,11 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
           // ),
           const SizedBox(height: 12),
           _buildNotificationToggle(
-            icon: Icons.lightbulb_outline,
-            title: 'Health Tips',
-            subtitle: 'General health and wellness tips',
-            value: _healthTips,
-            onChanged: (value) => setState(() => _healthTips = value),
+            icon: Icons.note_alt_outlined,
+            title: 'Progress Note Reminders',
+            subtitle: 'Updates when care or therapy notes are added',
+            value: _progressNoteReminders,
+            onChanged: (value) => setState(() => _progressNoteReminders = value),
             enabled: _allNotifications,
           ),
         ],
@@ -726,7 +726,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
       _appointmentReminders = false;
       _medicationReminders = false;
       _vitalsTracking = false;
-      _healthTips = false;
+      _progressNoteReminders = false;
       _nurseMessages = false;
       _doctorMessages = false;
       _transportUpdates = false;
@@ -744,7 +744,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
       _appointmentReminders = true;
       _medicationReminders = true;
       _vitalsTracking = true;
-      _healthTips = true;
+      _progressNoteReminders = true;
       _nurseMessages = true;
       _doctorMessages = true;
       _transportUpdates = true;
@@ -767,7 +767,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
         'appointment_reminders': _appointmentReminders,
         'medication_reminders': _medicationReminders,
         'vitals_tracking': _vitalsTracking,
-        'health_tips': _healthTips,
+        'progress_note_reminders': _progressNoteReminders,
         'nurse_messages': _nurseMessages,
         'doctor_messages': _doctorMessages,
         'transport_updates': _transportUpdates,
