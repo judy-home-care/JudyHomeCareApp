@@ -118,16 +118,18 @@ class ApiConfig {
 
   // ==================== SAVED CARDS / AUTO-PAY ====================
 
-  static const String patientPaymentMethodsEndpoint = '$mobilePrefix/patient/payment-methods';
+  // Shared by patients and contact persons — each manages their OWN card;
+  // a contact person's auto-pay card covers their linked patient's invoices.
+  static const String patientPaymentMethodsEndpoint = '$mobilePrefix/payment-methods';
 
   static String patientPaymentMethodAutopayEndpoint(int methodId) =>
-      '$mobilePrefix/patient/payment-methods/$methodId/autopay';
+      '$mobilePrefix/payment-methods/$methodId/autopay';
 
   static String patientPaymentMethodDeleteEndpoint(int methodId) =>
-      '$mobilePrefix/patient/payment-methods/$methodId';
+      '$mobilePrefix/payment-methods/$methodId';
 
   static String patientPaymentMethodDismissPromptEndpoint(int methodId) =>
-      '$mobilePrefix/patient/payment-methods/$methodId/dismiss-autopay-prompt';
+      '$mobilePrefix/payment-methods/$methodId/dismiss-autopay-prompt';
 
   // ==================== CARE PLAN ENDPOINTS ====================
   

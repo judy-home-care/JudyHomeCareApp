@@ -9,6 +9,7 @@ import '../../utils/app_colors.dart';
 import '../messages/conversations_screen.dart';
 import '../password_security/password_security.dart';
 import '../patient/patient_notification_preferences.dart';
+import '../patient/payment_methods_screen.dart';
 import '../expenses/expenses_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'patient_selector_screen.dart';
@@ -617,6 +618,18 @@ class _ContactPersonAccountScreenState
             iconColor: const Color(0xFFFF9A00),
             iconBg: const Color(0xFFFFF4E5),
             onTap: () => _navigateToNotificationPreferences(),
+          ),
+          _buildDivider(),
+          _buildSettingTile(
+            icon: Icons.credit_card_outlined,
+            title: 'Payment Methods',
+            subtitle: 'Saved cards & auto-pay for your patient\'s invoices',
+            iconColor: const Color(0xFF6C63FF),
+            iconBg: const Color(0xFFEDE9FF),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PaymentMethodsScreen()),
+            ),
           ),
           _buildDivider(),
           _buildSettingTile(

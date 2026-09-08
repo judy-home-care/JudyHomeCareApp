@@ -16,10 +16,13 @@ import '../../../utils/secure_storage.dart';
 ///    Account → Payment Methods)
 Future<void> maybePromptForAutopay(BuildContext context) async {
   try {
-    // Patients only
-    final userData = await SecureStorage().getUserData();
-    final role = userData?['role']?.toString();
-    if (role != null && role != 'patient') return;
+    // Patients and contact persons only (staff never see this)
+    final storage = SecureStorage();
+    final userData = await storage.getUserData();
+    final userType = await storage.getUserType();
+    final role = userData?['role']?.toString() ?? userType;
+    final isContactPerson = role == 'contact_person';
+    if (role != null && role != 'patient' && role != 'contact_person') return;
 
     final cards = await PaymentMethodsService().getSavedCards();
     if (cards.isEmpty) return;
@@ -46,7 +49,7 @@ Future<void> maybePromptForAutopay(BuildContext context) async {
 
     if (!context.mounted) return;
 
-    final enable = await _showAutopaySheet(context, justUsed);
+    final enable = await _showAutopaySheet(context, justUsed, isContactPerson: isContactPerson);
 
     if (enable == true) {
       final message = await PaymentMethodsService().setAutopay(justUsed.id, true);
@@ -73,7 +76,7 @@ Future<void> maybePromptForAutopay(BuildContext context) async {
   }
 }
 
-Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card) {
+Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card, {bool isContactPerson = false}) {
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
@@ -130,8 +133,11 @@ Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card) {
             ),
             const SizedBox(height: 10),
             Text(
-              'We can automatically charge this card whenever an invoice is due, '
-              'so you never miss a payment.',
+              isContactPerson
+                  ? 'We can automatically charge this card whenever an invoice is due '
+                      'for your patient, so their care is never interrupted.'
+                  : 'We can automatically charge this card whenever an invoice is due, '
+                      'so you never miss a payment.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13.5, color: Colors.grey.shade600, height: 1.45),
             ),
