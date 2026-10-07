@@ -4,6 +4,7 @@ import '../../../utils/app_colors.dart';
 import '../../../services/patients_assessments/progress_note_service.dart';
 import '../../../models/patients_assessments/progress_note_models.dart';
 import '../../../models/patients/nurse_patient_models.dart';
+import '../../../services/patients/nurse_patient_service.dart';
 
 // ==================== EDIT PROGRESS NOTE FORM ====================
 class EditProgressNoteForm extends StatefulWidget {
@@ -63,9 +64,26 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
   
   final _nextVisitPlanController = TextEditingController();
 
+  // Admin-configured per-nurse vitals requirements (defaults all-required)
+  Map<String, bool> _requiredVitals = {
+    'temperature': true,
+    'pulse': true,
+    'respiration': true,
+    'blood_pressure': true,
+    'spo2': true,
+  };
+
+  bool _isVitalRequired(String key) => _requiredVitals[key] ?? true;
+
+  Future<void> _loadRequiredVitals() async {
+    final settings = await NursePatientService().getRequiredVitals();
+    if (mounted) setState(() => _requiredVitals = settings);
+  }
+
   @override
   void initState() {
     super.initState();
+    _loadRequiredVitals();
     _populateExistingData();
   }
 
@@ -250,12 +268,22 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
 
   Future<void> _updateNote() async {
     if (_formKey.currentState!.validate()) {
-      if (_temperatureController.text.isEmpty ||
-          _pulseController.text.isEmpty ||
-          _respirationController.text.isEmpty ||
-          _bloodPressureController.text.isEmpty ||
-          _spo2Controller.text.isEmpty) {
-        _showErrorSnackBar('All vital signs fields are required');
+      // Only the vitals the admin marked as required must be filled
+      final vitalControllers = {
+        'Temperature': MapEntry('temperature', _temperatureController),
+        'Pulse': MapEntry('pulse', _pulseController),
+        'Respiration': MapEntry('respiration', _respirationController),
+        'Blood Pressure': MapEntry('blood_pressure', _bloodPressureController),
+        'SpO₂': MapEntry('spo2', _spo2Controller),
+      };
+      final missingVitals = vitalControllers.entries
+          .where((e) =>
+              _isVitalRequired(e.value.key) && e.value.value.text.trim().isEmpty)
+          .map((e) => e.key)
+          .toList();
+      if (missingVitals.isNotEmpty) {
+        _showErrorSnackBar(
+            'Please fill the required vital signs: ${missingVitals.join(', ')}');
         return;
       }
 
@@ -657,7 +685,8 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           Expanded(
                             child: _buildRequiredNumberField(
-                              label: 'Temperature (°C) *',
+                              label: _isVitalRequired('temperature') ? 'Temperature (°C) *' : 'Temperature (°C) (optional)',
+                              vitalKey: 'temperature',
                               controller: _temperatureController,
                               hint: '36.5',
                             ),
@@ -665,7 +694,8 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: _buildRequiredNumberField(
-                              label: 'Pulse (bpm) *',
+                              label: _isVitalRequired('pulse') ? 'Pulse (bpm) *' : 'Pulse (bpm) (optional)',
+                              vitalKey: 'pulse',
                               controller: _pulseController,
                               hint: '72',
                             ),
@@ -678,7 +708,8 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           Expanded(
                             child: _buildRequiredNumberField(
-                              label: 'Respiration (/min) *',
+                              label: _isVitalRequired('respiration') ? 'Respiration (/min) *' : 'Respiration (/min) (optional)',
+                              vitalKey: 'respiration',
                               controller: _respirationController,
                               hint: '16',
                             ),
@@ -686,7 +717,8 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: _buildRequiredTextField(
-                              label: 'Blood Pressure *',
+                              label: _isVitalRequired('blood_pressure') ? 'Blood Pressure *' : 'Blood Pressure (optional)',
+                              vitalKey: 'blood_pressure',
                               controller: _bloodPressureController,
                               hint: '120/80',
                             ),
@@ -696,7 +728,8 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const SizedBox(height: 16),
                       
                       _buildRequiredNumberField(
-                        label: 'SpO₂ (%) *',
+                        label: _isVitalRequired('spo2') ? 'SpO₂ (%) *' : 'SpO₂ (%) (optional)',
+                        vitalKey: 'spo2',
                         controller: _spo2Controller,
                         hint: '98',
                       ),
@@ -1203,6 +1236,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
     required String label,
     required TextEditingController controller,
     required String hint,
+    String? vitalKey, // when set, "required" follows the admin's vitals settings
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1221,6 +1255,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
           keyboardType: TextInputType.number,
           validator: (value) {
             if (value == null || value.isEmpty) {
+              if (vitalKey != null && !_isVitalRequired(vitalKey)) return null;
               return 'This field is required';
             }
             return null;
@@ -1267,6 +1302,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
     required String label,
     required TextEditingController controller,
     required String hint,
+    String? vitalKey, // when set, "required" follows the admin's vitals settings
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1284,6 +1320,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
           controller: controller,
           validator: (value) {
             if (value == null || value.isEmpty) {
+              if (vitalKey != null && !_isVitalRequired(vitalKey)) return null;
               return 'This field is required';
             }
             return null;

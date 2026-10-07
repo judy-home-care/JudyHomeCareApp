@@ -5441,6 +5441,26 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
   DateTime _visitDate = DateTime.now();
   TimeOfDay _visitTime = TimeOfDay.now();
   
+  // Which vitals the admin requires this nurse to record (configured on the
+  // portal's nurse details page). Defaults to all-required until loaded.
+  Map<String, bool> _requiredVitals = {
+    'temperature': true,
+    'pulse': true,
+    'respiration': true,
+    'blood_pressure': true,
+    'spo2': true,
+  };
+
+  bool _isVitalRequired(String key) => _requiredVitals[key] ?? true;
+
+  String _vitalLabel(String base, String key) =>
+      _isVitalRequired(key) ? '$base *' : '$base (optional)';
+
+  Future<void> _loadRequiredVitals() async {
+    final settings = await NursePatientService().getRequiredVitals();
+    if (mounted) setState(() => _requiredVitals = settings);
+  }
+
   // Required Vital Signs Controllers
   final _temperatureController = TextEditingController();
   final _pulseController = TextEditingController();
@@ -5613,6 +5633,12 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
   final _nextVisitPlanController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _loadRequiredVitals();
+  }
+
+  @override
   void dispose() {
     _validationDebounce?.cancel();
     _temperatureController.dispose();
@@ -5715,12 +5741,22 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
 
   Future<void> _saveNote() async {
     if (_formKey.currentState!.validate()) {
-      if (_temperatureController.text.isEmpty ||
-          _pulseController.text.isEmpty ||
-          _respirationController.text.isEmpty ||
-          _bloodPressureController.text.isEmpty ||
-          _spo2Controller.text.isEmpty) {
-        _showErrorSnackBar('All vital signs fields are required');
+      // Only the vitals the admin marked as required must be filled
+      final vitalControllers = {
+        'Temperature': MapEntry('temperature', _temperatureController),
+        'Pulse': MapEntry('pulse', _pulseController),
+        'Respiration': MapEntry('respiration', _respirationController),
+        'Blood Pressure': MapEntry('blood_pressure', _bloodPressureController),
+        'SpO₂': MapEntry('spo2', _spo2Controller),
+      };
+      final missingVitals = vitalControllers.entries
+          .where((e) =>
+              _isVitalRequired(e.value.key) && e.value.value.text.trim().isEmpty)
+          .map((e) => e.key)
+          .toList();
+      if (missingVitals.isNotEmpty) {
+        _showErrorSnackBar(
+            'Please fill the required vital signs: ${missingVitals.join(', ')}');
         return;
       }
 
@@ -6024,9 +6060,13 @@ Widget build(BuildContext context) {
               children: [
                 const Icon(Icons.favorite, color: AppColors.primaryGreen, size: 20),
                 const SizedBox(width: 8),
-                const Text(
-                  'Vital Signs (All Required)',
-                  style: TextStyle(
+                Text(
+                  _requiredVitals.values.every((r) => r)
+                      ? 'Vital Signs (All Required)'
+                      : _requiredVitals.values.any((r) => r)
+                          ? 'Vital Signs'
+                          : 'Vital Signs (Optional)',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF1A1A1A),
@@ -6068,7 +6108,7 @@ Widget build(BuildContext context) {
               children: [
                 Expanded(
                   child: _buildVitalFieldWithValidation(
-                    label: 'Temperature (°C) *',
+                    label: _vitalLabel('Temperature (°C)', 'temperature'),
                     controller: _temperatureController,
                     hint: '36.5',
                     vitalType: 'temperature',
@@ -6078,7 +6118,7 @@ Widget build(BuildContext context) {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildVitalFieldWithValidation(
-                    label: 'Pulse (bpm) *',
+                    label: _vitalLabel('Pulse (bpm)', 'pulse'),
                     controller: _pulseController,
                     hint: '72',
                     vitalType: 'pulse',
@@ -6095,7 +6135,7 @@ Widget build(BuildContext context) {
               children: [
                 Expanded(
                   child: _buildVitalFieldWithValidation(
-                    label: 'Respiration (/min) *',
+                    label: _vitalLabel('Respiration (/min)', 'respiration'),
                     controller: _respirationController,
                     hint: '16',
                     vitalType: 'respiration',
@@ -6105,7 +6145,7 @@ Widget build(BuildContext context) {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _buildBloodPressureFieldWithValidation(
-                    label: 'Blood Pressure *',
+                    label: _vitalLabel('Blood Pressure', 'blood_pressure'),
                     controller: _bloodPressureController,
                     hint: '120/80',
                   ),
@@ -6116,7 +6156,7 @@ Widget build(BuildContext context) {
             
             // SpO2 Field
             _buildVitalFieldWithValidation(
-              label: 'SpO₂ (%) *',
+              label: _vitalLabel('SpO₂ (%)', 'spo2'),
               controller: _spo2Controller,
               hint: '98',
               vitalType: 'spo2',
@@ -6556,7 +6596,8 @@ Widget _buildVitalFieldWithValidation({
         onChanged: _onVitalChanged,
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Required';
+            // Only block when the admin marked this vital as required
+            return _isVitalRequired(vitalType) ? 'Required' : null;
           }
           final numValue = double.tryParse(value.trim());
           if (numValue == null) {
@@ -6697,7 +6738,7 @@ Widget _buildBloodPressureFieldWithValidation({
         onChanged: _onVitalChanged,
         validator: (value) {
           if (value == null || value.isEmpty) {
-            return 'Required';
+            return _isVitalRequired('blood_pressure') ? 'Required' : null;
           }
           if (!value.contains('/')) {
             return 'Use format: systolic/diastolic';
