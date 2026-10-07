@@ -368,36 +368,6 @@ Future<ProgressNote> getProgressNoteDetail(int noteId) async {
   }
 }
 
-  /// Which vitals the admin requires this nurse to record on a daily note.
-  /// Falls back to "all required" on any failure so the form stays safe.
-  Future<Map<String, bool>> getRequiredVitals() async {
-    const allRequired = {
-      'temperature': true,
-      'pulse': true,
-      'respiration': true,
-      'blood_pressure': true,
-      'spo2': true,
-    };
-
-    try {
-      final response = await _apiClient.get(
-        ApiConfig.nurseVitalsSettingsEndpoint,
-        requiresAuth: true,
-      );
-
-      final data = response['data'];
-      final raw = data is Map ? data['required_vitals'] : null;
-      if (raw is! Map) return Map.of(allRequired);
-
-      return {
-        for (final entry in allRequired.entries)
-          entry.key: raw[entry.key] is bool ? raw[entry.key] as bool : true,
-      };
-    } catch (_) {
-      return Map.of(allRequired);
-    }
-  }
-
   // ==========================================================================
   // THERAPY NOTES (Physiotherapist / Speech Therapist only)
   // ==========================================================================

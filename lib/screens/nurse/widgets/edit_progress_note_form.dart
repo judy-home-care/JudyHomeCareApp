@@ -4,7 +4,6 @@ import '../../../utils/app_colors.dart';
 import '../../../services/patients_assessments/progress_note_service.dart';
 import '../../../models/patients_assessments/progress_note_models.dart';
 import '../../../models/patients/nurse_patient_models.dart';
-import '../../../services/patients/nurse_patient_service.dart';
 
 // ==================== EDIT PROGRESS NOTE FORM ====================
 class EditProgressNoteForm extends StatefulWidget {
@@ -64,26 +63,14 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
   
   final _nextVisitPlanController = TextEditingController();
 
-  // Admin-configured per-nurse vitals requirements (defaults all-required)
-  Map<String, bool> _requiredVitals = {
-    'temperature': true,
-    'pulse': true,
-    'respiration': true,
-    'blood_pressure': true,
-    'spo2': true,
-  };
-
-  bool _isVitalRequired(String key) => _requiredVitals[key] ?? true;
-
-  Future<void> _loadRequiredVitals() async {
-    final settings = await NursePatientService().getRequiredVitals();
-    if (mounted) setState(() => _requiredVitals = settings);
-  }
+  // Which vitals must be recorded for THIS patient (admin controlled from
+  // the portal's patient details page; arrives with the patient detail).
+  bool _isVitalRequired(String key) =>
+      widget.patientDetail.requiredVitals[key] ?? true;
 
   @override
   void initState() {
     super.initState();
-    _loadRequiredVitals();
     _populateExistingData();
   }
 

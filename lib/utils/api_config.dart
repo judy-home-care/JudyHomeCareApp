@@ -47,9 +47,6 @@ class ApiConfig {
   // Dashboard endpoints
   static const String nurseMobileDashboardEndpoint = '/api/mobile/nurse/dashboard';
 
-  // Which vitals the admin requires this nurse to record on daily notes
-  static const String nurseVitalsSettingsEndpoint = '/api/mobile/nurse/vitals-settings';
-
   // Patient Dashboard endpoint
   static const String patientMobileDashboardEndpoint = '/api/mobile/patient/dashboard';
 

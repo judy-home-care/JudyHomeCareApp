@@ -5441,25 +5441,14 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
   DateTime _visitDate = DateTime.now();
   TimeOfDay _visitTime = TimeOfDay.now();
   
-  // Which vitals the admin requires this nurse to record (configured on the
-  // portal's nurse details page). Defaults to all-required until loaded.
-  Map<String, bool> _requiredVitals = {
-    'temperature': true,
-    'pulse': true,
-    'respiration': true,
-    'blood_pressure': true,
-    'spo2': true,
-  };
+  // Which vitals must be recorded for THIS patient (admin controlled from
+  // the portal's patient details page; arrives with the patient detail).
+  Map<String, bool> get _requiredVitals => widget.patientDetail.requiredVitals;
 
   bool _isVitalRequired(String key) => _requiredVitals[key] ?? true;
 
   String _vitalLabel(String base, String key) =>
       _isVitalRequired(key) ? '$base *' : '$base (optional)';
-
-  Future<void> _loadRequiredVitals() async {
-    final settings = await NursePatientService().getRequiredVitals();
-    if (mounted) setState(() => _requiredVitals = settings);
-  }
 
   // Required Vital Signs Controllers
   final _temperatureController = TextEditingController();
@@ -5631,12 +5620,6 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
   final _familyConcernsController = TextEditingController();
   
   final _nextVisitPlanController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRequiredVitals();
-  }
 
   @override
   void dispose() {

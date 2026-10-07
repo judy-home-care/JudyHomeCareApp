@@ -294,6 +294,9 @@ class PatientDetail {
   final int carePlansCount; // NEW: Count of care plans
   final Doctor? doctor;
   final PatientVitals? vitals;
+  /// Which vitals nurses must record on this patient's daily notes
+  /// (admin controlled from the portal). Missing keys default to required.
+  final Map<String, bool> requiredVitals;
   final List<ProgressNote> recentNotes;
   /// Therapy session notes (physiotherapy / speech therapy) for this patient.
   /// Mutable so a newly-saved note can be shown immediately without a refetch.
@@ -320,12 +323,21 @@ class PatientDetail {
     required this.carePlansCount,
     this.doctor,
     this.vitals,
+    Map<String, bool>? requiredVitals,
     required this.recentNotes,
     List<TherapyNote>? therapyNotes,
     required this.schedules,
     this.initialAssessment,
     this.assignment,
-  }) : therapyNotes = therapyNotes ?? [];
+  }) : therapyNotes = therapyNotes ?? [],
+       requiredVitals = requiredVitals ??
+           const {
+             'temperature': true,
+             'pulse': true,
+             'respiration': true,
+             'blood_pressure': true,
+             'spo2': true,
+           };
 
   factory PatientDetail.fromJson(Map<String, dynamic> json) {
     try {
@@ -424,6 +436,13 @@ class PatientDetail {
             : null,
         vitals: json['vitals'] != null && json['vitals'] is Map
             ? PatientVitals.fromJson(json['vitals'] as Map<String, dynamic>)
+            : null,
+        requiredVitals: json['requiredVitals'] is Map
+            ? {
+                for (final entry
+                    in Map<String, dynamic>.from(json['requiredVitals']).entries)
+                  entry.key: entry.value is bool ? entry.value as bool : true,
+              }
             : null,
         recentNotes: (json['recentNotes'] as List<dynamic>?)
                 ?.map((e) => ProgressNote.fromJson(e as Map<String, dynamic>))
