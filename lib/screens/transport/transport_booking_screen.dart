@@ -3,6 +3,8 @@ import 'package:geolocator/geolocator.dart';
 import '../../utils/app_colors.dart';
 import '../../services/transport/transport_service.dart';
 import '../../models/transport/transport_models.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class TransportBookingScreen extends StatefulWidget {
   final String transportType;
@@ -303,7 +305,7 @@ Widget _buildCompactLocationRow({
                         color: Color(0xFF1A1A1A),
                       ),
                     ),
-                    Text(
+                    TText(
                       'Select your driver',
                       style: TextStyle(
                         fontSize: 13,
@@ -344,7 +346,7 @@ Widget _buildCompactLocationRow({
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TText(
                         'Patient',
                         style: TextStyle(
                           fontSize: 11,
@@ -377,7 +379,7 @@ Widget _buildCompactLocationRow({
           
           _buildLocationRow(
             icon: Icons.my_location,
-            label: 'Pickup Location',
+            label: 'Pickup Location'.tr,
             location: widget.pickupLocation,
             color: AppColors.primaryGreen,
           ),
@@ -386,7 +388,7 @@ Widget _buildCompactLocationRow({
           
           _buildLocationRow(
             icon: Icons.location_on,
-            label: 'Destination',
+            label: 'Destination'.tr,
             location: widget.destinationLocation,
             color: const Color(0xFFFF4757),
           ),
@@ -476,7 +478,7 @@ Widget _buildCompactLocationRow({
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
             child: Row(
               children: [
-                Text(
+                TText(
                   'Available Drivers',
                   style: TextStyle(
                     fontSize: 16,
@@ -530,7 +532,7 @@ Widget _buildCompactLocationRow({
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          const Text(
+          const TText(
             'Loading available drivers...',
             style: TextStyle(
               fontSize: 13,  // Reduced from 12
@@ -563,7 +565,7 @@ Widget _buildCompactLocationRow({
             ),
           ),
           const SizedBox(height: 16),  // Reduced from 24
-          Text(
+          TText(
             'No Drivers Available',
             style: TextStyle(
               fontSize: 16,  // Reduced from 18
@@ -572,7 +574,7 @@ Widget _buildCompactLocationRow({
             ),
           ),
           const SizedBox(height: 8),  // Reduced from 12
-          Text(
+          TText(
             'No drivers available at the moment. Please try again later.',  // Shorter text
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -585,7 +587,7 @@ Widget _buildCompactLocationRow({
           ElevatedButton.icon(
             onPressed: _loadAvailableDrivers,
             icon: const Icon(Icons.refresh, size: 18),  // Reduced from 20
-            label: const Text(
+            label: const TText(
               'Refresh',
               style: TextStyle(fontSize: 14),  // Explicit font size
             ),
@@ -913,7 +915,7 @@ Widget _buildCompactLocationRow({
                 children: const [
                   Icon(Icons.check_circle_outline, size: 22),
                   SizedBox(width: 12),
-                  Text(
+                  TText(
                     'Confirm Booking',
                     style: TextStyle(
                       fontSize: 16,
@@ -949,7 +951,7 @@ Widget _buildCompactLocationRow({
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
               ),
               const SizedBox(height: 16),
-              //const Text('Creating booking...'),
+              //const TText('Creating booking...'),
             ],
           ),
         ),
@@ -1059,7 +1061,7 @@ Widget _buildCompactLocationRow({
               const Icon(Icons.error_outline, color: Colors.white, size: 20),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text('An error occurred while creating the booking'),
+                child: TText('An error occurred while creating the booking'),
               ),
             ],
           ),

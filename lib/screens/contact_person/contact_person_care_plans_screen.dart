@@ -3,6 +3,8 @@ import '../../models/care_plans/care_plan_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonCarePlansScreen extends StatefulWidget {
   final int patientId;
@@ -354,7 +356,7 @@ class ContactPersonCarePlansScreenState
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Care plans updated'),
+              child: TText('Care plans updated'),
             ),
           ],
         ),
@@ -402,7 +404,7 @@ class ContactPersonCarePlansScreenState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Filter Care Plans',
                         style: TextStyle(
                           fontSize: 20,
@@ -422,7 +424,7 @@ class ContactPersonCarePlansScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Status',
                         style: TextStyle(
                           fontSize: 14,
@@ -442,11 +444,11 @@ class ContactPersonCarePlansScreenState
                           value: _selectedStatus,
                           isExpanded: true,
                           underline: const SizedBox(),
-                          hint: const Text('All Statuses'),
+                          hint: const TText('All Statuses'),
                           items: [
                             const DropdownMenuItem<String>(
                               value: null,
-                              child: Text('All Statuses'),
+                              child: TText('All Statuses'),
                             ),
                             ...['active', 'completed', 'pending', 'cancelled']
                                 .map((status) => DropdownMenuItem<String>(
@@ -464,7 +466,7 @@ class ContactPersonCarePlansScreenState
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const Text(
+                      const TText(
                         'Priority',
                         style: TextStyle(
                           fontSize: 14,
@@ -484,11 +486,11 @@ class ContactPersonCarePlansScreenState
                           value: _selectedPriority,
                           isExpanded: true,
                           underline: const SizedBox(),
-                          hint: const Text('All Priorities'),
+                          hint: const TText('All Priorities'),
                           items: [
                             const DropdownMenuItem<String>(
                               value: null,
-                              child: Text('All Priorities'),
+                              child: TText('All Priorities'),
                             ),
                             ...['low', 'medium', 'high']
                                 .map((priority) => DropdownMenuItem<String>(
@@ -528,7 +530,7 @@ class ContactPersonCarePlansScreenState
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Reset'),
+                          child: const TText('Reset'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -551,7 +553,7 @@ class ContactPersonCarePlansScreenState
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Apply Filters',
                             style: TextStyle(
                               fontSize: 15,
@@ -608,7 +610,7 @@ class ContactPersonCarePlansScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Care Plans',
                     style: TextStyle(
                       fontSize: 24,
@@ -640,7 +642,7 @@ class ContactPersonCarePlansScreenState
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'Care Plans',
                 style: TextStyle(
                   fontSize: 24,
@@ -659,7 +661,7 @@ class ContactPersonCarePlansScreenState
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -715,7 +717,7 @@ class ContactPersonCarePlansScreenState
                   color: _primaryColor,
                 ),
                 onPressed: _showFilterModal,
-                tooltip: 'Filter',
+                tooltip: 'Filter'.tr,
               ),
               if (_hasActiveFilters())
                 Positioned(
@@ -1310,7 +1312,7 @@ class ContactPersonCarePlansScreenState
                   Color(0xFF147D73),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Care Plans Yet',
                 style: TextStyle(
                   fontSize: 24,
@@ -1349,7 +1351,7 @@ class ContactPersonCarePlansScreenState
                   _loadCarePlans(refresh: true, forceRefresh: true);
                 },
                 icon: const Icon(Icons.clear_all, size: 20),
-                label: const Text('Clear All Filters'),
+                label: const TText('Clear All Filters'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _primaryColor,
                   side: BorderSide(color: _primaryColor.withOpacity(0.5), width: 2),
@@ -1437,7 +1439,7 @@ class ContactPersonCarePlansScreenState
                   Colors.red.shade500,
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'Oops! Something Went Wrong',
                 style: TextStyle(
                   fontSize: 24,
@@ -1465,7 +1467,7 @@ class ContactPersonCarePlansScreenState
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'Please check your connection and try again',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1497,7 +1499,7 @@ class ContactPersonCarePlansScreenState
                 onPressed: () =>
                     _loadCarePlans(refresh: true, forceRefresh: true),
                 icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Try Again'),
+                label: const TText('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,

@@ -8,6 +8,8 @@ import '../../services/file_download_service.dart';
 import '../../services/wallet_service.dart';
 import '../../models/wallet/wallet_models.dart';
 import 'wallet_deposit_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class WalletScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -173,7 +175,7 @@ class _WalletScreenState extends State<WalletScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'My Wallet',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -240,7 +242,7 @@ class _WalletScreenState extends State<WalletScreen> {
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: 16),
-            Text(
+            TText(
               'Failed to load wallet',
               style: TextStyle(
                 fontSize: 18,
@@ -267,7 +269,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
+              child: const TText(
                 'Retry',
                 style: TextStyle(
                   color: Colors.white,
@@ -336,7 +338,7 @@ class _WalletScreenState extends State<WalletScreen> {
             ],
           ),
           const SizedBox(height: 24),
-          const Text(
+          const TText(
             'Available Balance',
             style: TextStyle(
               color: Colors.white70,
@@ -372,7 +374,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 children: [
                   Icon(Icons.add, size: 20),
                   SizedBox(width: 8),
-                  Text(
+                  TText(
                     'Add Funds',
                     style: TextStyle(
                       fontSize: 16,
@@ -463,7 +465,7 @@ class _WalletScreenState extends State<WalletScreen> {
               ),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text(
+                child: TText(
                   'Download Statement',
                   style: TextStyle(
                     fontSize: 15,
@@ -475,7 +477,7 @@ class _WalletScreenState extends State<WalletScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          TText(
             'Export your transaction records as a PDF',
             style: TextStyle(
               fontSize: 13,
@@ -487,7 +489,7 @@ class _WalletScreenState extends State<WalletScreen> {
             children: [
               Expanded(
                 child: _StatementDateButton(
-                  label: 'This Month',
+                  label: 'This Month'.tr,
                   icon: Icons.calendar_today,
                   onTap: () {
                     final now = DateTime.now();
@@ -499,7 +501,7 @@ class _WalletScreenState extends State<WalletScreen> {
               const SizedBox(width: 8),
               Expanded(
                 child: _StatementDateButton(
-                  label: 'Last 3 Months',
+                  label: 'Last 3 Months'.tr,
                   icon: Icons.date_range,
                   onTap: () {
                     final now = DateTime.now();
@@ -516,7 +518,7 @@ class _WalletScreenState extends State<WalletScreen> {
             child: OutlinedButton.icon(
               onPressed: _showCustomDateRangePicker,
               icon: const Icon(Icons.tune, size: 18),
-              label: const Text('Custom Date Range'),
+              label: const TText('Custom Date Range'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primaryGreen,
                 side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.4)),
@@ -599,7 +601,7 @@ class _WalletScreenState extends State<WalletScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
+          TText(
             'Transaction History',
             style: TextStyle(
               fontSize: 16,
@@ -649,7 +651,7 @@ class _WalletScreenState extends State<WalletScreen> {
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'No transactions yet',
             style: TextStyle(
               fontSize: 16,
@@ -658,7 +660,7 @@ class _WalletScreenState extends State<WalletScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'Your transaction history will appear here',
             style: TextStyle(
               fontSize: 14,
@@ -946,7 +948,7 @@ class _WalletScreenState extends State<WalletScreen> {
                           _downloadTransactionReceipt(transaction);
                         },
                         icon: const Icon(Icons.download, size: 20),
-                        label: const Text(
+                        label: const TText(
                           'Download Receipt',
                           style: TextStyle(
                             fontSize: 15,
@@ -977,7 +979,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
+                            child: const TText(
                               'Close',
                               style: TextStyle(
                                 fontSize: 15,
@@ -995,7 +997,7 @@ class _WalletScreenState extends State<WalletScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text(
+                            child: const TText(
                               'Close',
                               style: TextStyle(
                                 fontSize: 15,

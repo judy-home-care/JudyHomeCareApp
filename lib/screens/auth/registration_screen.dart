@@ -5,6 +5,9 @@ import 'package:image_picker/image_picker.dart';
 import '../../models/auth/auth_models.dart';
 import '../../services/auth/auth_service.dart';
 import '../auth/pending_approval_screen.dart';
+import '../../config/countries.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -39,12 +42,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   File? _nursePinFront;
   File? _nursePinBack;
 
-  final List<Map<String, String>> _countries = [
-    {'name': 'Ghana', 'code': '+233', 'flag': '🇬🇭'},
-    {'name': 'Nigeria', 'code': '+234', 'flag': '🇳🇬'},
-    {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
-    {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
-  ];
+  final List<Map<String, String>> _countries = kSupportedCountries;
 
   @override
   void dispose() {
@@ -110,7 +108,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+              const TText(
                 'Select Image Source',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -120,7 +118,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   _buildImageSourceOption(
                     icon: Icons.camera_alt_rounded,
-                    label: 'Camera',
+                    label: 'Camera'.tr,
                     onTap: () {
                       Navigator.pop(context);
                       _pickImageFromSource(imageType, ImageSource.camera);
@@ -128,7 +126,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   ),
                   _buildImageSourceOption(
                     icon: Icons.photo_library_rounded,
-                    label: 'Gallery',
+                    label: 'Gallery'.tr,
                     onTap: () {
                       Navigator.pop(context);
                       _pickImageFromSource(imageType, ImageSource.gallery);
@@ -261,7 +259,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           ),
           const SizedBox(width: 16),
           const Expanded(
-            child: Text(
+            child: TText(
               'Request a Callback',
               style: TextStyle(
                 fontSize: 20,
@@ -303,7 +301,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
                 SizedBox(height: 4),
-                Text(
+                TText(
                   'Fill in your details and our team will call you back shortly.',
                   style: TextStyle(fontSize: 13, color: Color(0xFF666666), height: 1.4),
                 ),
@@ -319,7 +317,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('I am a...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+        const TText('I am a...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
         const SizedBox(height: 12),
         Row(
           children: [
@@ -391,13 +389,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             children: [
               Icon(Icons.person_outline, color: _primaryColor, size: 20),
               SizedBox(width: 8),
-              Text('Personal Information', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+              TText('Personal Information', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
             ],
           ),
           const SizedBox(height: 20),
           _buildTextField(
             controller: _nameController,
-            label: 'Full Name',
+            label: 'Full Name'.tr,
             hint: 'Enter your full name',
             icon: Icons.badge_outlined,
             validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your name' : null,
@@ -405,7 +403,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           const SizedBox(height: 16),
           _buildTextField(
             controller: _emailController,
-            label: 'Email Address',
+            label: 'Email Address'.tr,
             hint: 'your.email@example.com',
             icon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
@@ -463,7 +461,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Phone Number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+        const TText('Phone Number', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -499,7 +497,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 },
                 style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 decoration: InputDecoration(
-                  hintText: 'Phone number',
+                  hintText: 'Phone number'.tr,
                   hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
                   enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
@@ -531,17 +529,17 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             children: [
               Icon(Icons.folder_outlined, color: _nurseColor, size: 20),
               const SizedBox(width: 8),
-              const Text('Required Documents', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              const TText('Required Documents', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 8),
-          Text('Upload clear images of your documents', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+          TText('Upload clear images of your documents', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
           const SizedBox(height: 20),
           
           // Ghana Card Number
           _buildTextField(
             controller: _ghanaCardNumberController,
-            label: 'Ghana Card Number',
+            label: 'Ghana Card Number'.tr,
             hint: 'GHA-XXXXXXXXX-X',
             icon: Icons.credit_card_rounded,
             textCapitalization: TextCapitalization.characters,
@@ -563,7 +561,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           // Nurse PIN Input
           _buildTextField(
             controller: _nursePinController,
-            label: 'Nurse PIN Number',
+            label: 'Nurse PIN Number'.tr,
             hint: 'Enter your Nurse PIN',
             icon: Icons.pin_outlined,
             validator: (v) => _selectedUserType == 'nurse' && (v == null || v.trim().isEmpty) ? 'Required for nurses' : null,
@@ -866,17 +864,22 @@ class _CountryPickerSheet extends StatelessWidget {
         ),
         const Padding(
           padding: EdgeInsets.all(20),
-          child: Text('Select Country', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          child: TText('Select Country', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ),
-        ...countries.map((c) => ListTile(
-          leading: Text(c['flag']!, style: const TextStyle(fontSize: 24)),
-          title: Text(c['name']!),
-          trailing: Text(c['code']!, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
-          onTap: () {
-            onSelected(c['code']!, c['flag']!);
-            Navigator.pop(context);
-          },
-        )),
+        Flexible(
+          child: ListView(
+            shrinkWrap: true,
+            children: countries.map((c) => ListTile(
+              leading: Text(c['flag']!, style: const TextStyle(fontSize: 24)),
+              title: Text(c['name']!),
+              trailing: Text(c['code']!, style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w500)),
+              onTap: () {
+                onSelected(c['code']!, c['flag']!);
+                Navigator.pop(context);
+              },
+            )).toList(),
+          ),
+        ),
         const SizedBox(height: 20),
       ],
     );

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../models/incidents/incident_report_models.dart';
 import '../../services/incidents/incident_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class AddIncidentReportScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -108,7 +110,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
             icon: const Icon(Icons.close, color: Color(0xFF1A1A1A)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: const TText(
             'New Incident Report',
             style: TextStyle(
               color: Color(0xFF1A1A1A),
@@ -420,7 +422,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
       onTap: () => _showPatientSearchModal(),
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: 'Select Patient *',
+          labelText: 'Select Patient *'.tr,
           filled: true,
           fillColor: Colors.grey.shade50,
           border: OutlineInputBorder(
@@ -638,7 +640,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
       },
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: 'Incident Time *',
+          labelText: 'Incident Time *'.tr,
           filled: true,
           fillColor: Colors.grey.shade50,
           border: OutlineInputBorder(
@@ -710,7 +712,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Text(
+            : const TText(
                 'Submit Report',
                 style: TextStyle(
                   fontSize: 16,
@@ -728,7 +730,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please select a patient'),
+          content: TText('Please select a patient'),
           backgroundColor: Colors.red,
         ),
       );
@@ -738,7 +740,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please fill all required fields'),
+          content: TText('Please fill all required fields'),
           backgroundColor: Colors.red,
         ),
       );
@@ -810,7 +812,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
       if (response.success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Incident report submitted successfully'),
+            content: TText('Incident report submitted successfully'),
             backgroundColor: Color(0xFF199A8E),
           ),
         );
@@ -827,7 +829,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to submit incident report'),
+            content: TText('Failed to submit incident report'),
             backgroundColor: Colors.red,
           ),
         );
@@ -932,7 +934,7 @@ class _PatientSearchModalState extends State<_PatientSearchModal> {
                 Row(
                   children: [
                     const Expanded(
-                      child: Text(
+                      child: TText(
                         'Select Patient',
                         style: TextStyle(
                           fontSize: 20,
@@ -963,7 +965,7 @@ class _PatientSearchModalState extends State<_PatientSearchModal> {
               onChanged: _filterPatients,
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
-                hintText: 'Search by name or age...',
+                hintText: 'Search by name or age...'.tr,
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -1000,7 +1002,7 @@ class _PatientSearchModalState extends State<_PatientSearchModal> {
                           color: Colors.grey.shade400,
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        TText(
                           'No patients found',
                           style: TextStyle(
                             fontSize: 16,
@@ -1008,7 +1010,7 @@ class _PatientSearchModalState extends State<_PatientSearchModal> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        TText(
                           'Try adjusting your search',
                           style: TextStyle(
                             fontSize: 14,

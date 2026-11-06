@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/i18n/app_language.dart';
 
 /// Bottom navigation for physiotherapists / speech therapists.
 /// Tabs: Home · Patients · Account (matches the nurse/patient nav styling).
@@ -33,19 +34,19 @@ class TherapistBottomNavigation extends StatelessWidget {
             children: [
               _buildNavItem(
                 icon: Icons.home_rounded,
-                label: 'Home',
+                label: 'Home'.tr,
                 index: 0,
                 isSelected: currentIndex == 0,
               ),
               _buildNavItem(
                 icon: Icons.people_rounded,
-                label: 'Patients',
+                label: 'Patients'.tr,
                 index: 1,
                 isSelected: currentIndex == 1,
               ),
               _buildNavItem(
                 icon: Icons.person_rounded,
-                label: 'Account',
+                label: 'Account'.tr,
                 index: 2,
                 isSelected: currentIndex == 2,
               ),

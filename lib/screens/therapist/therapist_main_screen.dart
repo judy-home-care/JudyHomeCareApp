@@ -3,6 +3,7 @@ import 'therapist_dashboard_screen.dart';
 import 'therapist_account_screen.dart';
 import 'therapist_bottom_navigation.dart';
 import '../nurse/nurse_patients_screen.dart';
+import '../../services/i18n/t_text.dart';
 
 /// Main shell for physiotherapists and speech therapists.
 ///
@@ -145,18 +146,18 @@ class _TherapistMainScreenState extends State<TherapistMainScreen>
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
+        title: const TText(
           'Exit App',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        content: const Text(
+        content: const TText(
           'Are you sure you want to exit?',
           style: TextStyle(fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w600),
             ),
@@ -167,7 +168,7 @@ class _TherapistMainScreenState extends State<TherapistMainScreen>
               backgroundColor: const Color(0xFF199A8E),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Exit'),
+            child: const TText('Exit'),
           ),
         ],
       ),

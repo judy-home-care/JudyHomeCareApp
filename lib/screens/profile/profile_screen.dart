@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/profile_service.dart';
 import '../../utils/api_config.dart'; 
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PersonalInformationScreen extends StatefulWidget {
   final Map<String, dynamic> userData; // ✅ Changed from nurseData to userData
@@ -256,7 +258,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Personal Information',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -269,7 +271,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             TextButton.icon(
               onPressed: () => setState(() => _isEditing = true),
               icon: const Icon(Icons.edit_outlined, size: 18),
-              label: const Text('Edit'),
+              label: const TText('Edit'),
               style: TextButton.styleFrom(
                 foregroundColor: AppColors.primaryGreen,
               ),
@@ -428,7 +430,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             Expanded(
               child: _buildTextField(
                 controller: _firstNameController,
-                label: 'First Name',
+                label: 'First Name'.tr,
                 icon: Icons.person_outline,
                 enabled: _isEditing,
               ),
@@ -437,7 +439,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             Expanded(
               child: _buildTextField(
                 controller: _lastNameController,
-                label: 'Last Name',
+                label: 'Last Name'.tr,
                 icon: Icons.person_outline,
                 enabled: _isEditing,
               ),
@@ -447,7 +449,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         const SizedBox(height: 16),
         _buildTextField(
           controller: _emailController,
-          label: 'Email Address',
+          label: 'Email Address'.tr,
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
           enabled: _isEditing,
@@ -455,7 +457,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         const SizedBox(height: 16),
         _buildTextField(
           controller: _phoneController,
-          label: 'Phone Number',
+          label: 'Phone Number'.tr,
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
           enabled: _isEditing,
@@ -467,7 +469,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         const SizedBox(height: 16),
         _buildTextField(
           controller: _ghanaCardController,
-          label: 'Ghana Card Number',
+          label: 'Ghana Card Number'.tr,
           icon: Icons.badge_outlined,
           enabled: _isEditing,
         ),
@@ -484,7 +486,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       children: [
         _buildTextField(
           controller: _licenseController,
-          label: 'License Number',
+          label: 'License Number'.tr,
           icon: Icons.badge_outlined,
           enabled: _isEditing,
         ),
@@ -493,7 +495,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
         const SizedBox(height: 16),
         _buildTextField(
           controller: _yearsExpController,
-          label: 'Years of Experience',
+          label: 'Years of Experience'.tr,
           icon: Icons.calendar_today_outlined,
           keyboardType: TextInputType.number,
           enabled: _isEditing,
@@ -508,7 +510,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
+          child: TText(
             'Specialization',
             style: TextStyle(
               fontSize: 14,
@@ -535,7 +537,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                       size: 20,
                     ),
                   ),
-                  hint: Text(
+                  hint: TText(
                     'Select specialization',
                     style: TextStyle(
                       fontSize: 15,
@@ -701,7 +703,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4, bottom: 8),
-          child: Text(
+          child: TText(
             'Gender',
             style: TextStyle(
               fontSize: 14,
@@ -787,7 +789,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TText(
                     'Date of Birth',
                     style: TextStyle(
                       fontSize: 12,
@@ -849,7 +851,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Cancel',
                   style: TextStyle(
                     fontSize: 16,
@@ -881,7 +883,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
+                    : const TText(
                         'Save Changes',
                         style: TextStyle(
                           fontSize: 16,
@@ -931,7 +933,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please fill all required fields'),
+            content: TText('Please fill all required fields'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1028,7 +1030,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
                   SizedBox(width: 12),
-                  Text('Profile updated successfully!'),
+                  TText('Profile updated successfully!'),
                 ],
               ),
               backgroundColor: AppColors.primaryGreen,

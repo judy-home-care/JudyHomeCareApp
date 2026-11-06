@@ -5,6 +5,8 @@ import '../../utils/api_config.dart';
 import '../../utils/app_colors.dart';
 import 'contact_person_main_screen.dart';
 import '../auth/login_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientSelectorScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -117,7 +119,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'Select a patient to continue',
             style: TextStyle(
               fontSize: 16,
@@ -275,7 +277,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
                           color: AppColors.primaryGreen.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: const TText(
                           'Primary',
                           style: TextStyle(
                             fontSize: 11,
@@ -328,7 +330,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
               color: Colors.red.shade400,
             ),
             const SizedBox(width: 8),
-            Text(
+            TText(
               'Sign Out',
               style: TextStyle(
                 fontSize: 15,
@@ -349,14 +351,14 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
+        title: const TText(
           'Sign Out',
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
-        content: Text(
+        content: TText(
           'Are you sure you want to sign out?',
           style: TextStyle(
             color: Colors.grey.shade600,
@@ -366,7 +368,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -376,7 +378,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
           ),
           TextButton(
             onPressed: () => _handleLogout(),
-            child: Text(
+            child: TText(
               'Sign Out',
               style: TextStyle(
                 color: Colors.red.shade400,

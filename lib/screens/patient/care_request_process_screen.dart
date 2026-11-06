@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../services/care_request_service.dart';
 import '../../utils/app_colors.dart';
 import '../../models/care_request/care_request_models.dart';
+import '../../services/i18n/t_text.dart';
 import '../payment/care_payment_screen.dart';  // Import the actual payment screen
 
 class CareRequestProcessScreen extends StatefulWidget {
@@ -175,7 +176,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Request Process',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -212,7 +213,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
               ),
-              child: const Text('Retry'),
+              child: const TText('Retry'),
             ),
           ],
         ),
@@ -281,7 +282,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TText(
                       'Assessment Fee',
                       style: TextStyle(
                         color: Colors.white,
@@ -290,7 +291,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                       ),
                     ),
                     SizedBox(height: 4),
-                    Text(
+                    TText(
                       'One-time payment to begin',
                       style: TextStyle(
                         color: Colors.white70,
@@ -314,7 +315,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
+                    TText(
                       'Base Fee',
                       style: TextStyle(
                         color: Colors.grey.shade600,
@@ -335,7 +336,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      TText(
                         'Tax',
                         style: TextStyle(
                           color: Colors.grey.shade600,
@@ -358,7 +359,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    const TText(
                       'Total Amount',
                       style: TextStyle(
                         fontSize: 16,
@@ -417,7 +418,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const TText(
             'What Happens Next',
             style: TextStyle(
               fontSize: 20,
@@ -540,7 +541,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              const TText(
                 'Important Notes',
                 style: TextStyle(
                   fontSize: 16,
@@ -612,7 +613,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       ),
                     )
-                  : const Text(
+                  : const TText(
                       'Proceed to Payment',
                       style: TextStyle(
                         fontSize: 16,
@@ -625,7 +626,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
           const SizedBox(height: 12),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text(
+            child: const TText(
               'Go Back',
               style: TextStyle(
                 color: Color(0xFF199A8E),

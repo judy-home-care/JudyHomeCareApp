@@ -6,6 +6,7 @@ import '../../../services/contact_person/contact_person_service.dart';
 import '../../../services/payment_service.dart';
 import '../../../services/wallet_service.dart';
 import '../../../widgets/paystack_webview.dart';
+import '../../../services/i18n/t_text.dart';
 
 /// Legacy widget kept for backward compatibility
 /// All installment info is now shown in Care Payment Summary card in TabbedCareRequestCard
@@ -198,7 +199,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Insufficient Balance',
               style: TextStyle(
                 fontSize: 22,
@@ -224,7 +225,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Cancel'),
+                    child: const TText('Cancel'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -242,7 +243,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Use Paystack',
                       style: TextStyle(color: Colors.white),
                     ),
@@ -314,7 +315,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Payment URL is empty. Please try again.'),
+                content: TText('Payment URL is empty. Please try again.'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -416,7 +417,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Payment Cancelled',
               style: TextStyle(
                 fontSize: 24,
@@ -425,7 +426,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Your payment was cancelled. You can try again or go back.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -450,7 +451,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                       ),
                       side: BorderSide(color: Colors.grey.shade400),
                     ),
-                    child: Text(
+                    child: TText(
                       'Go Back',
                       style: TextStyle(
                         fontSize: 16,
@@ -474,7 +475,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Try Again',
                       style: TextStyle(
                         fontSize: 16,
@@ -519,7 +520,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Payment Successful!',
               style: TextStyle(
                 fontSize: 24,
@@ -568,7 +569,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Done',
                   style: TextStyle(
                     fontSize: 16,
@@ -720,7 +721,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Pay Installment',
                         style: TextStyle(
                           fontSize: 18,
@@ -757,7 +758,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
               ),
               child: Column(
                 children: [
-                  Text(
+                  TText(
                     'Amount to Pay',
                     style: TextStyle(
                       fontSize: 14,
@@ -790,7 +791,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                             color: Colors.red,
                           ),
                           const SizedBox(width: 6),
-                          const Text(
+                          const TText(
                             'This payment is overdue',
                             style: TextStyle(
                               fontSize: 12,
@@ -821,7 +822,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                TText(
                   'Select Payment Method',
                   style: TextStyle(
                     fontSize: 14,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_colors.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseFAQScreen extends StatefulWidget {
   const NurseFAQScreen({Key? key}) : super(key: key);
@@ -278,7 +280,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Help & FAQs',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -318,7 +320,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search for answers...',
+                  hintText: 'Search for answers...'.tr,
                   hintStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
@@ -442,7 +444,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
         backgroundColor: AppColors.primaryGreen,
         elevation: 4,
         icon: const Icon(Icons.support_agent, color: Colors.white),
-        label: const Text(
+        label: const TText(
           'Contact Support',
           style: TextStyle(
             color: Colors.white,
@@ -474,7 +476,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            TText(
               'No results found',
               style: TextStyle(
                 fontSize: 20,
@@ -483,7 +485,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            TText(
               'Try adjusting your search or filter',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -660,7 +662,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
             
             const SizedBox(height: 16),
             
-            const Text(
+            const TText(
               'Contact Support',
               style: TextStyle(
                 fontSize: 22,
@@ -692,7 +694,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
             //     Navigator.pop(context);
             //     ScaffoldMessenger.of(context).showSnackBar(
             //       const SnackBar(
-            //         content: Text('Opening live chat...'),
+            //         content: TText('Opening live chat...'),
             //         backgroundColor: AppColors.primaryGreen,
             //       ),
             //     );

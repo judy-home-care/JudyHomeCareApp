@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../utils/api_client.dart';
+import '../services/i18n/t_text.dart';
 
 /// Service for downloading files from API endpoints and saving/sharing them.
 class FileDownloadService {
@@ -33,7 +34,7 @@ class FileDownloadService {
               ),
             ),
             SizedBox(width: 12),
-            Text('Downloading...'),
+            TText('Downloading...'),
           ],
         ),
         backgroundColor: const Color(0xFF199A8E),
@@ -55,7 +56,7 @@ class FileDownloadService {
         scaffoldMessenger.clearSnackBars();
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: const Text('Receipt not available yet'),
+            content: const TText('Receipt not available yet'),
             backgroundColor: Colors.orange,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -68,7 +69,7 @@ class FileDownloadService {
         scaffoldMessenger.clearSnackBars();
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: const Text('Downloaded file is empty'),
+            content: const TText('Downloaded file is empty'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

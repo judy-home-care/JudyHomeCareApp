@@ -16,6 +16,9 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import '../../utils/api_config.dart';
 import '../therapist/therapy_note_form.dart';
+import '../../services/drafts/draft_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 /// Optimized Smart Refresh Nurse Patients Screen with:
 /// - Performance optimizations for low-end devices
@@ -370,7 +373,7 @@ Future<void> _confirmAndCall(String? phoneNumber, String contactName) async {
           ),
           const SizedBox(width: 12),
           const Expanded(
-            child: Text(
+            child: TText(
               'Make Call',
               style: TextStyle(fontSize: 18),
             ),
@@ -420,7 +423,7 @@ Future<void> _confirmAndCall(String? phoneNumber, String contactName) async {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, false),
-          child: Text(
+          child: TText(
             'Cancel',
             style: TextStyle(color: Colors.grey[600]),
           ),
@@ -428,7 +431,7 @@ Future<void> _confirmAndCall(String? phoneNumber, String contactName) async {
         ElevatedButton.icon(
           onPressed: () => Navigator.pop(context, true),
           icon: const Icon(Icons.phone, size: 18),
-          label: const Text('Call Now'),
+          label: const TText('Call Now'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primaryGreen,
             foregroundColor: Colors.white,
@@ -821,7 +824,7 @@ void _showErrorSnackBar(String message) {
         ),
         duration: const Duration(seconds: 2),
         action: SnackBarAction(
-          label: 'OK',
+          label: 'OK'.tr,
           textColor: Colors.white,
           onPressed: () {},
         ),
@@ -940,7 +943,7 @@ String _formatTimeAgo(DateTime? dateTime) {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const TText(
               'My Patients',
               style: TextStyle(
                 color: Color(0xFF1A1A1A),
@@ -984,7 +987,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -1078,7 +1081,7 @@ String _formatTimeAgo(DateTime? dateTime) {
           controller: _searchController,
           onChanged: _handleSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Search patients, conditions, care types...',
+            hintText: 'Search patients, conditions, care types...'.tr,
             hintStyle: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 14,
@@ -1221,7 +1224,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                 color: Colors.red.shade300,
               ),
               const SizedBox(height: 16),
-              Text(
+              TText(
                 'Error',
                 style: TextStyle(
                   fontSize: 20,
@@ -1242,7 +1245,7 @@ String _formatTimeAgo(DateTime? dateTime) {
               ElevatedButton.icon(
                 onPressed: () => _loadPatients(forceRefresh: true),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                label: const TText('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
@@ -1302,7 +1305,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TText(
                   'Loading more patients...',
                   style: TextStyle(
                     fontSize: 14,
@@ -1975,7 +1978,7 @@ void _editProgressNote(ProgressNote note, PatientDetail patientDetail) async {
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Progress note updated successfully'),
+              child: TText('Progress note updated successfully'),
             ),
           ],
         ),
@@ -2110,7 +2113,7 @@ Future<void> _refreshPatientList() async {
                     patientDetail.name,
                   ),
                   icon: const Icon(Icons.phone, size: 18),
-                  label: const Text('Call Patient'),
+                  label: const TText('Call Patient'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primaryGreen,
                     side: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
@@ -2129,7 +2132,7 @@ Future<void> _refreshPatientList() async {
                     patientDetail.emergencyContact.name,
                   ),
                   icon: const Icon(Icons.contact_phone, size: 18),
-                  label: const Text('Call Emergency'),
+                  label: const TText('Call Emergency'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFFF4757),
                     side: const BorderSide(color: Color(0xFFFF4757), width: 1.5),
@@ -2187,7 +2190,7 @@ Future<void> _refreshPatientList() async {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              const TText(
                 'Visit Schedule',
                 style: TextStyle(
                   fontSize: 16,
@@ -2205,7 +2208,7 @@ Future<void> _refreshPatientList() async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TText(
                       'Last Visit',
                       style: TextStyle(
                         fontSize: 12,
@@ -2243,7 +2246,7 @@ Future<void> _refreshPatientList() async {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TText(
                       'Next Visit',
                       style: TextStyle(
                         fontSize: 12,
@@ -2375,7 +2378,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              const TText(
                 'Latest Vitals',
                 style: TextStyle(
                   fontSize: 16,
@@ -2413,31 +2416,31 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
             children: [
               _buildVitalCard(
                 icon: Icons.favorite,
-                label: 'Blood Pressure',
+                label: 'Blood Pressure'.tr,
                 value: vitals.bloodPressure,
                 color: const Color(0xFFFF4757),
               ),
               _buildVitalCard(
                 icon: Icons.monitor_heart,
-                label: 'Pulse',
+                label: 'Pulse'.tr,
                 value: '${vitals.pulse} bpm',
                 color: const Color(0xFFFF6B9D),
               ),
               _buildVitalCard(
                 icon: Icons.thermostat,
-                label: 'Temperature',
+                label: 'Temperature'.tr,
                 value: '${vitals.temperature}°C',
                 color: const Color(0xFFFF9A00),
               ),
               _buildVitalCard(
                 icon: Icons.air,
-                label: 'SpO₂',
+                label: 'SpO₂'.tr,
                 value: '${vitals.spo2}%',
                 color: AppColors.primaryGreen,
               ),
               _buildVitalCard(
                 icon: Icons.air_rounded,
-                label: 'Respiration',
+                label: 'Respiration'.tr,
                 value: '${vitals.respiration}/min',
                 color: const Color(0xFF2196F3),
               ),
@@ -2487,7 +2490,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
               ),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text(
+                child: TText(
                   'Initial Assessment',
                   style: TextStyle(
                     fontSize: 16,
@@ -2530,25 +2533,25 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
             children: [
               _buildAssessmentStatusCard(
                 icon: Icons.health_and_safety,
-                label: 'General Condition',
+                label: 'General Condition'.tr,
                 value: assessment.generalConditionDisplay,
                 color: _getConditionColor(assessment.generalCondition),
               ),
               _buildAssessmentStatusCard(
                 icon: Icons.water_drop,
-                label: 'Hydration',
+                label: 'Hydration'.tr,
                 value: assessment.hydrationStatusDisplay,
                 color: _getStatusColor(assessment.hydrationStatus),
               ),
               _buildAssessmentStatusCard(
                 icon: Icons.restaurant,
-                label: 'Nutrition',
+                label: 'Nutrition'.tr,
                 value: assessment.nutritionStatusDisplay,
                 color: _getStatusColor(assessment.nutritionStatus),
               ),
               _buildAssessmentStatusCard(
                 icon: Icons.accessibility_new,
-                label: 'Mobility',
+                label: 'Mobility'.tr,
                 value: assessment.mobilityStatusDisplay,
                 color: _getMobilityColor(assessment.mobilityStatus),
               ),
@@ -2573,7 +2576,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                     size: 20,
                   ),
                   const SizedBox(width: 10),
-                  Text(
+                  TText(
                     'Pain Level',
                     style: TextStyle(
                       fontSize: 12,
@@ -2624,7 +2627,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        const TText(
                           'Has Wounds',
                           style: TextStyle(
                             fontSize: 12,
@@ -2665,7 +2668,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                     children: [
                       Icon(Icons.favorite_rounded, size: 14, color: Colors.grey[600]),
                       const SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Initial Vitals',
                         style: TextStyle(
                           fontSize: 11,
@@ -2716,7 +2719,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                     children: [
                       Icon(Icons.note_outlined, size: 14, color: Colors.grey[600]),
                       const SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Nursing Impression',
                         style: TextStyle(
                           fontSize: 11,
@@ -2862,7 +2865,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
 
   Color _getConditionColor(String? condition) {
     switch (condition?.toLowerCase()) {
-      case 'stable':
+      case '.trstable':
         return AppColors.primaryGreen;
       case 'improving':
         return const Color(0xFF2196F3);
@@ -3164,7 +3167,7 @@ Widget _buildCheckableCareTask({
                     color: color,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: const Text(
+                  child: const TText(
                     'Done',
                     style: TextStyle(
                       fontSize: 10,
@@ -3194,7 +3197,7 @@ Future<void> _toggleTaskCompletion(
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Care plan tasks can only be updated by the nursing team.'),
+          content: const TText('Care plan tasks can only be updated by the nursing team.'),
           backgroundColor: Colors.orange.shade700,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -3304,7 +3307,7 @@ Future<void> _toggleTaskCompletion(
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 12),
               Expanded(
-                child: Text('Failed to update task. Please try again.'),
+                child: TText('Failed to update task. Please try again.'),
               ),
             ],
           ),
@@ -3492,7 +3495,7 @@ Widget _buildComprehensiveHistoryNote(
                       Row(
                         children: [
                           const Expanded(
-                            child: Text(
+                            child: TText(
                               'Daily Progress Note',
                               style: TextStyle(
                                 fontSize: 16,
@@ -3524,7 +3527,7 @@ Widget _buildComprehensiveHistoryNote(
                                       color: Colors.white,
                                     ),
                                     SizedBox(width: 4),
-                                    Text(
+                                    TText(
                                       'Edit',
                                       style: TextStyle(
                                         fontSize: 12,
@@ -3657,7 +3660,7 @@ Widget _buildComprehensiveHistoryNote(
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
+                TText(
                   'Tap to view full details',
                   style: TextStyle(
                     fontSize: 12,
@@ -3702,7 +3705,7 @@ if (isExpanded) ...[
                               color: AppColors.primaryGreen,
                             ),
                             const SizedBox(width: 6),
-                            Text(
+                            TText(
                               'General Condition',
                               style: TextStyle(
                                 fontSize: 12,
@@ -3745,7 +3748,7 @@ if (isExpanded) ...[
                               color: Color(0xFFFF9A00),
                             ),
                             const SizedBox(width: 6),
-                            Text(
+                            TText(
                               'Pain Level',
                               style: TextStyle(
                                 fontSize: 12,
@@ -3779,7 +3782,7 @@ if (isExpanded) ...[
             children: [
               Icon(Icons.favorite, size: 16, color: Colors.grey[600]),
               const SizedBox(width: 6),
-              const Text(
+              const TText(
                 'VITAL SIGNS',
                 style: TextStyle(
                   fontSize: 11,
@@ -3807,35 +3810,35 @@ if (isExpanded) ...[
                 if (note.vitals!['temperature'] != null)
                   _buildVitalBadge(
                     icon: Icons.thermostat,
-                    label: 'Temp',
+                    label: 'Temp'.tr,
                     value: '${note.vitals!['temperature']}°C',
                     color: const Color(0xFFFF9A00),
                   ),
                 if (note.vitals!['pulse'] != null)
                   _buildVitalBadge(
                     icon: Icons.monitor_heart,
-                    label: 'Pulse',
+                    label: 'Pulse'.tr,
                     value: '${note.vitals!['pulse']} bpm',
                     color: const Color(0xFFFF4757),
                   ),
                 if (note.vitals!['blood_pressure'] != null)
                   _buildVitalBadge(
                     icon: Icons.favorite,
-                    label: 'BP',
+                    label: 'BP'.tr,
                     value: note.vitals!['blood_pressure'].toString(),
                     color: const Color(0xFFFF6B9D),
                   ),
                 if (note.vitals!['respiration'] != null)
                   _buildVitalBadge(
                     icon: Icons.air,
-                    label: 'Resp',
+                    label: 'Resp'.tr,
                     value: '${note.vitals!['respiration']}/min',
                     color: const Color(0xFF2196F3),
                   ),
                 if (note.vitals!['spo2'] != null)
                   _buildVitalBadge(
                     icon: Icons.speed,
-                    label: 'SpO₂',
+                    label: 'SpO₂'.tr,
                     value: '${note.vitals!['spo2']}%',
                     color: AppColors.primaryGreen,
                   ),
@@ -3851,7 +3854,7 @@ if (isExpanded) ...[
             children: [
               Icon(Icons.medical_services, size: 16, color: Colors.grey[600]),
               const SizedBox(width: 6),
-              const Text(
+              const TText(
                 'INTERVENTIONS PROVIDED',
                 style: TextStyle(
                   fontSize: 11,
@@ -3978,7 +3981,7 @@ if (isExpanded) ...[
             children: [
               Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
               const SizedBox(width: 4),
-              Text(
+              TText(
                 'Recorded',
                 style: TextStyle(
                   fontSize: 11,
@@ -4285,7 +4288,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  const TText(
                     'Active Care Plans',
                     style: TextStyle(
                       fontSize: 16,
@@ -4302,7 +4305,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                         color: Colors.grey[500],
                       ),
                       const SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Swipe to view all plans',
                         style: TextStyle(
                           fontSize: 12,
@@ -4442,7 +4445,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                             }
                           : null,
                       icon: const Icon(Icons.arrow_back, size: 18),
-                      label: const Text('Previous'),
+                      label: const TText('Previous'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: AppColors.primaryGreen,
@@ -4475,7 +4478,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                             }
                           : null,
                       icon: const Icon(Icons.arrow_forward, size: 18),
-                      label: const Text('Next'),
+                      label: const TText('Next'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _currentPage < widget.carePlans.length - 1
                             ? AppColors.primaryGreen
@@ -4538,8 +4541,82 @@ class _CarePlanCardState extends State<CarePlanCard> {
   final _evaluationController = TextEditingController();
   bool _isSavingEntry = false;
 
+  // Local draft so a crash / lost connection never loses a typed entry
+  final _draftService = DraftService();
+  Timer? _entryDraftDebounce;
+  bool _restoringEntryDraft = false;
+  bool _entryDraftRestoredBanner = false;
+
+  String get _entryDraftKey => DraftService.careEntryKey(widget.carePlan.id);
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.readOnly) {
+      _nurseInterventionsController.addListener(_scheduleEntryDraftSave);
+      _evaluationController.addListener(_scheduleEntryDraftSave);
+      _restoreEntryDraft();
+    }
+  }
+
+  void _scheduleEntryDraftSave() {
+    if (_restoringEntryDraft || !mounted) return;
+    _entryDraftDebounce?.cancel();
+    _entryDraftDebounce = Timer(const Duration(milliseconds: 800), _saveEntryDraftNow);
+  }
+
+  void _saveEntryDraftNow() {
+    if (_restoringEntryDraft) return;
+    final interventions = _nurseInterventionsController.text;
+    final evaluation = _evaluationController.text;
+    if (interventions.trim().isEmpty && evaluation.trim().isEmpty) {
+      _draftService.clear(_entryDraftKey);
+    } else {
+      _draftService.save(_entryDraftKey, {
+        'interventions': interventions,
+        'evaluation': evaluation,
+      });
+    }
+  }
+
+  Future<void> _restoreEntryDraft() async {
+    final draft = await _draftService.load(_entryDraftKey);
+    if (draft == null || !mounted) return;
+
+    final interventions = draft['interventions']?.toString() ?? '';
+    final evaluation = draft['evaluation']?.toString() ?? '';
+    if (interventions.trim().isEmpty && evaluation.trim().isEmpty) return;
+    // Don't overwrite anything already typed
+    if (_nurseInterventionsController.text.isNotEmpty ||
+        _evaluationController.text.isNotEmpty) {
+      return;
+    }
+
+    _restoringEntryDraft = true;
+    _nurseInterventionsController.text = interventions;
+    _evaluationController.text = evaluation;
+    _restoringEntryDraft = false;
+
+    if (mounted) {
+      setState(() => _entryDraftRestoredBanner = true);
+    }
+  }
+
+  void _discardEntryDraft() {
+    _restoringEntryDraft = true;
+    _nurseInterventionsController.clear();
+    _evaluationController.clear();
+    _restoringEntryDraft = false;
+    _draftService.clear(_entryDraftKey);
+    setState(() => _entryDraftRestoredBanner = false);
+  }
+
   @override
   void dispose() {
+    _entryDraftDebounce?.cancel();
+    if (!widget.readOnly) _saveEntryDraftNow();
+    _nurseInterventionsController.removeListener(_scheduleEntryDraftSave);
+    _evaluationController.removeListener(_scheduleEntryDraftSave);
     _nurseInterventionsController.dispose();
     _evaluationController.dispose();
     super.dispose();
@@ -4806,7 +4883,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                               color: Colors.grey[600],
                             ),
                             const SizedBox(width: 6),
-                            Text(
+                            TText(
                               'DESCRIPTION',
                               style: TextStyle(
                                 fontSize: 11,
@@ -4863,7 +4940,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Text(
+                          const TText(
                             'Add Nurse Entry',
                             style: TextStyle(
                               fontSize: 15,
@@ -4875,10 +4952,19 @@ class _CarePlanCardState extends State<CarePlanCard> {
                       ),
                       const SizedBox(height: 16),
 
+                      if (_entryDraftRestoredBanner) ...[
+                        _draftRestoredBannerWidget(
+                          message: 'Draft restored — your unsaved entry was recovered.',
+                          onDiscard: _discardEntryDraft,
+                          onDismiss: () => setState(() => _entryDraftRestoredBanner = false),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+
                       // Nurse Interventions TextField
                       Row(
                         children: [
-                          Text(
+                          TText(
                             'Nurse Interventions',
                             style: TextStyle(
                               fontSize: 12,
@@ -4901,7 +4987,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                         controller: _nurseInterventionsController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'Enter nurse interventions...',
+                          hintText: 'Enter nurse interventions...'.tr,
                           hintStyle: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 13,
@@ -4931,7 +5017,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                       // Evaluation TextField
                       Row(
                         children: [
-                          Text(
+                          TText(
                             'Evaluation',
                             style: TextStyle(
                               fontSize: 12,
@@ -4954,7 +5040,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                         controller: _evaluationController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'Enter evaluation...',
+                          hintText: 'Enter evaluation...'.tr,
                           hintStyle: TextStyle(
                             color: Colors.grey[400],
                             fontSize: 13,
@@ -5011,7 +5097,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                                   children: [
                                     Icon(Icons.save_rounded, size: 18),
                                     SizedBox(width: 8),
-                                    Text(
+                                    TText(
                                       'Save Entry',
                                       style: TextStyle(
                                         fontSize: 14,
@@ -5047,7 +5133,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
             children: [
               Icon(Icons.warning_amber_rounded, color: Colors.white),
               SizedBox(width: 12),
-              Expanded(child: Text('Both Nurse Interventions and Evaluation are required')),
+              Expanded(child: TText('Both Nurse Interventions and Evaluation are required')),
             ],
           ),
           backgroundColor: const Color(0xFFFF9A00),
@@ -5077,8 +5163,16 @@ class _CarePlanCardState extends State<CarePlanCard> {
         notes: evaluation,
       );
 
+      // Saved on the server — drop the local draft
+      _entryDraftDebounce?.cancel();
+      _restoringEntryDraft = true;
       _nurseInterventionsController.clear();
       _evaluationController.clear();
+      _restoringEntryDraft = false;
+      await _draftService.clear(_entryDraftKey);
+      if (mounted && _entryDraftRestoredBanner) {
+        setState(() => _entryDraftRestoredBanner = false);
+      }
 
       if (mounted) {
         // Show success dialog
@@ -5105,7 +5199,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                const TText(
                   'Success!',
                   style: TextStyle(
                     fontSize: 20,
@@ -5114,7 +5208,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                TText(
                   'Nurse Interventions and Evaluation saved successfully!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -5137,7 +5231,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
+                  child: const TText(
                     'OK',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
@@ -5172,7 +5266,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                const TText(
                   'Error',
                   style: TextStyle(
                     fontSize: 20,
@@ -5204,7 +5298,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text(
+                  child: const TText(
                     'OK',
                     style: TextStyle(fontWeight: FontWeight.w600),
                   ),
@@ -5328,7 +5422,7 @@ class _CheckableCareTask extends StatelessWidget {
                       color: color,
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Done',
                       style: TextStyle(
                         fontSize: 10,
@@ -5449,6 +5543,175 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
 
   String _vitalLabel(String base, String key) =>
       _isVitalRequired(key) ? '$base *' : '$base (optional)';
+
+  // ==================== LOCAL DRAFT (auto-save while typing) ====================
+  // Everything typed here is drafted on-device (debounced) so a crash, kill
+  // or lost connection never loses the nurse's work. The draft is restored
+  // when the form reopens for this patient and cleared on successful save.
+  final _draftService = DraftService();
+  Timer? _draftDebounce;
+  bool _restoringDraft = false;
+  bool _draftCleared = false;
+  bool _draftRestoredBanner = false;
+
+  String get _draftKey => DraftService.dailyNoteKey(widget.patientDetail.id);
+
+  List<TextEditingController> get _allDraftControllers => [
+        _temperatureController,
+        _pulseController,
+        _respirationController,
+        _bloodPressureController,
+        _spo2Controller,
+        _medicationDetailsController,
+        _woundCareDetailsController,
+        _physiotherapyDetailsController,
+        _nutritionDetailsController,
+        _hygieneDetailsController,
+        _counselingDetailsController,
+        _otherInterventionsController,
+        _woundStatusController,
+        _observationsController,
+        _educationProvidedController,
+        _familyConcernsController,
+        _nextVisitPlanController,
+      ];
+
+  @override
+  void initState() {
+    super.initState();
+    for (final controller in _allDraftControllers) {
+      controller.addListener(_scheduleDraftSave);
+    }
+    _restoreDraft();
+  }
+
+  // Any UI state change (checkboxes, condition, pain level) also drafts.
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _scheduleDraftSave();
+  }
+
+  void _scheduleDraftSave() {
+    if (_restoringDraft || _draftCleared || !mounted) return;
+    _draftDebounce?.cancel();
+    _draftDebounce = Timer(const Duration(milliseconds: 800), _saveDraftNow);
+  }
+
+  Map<String, dynamic> _draftSnapshot() => {
+        'temperature': _temperatureController.text,
+        'pulse': _pulseController.text,
+        'respiration': _respirationController.text,
+        'blood_pressure': _bloodPressureController.text,
+        'spo2': _spo2Controller.text,
+        'medication_administered': _medicationAdministered,
+        'medication_details': _medicationDetailsController.text,
+        'wound_care': _woundCare,
+        'wound_care_details': _woundCareDetailsController.text,
+        'physiotherapy': _physiotherapy,
+        'physiotherapy_details': _physiotherapyDetailsController.text,
+        'nutrition_support': _nutritionSupport,
+        'nutrition_details': _nutritionDetailsController.text,
+        'hygiene_care': _hygieneCare,
+        'hygiene_details': _hygieneDetailsController.text,
+        'counseling': _counseling,
+        'counseling_details': _counselingDetailsController.text,
+        'other_interventions': _otherInterventions,
+        'other_interventions_details': _otherInterventionsController.text,
+        'general_condition': _generalCondition,
+        'pain_level': _painLevel,
+        'wound_status': _woundStatusController.text,
+        'observations': _observationsController.text,
+        'education_provided': _educationProvidedController.text,
+        'family_concerns': _familyConcernsController.text,
+        'next_visit_plan': _nextVisitPlanController.text,
+      };
+
+  bool _draftHasContent(Map<String, dynamic> snapshot) {
+    for (final value in snapshot.values) {
+      if (value is String && value.trim().isNotEmpty) return true;
+      if (value is bool && value) return true;
+    }
+    if ((snapshot['pain_level'] ?? 0) is int && (snapshot['pain_level'] as int) > 0) {
+      return true;
+    }
+    return (snapshot['general_condition']?.toString() ?? 'Stable') != 'Stable';
+  }
+
+  void _saveDraftNow() {
+    if (_restoringDraft || _draftCleared) return;
+    final snapshot = _draftSnapshot();
+    if (_draftHasContent(snapshot)) {
+      _draftService.save(_draftKey, snapshot);
+    } else {
+      // Form emptied by the user → nothing worth keeping
+      _draftService.clear(_draftKey);
+    }
+  }
+
+  Future<void> _restoreDraft() async {
+    final draft = await _draftService.load(_draftKey);
+    if (draft == null || !mounted || !_draftHasContent(draft)) return;
+
+    _restoringDraft = true;
+    String text(String key) => draft[key]?.toString() ?? '';
+    bool flag(String key) => draft[key] == true;
+
+    _temperatureController.text = text('temperature');
+    _pulseController.text = text('pulse');
+    _respirationController.text = text('respiration');
+    _bloodPressureController.text = text('blood_pressure');
+    _spo2Controller.text = text('spo2');
+    _medicationDetailsController.text = text('medication_details');
+    _woundCareDetailsController.text = text('wound_care_details');
+    _physiotherapyDetailsController.text = text('physiotherapy_details');
+    _nutritionDetailsController.text = text('nutrition_details');
+    _hygieneDetailsController.text = text('hygiene_details');
+    _counselingDetailsController.text = text('counseling_details');
+    _otherInterventionsController.text = text('other_interventions_details');
+    _woundStatusController.text = text('wound_status');
+    _observationsController.text = text('observations');
+    _educationProvidedController.text = text('education_provided');
+    _familyConcernsController.text = text('family_concerns');
+    _nextVisitPlanController.text = text('next_visit_plan');
+
+    setState(() {
+      _medicationAdministered = flag('medication_administered');
+      _woundCare = flag('wound_care');
+      _physiotherapy = flag('physiotherapy');
+      _nutritionSupport = flag('nutrition_support');
+      _hygieneCare = flag('hygiene_care');
+      _counseling = flag('counseling');
+      _otherInterventions = flag('other_interventions');
+      _generalCondition = draft['general_condition']?.toString() ?? 'Stable';
+      _painLevel = draft['pain_level'] is int
+          ? draft['pain_level'] as int
+          : int.tryParse('${draft['pain_level']}') ?? 0;
+      _draftRestoredBanner = true;
+    });
+    _restoringDraft = false;
+  }
+
+  void _discardDraft() {
+    _restoringDraft = true;
+    for (final controller in _allDraftControllers) {
+      controller.clear();
+    }
+    setState(() {
+      _medicationAdministered = false;
+      _woundCare = false;
+      _physiotherapy = false;
+      _nutritionSupport = false;
+      _hygieneCare = false;
+      _counseling = false;
+      _otherInterventions = false;
+      _generalCondition = 'Stable';
+      _painLevel = 0;
+      _draftRestoredBanner = false;
+    });
+    _restoringDraft = false;
+    _draftService.clear(_draftKey);
+  }
 
   // Required Vital Signs Controllers
   final _temperatureController = TextEditingController();
@@ -5623,6 +5886,12 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
 
   @override
   void dispose() {
+    // Flush any pending draft before tearing down (best effort)
+    _draftDebounce?.cancel();
+    _saveDraftNow();
+    for (final controller in _allDraftControllers) {
+      controller.removeListener(_scheduleDraftSave);
+    }
     _validationDebounce?.cancel();
     _temperatureController.dispose();
     _pulseController.dispose();
@@ -5795,6 +6064,11 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
           request,
         );
 
+        // Saved on the server — the local draft is no longer needed
+        _draftCleared = true;
+        _draftDebounce?.cancel();
+        await _draftService.clear(_draftKey);
+
         if (mounted) {
           setState(() {
             _isSaving = false;
@@ -5959,11 +6233,19 @@ Widget build(BuildContext context) {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_draftRestoredBanner) ...[
+              _draftRestoredBannerWidget(
+                message: 'Draft restored — your unsaved note was recovered.',
+                onDiscard: _discardDraft,
+                onDismiss: () => setState(() => _draftRestoredBanner = false),
+              ),
+              const SizedBox(height: 16),
+            ],
             // Visit Date and Time
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'Visit Date *',
                   style: TextStyle(
                     fontSize: 14,
@@ -5999,7 +6281,7 @@ Widget build(BuildContext context) {
                   ),
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                const TText(
                   'Visit Time *',
                   style: TextStyle(
                     fontSize: 14,
@@ -6071,7 +6353,7 @@ Widget build(BuildContext context) {
                   const Icon(Icons.info_outline, size: 18, color: Color(0xFF2196F3)),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
+                    child: TText(
                       'Values will be validated against normal adult ranges',
                       style: TextStyle(
                         fontSize: 12,
@@ -6157,7 +6439,7 @@ Widget build(BuildContext context) {
               children: [
                 const Icon(Icons.medical_services, color: Color(0xFFFF9A00), size: 20),
                 const SizedBox(width: 8),
-                const Text(
+                const TText(
                   'Interventions Provided',
                   style: TextStyle(
                     fontSize: 16,
@@ -6170,7 +6452,7 @@ Widget build(BuildContext context) {
             const Divider(height: 24),
             
             _buildExpandableCheckbox(
-              label: 'Medication Administered',
+              label: 'Medication Administered'.tr,
               value: _medicationAdministered,
               interventionKey: 'medication',
               controller: _medicationDetailsController,
@@ -6184,7 +6466,7 @@ Widget build(BuildContext context) {
             ),
             
             _buildExpandableCheckbox(
-              label: 'Wound Care',
+              label: 'Wound Care'.tr,
               value: _woundCare,
               interventionKey: 'wound',
               controller: _woundCareDetailsController,
@@ -6198,7 +6480,7 @@ Widget build(BuildContext context) {
             ),
             
             _buildExpandableCheckbox(
-              label: 'Physiotherapy/Exercise',
+              label: 'Physiotherapy/Exercise'.tr,
               value: _physiotherapy,
               interventionKey: 'physio',
               controller: _physiotherapyDetailsController,
@@ -6212,7 +6494,7 @@ Widget build(BuildContext context) {
             ),
             
             _buildExpandableCheckbox(
-              label: 'Nutrition/Feeding Support',
+              label: 'Nutrition/Feeding Support'.tr,
               value: _nutritionSupport,
               interventionKey: 'nutrition',
               controller: _nutritionDetailsController,
@@ -6226,7 +6508,7 @@ Widget build(BuildContext context) {
             ),
             
             _buildExpandableCheckbox(
-              label: 'Hygiene/Personal Care',
+              label: 'Hygiene/Personal Care'.tr,
               value: _hygieneCare,
               interventionKey: 'hygiene',
               controller: _hygieneDetailsController,
@@ -6240,7 +6522,7 @@ Widget build(BuildContext context) {
             ),
             
             _buildExpandableCheckbox(
-              label: 'Counseling/Education',
+              label: 'Counseling/Education'.tr,
               value: _counseling,
               interventionKey: 'counseling',
               controller: _counselingDetailsController,
@@ -6254,7 +6536,7 @@ Widget build(BuildContext context) {
             ),
             
             _buildExpandableCheckbox(
-              label: 'Other Interventions',
+              label: 'Other Interventions'.tr,
               value: _otherInterventions,
               interventionKey: 'other',
               controller: _otherInterventionsController,
@@ -6273,7 +6555,7 @@ Widget build(BuildContext context) {
               children: [
                 const Icon(Icons.remove_red_eye, color: Color(0xFF2196F3), size: 20),
                 const SizedBox(width: 8),
-                const Text(
+                const TText(
                   'Observations/Findings (Required)',
                   style: TextStyle(
                     fontSize: 16,
@@ -6289,7 +6571,7 @@ Widget build(BuildContext context) {
               children: [
                 Expanded(
                   child: _buildDropdown(
-                    label: 'General Condition *',
+                    label: 'General Condition *'.tr,
                     value: _generalCondition,
                     items: ['Stable', 'Improving', 'Declining', 'Critical'],
                     onChanged: (value) {
@@ -6304,7 +6586,7 @@ Widget build(BuildContext context) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Pain Level (0-10) *',
                         style: TextStyle(
                           fontSize: 14,
@@ -6372,7 +6654,7 @@ Widget build(BuildContext context) {
             const SizedBox(height: 16),
             
             _buildTextField(
-              label: 'Wound Status (if any)',
+              label: 'Wound Status (if any)'.tr,
               controller: _woundStatusController,
               hint: 'Describe wound status, healing progress, etc...',
               maxLines: 3,
@@ -6380,7 +6662,7 @@ Widget build(BuildContext context) {
             const SizedBox(height: 16),
             
             _buildTextField(
-              label: 'Other Significant Observations',
+              label: 'Other Significant Observations'.tr,
               controller: _observationsController,
               hint: 'Note any other significant observations...',
               maxLines: 3,
@@ -6392,7 +6674,7 @@ Widget build(BuildContext context) {
               children: [
                 const Icon(Icons.people, color: Color(0xFF6C63FF), size: 20),
                 const SizedBox(width: 8),
-                const Text(
+                const TText(
                   'Family/Client Communication',
                   style: TextStyle(
                     fontSize: 16,
@@ -6405,7 +6687,7 @@ Widget build(BuildContext context) {
             const Divider(height: 24),
             
             _buildTextField(
-              label: 'Education Provided',
+              label: 'Education Provided'.tr,
               controller: _educationProvidedController,
               hint: 'Describe education provided to patient/family...',
               maxLines: 3,
@@ -6413,7 +6695,7 @@ Widget build(BuildContext context) {
             const SizedBox(height: 16),
             
             _buildTextField(
-              label: 'Concerns Raised by Family/Client',
+              label: 'Concerns Raised by Family/Client'.tr,
               controller: _familyConcernsController,
               hint: 'Note any concerns raised by family or client...',
               maxLines: 3,
@@ -6425,7 +6707,7 @@ Widget build(BuildContext context) {
               children: [
                 const Icon(Icons.event_note, color: AppColors.primaryGreen, size: 20),
                 const SizedBox(width: 8),
-                const Text(
+                const TText(
                   'Plan / Next Steps',
                   style: TextStyle(
                     fontSize: 16,
@@ -6438,7 +6720,7 @@ Widget build(BuildContext context) {
             const Divider(height: 24),
             
             _buildTextField(
-              label: 'Plan for Next Visit',
+              label: 'Plan for Next Visit'.tr,
               controller: _nextVisitPlanController,
               hint: 'Outline plans for the next visit, follow-up care, adjustments needed...',
               maxLines: 4,
@@ -6459,7 +6741,7 @@ Widget build(BuildContext context) {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Cancel'),
+                    child: const TText('Cancel'),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -6486,7 +6768,7 @@ Widget build(BuildContext context) {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text(
+                        : const TText(
                             'Save Note',
                             style: TextStyle(
                               fontSize: 15,
@@ -6706,7 +6988,7 @@ Widget _buildBloodPressureFieldWithValidation({
         ],
       ),
       const SizedBox(height: 4),
-      Text(
+      TText(
         'Normal: <120/<80 mmHg',
         style: TextStyle(
           fontSize: 11,
@@ -6907,7 +7189,7 @@ Widget _buildVitalsSummary() {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TText(
                     'Vitals Assessment',
                     style: TextStyle(
                       fontSize: 14,
@@ -7420,10 +7702,10 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
                 fontWeight: FontWeight.w500,
               ),
               padding: const EdgeInsets.all(4),
-              tabs: const [
-                Tab(text: 'Progress Notes'),
-                Tab(text: 'Care Plan Entries'),
-                Tab(text: 'Therapy Notes'),
+              tabs: [
+                Tab(text: 'Progress Notes'.tr),
+                Tab(text: 'Care Plan Entries'.tr),
+                Tab(text: 'Therapy Notes'.tr),
               ],
             ),
           ),
@@ -7460,7 +7742,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const TText(
             'Therapy Session Notes',
             style: TextStyle(
               fontSize: 16,
@@ -7469,7 +7751,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          TText(
             'Notes recorded by physiotherapists and speech therapists',
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
@@ -7630,7 +7912,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
                                   color: accent.withOpacity(0.12),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
-                                child: Text(
+                                child: TText(
                                   'You',
                                   style: TextStyle(
                                     fontSize: 10,
@@ -7730,7 +8012,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              const TText(
                 'Care History & Progress Notes',
                 style: TextStyle(
                   fontSize: 16,
@@ -7796,7 +8078,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
               ElevatedButton.icon(
                 onPressed: _loadCarePlanEntries,
                 icon: const Icon(Icons.refresh, size: 18),
-                label: const Text('Retry'),
+                label: const TText('Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
@@ -7816,7 +8098,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              const TText(
                 'Care Plan Entries',
                 style: TextStyle(
                   fontSize: 16,
@@ -8796,7 +9078,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
           style: TextButton.styleFrom(
             foregroundColor: AppColors.primaryGreen,
           ),
-          child: const Text(
+          child: const TText(
             'Load more',
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
@@ -8828,7 +9110,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'Vitals History',
                   style: TextStyle(
                     fontSize: 16,
@@ -9007,7 +9289,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
                             color: AppColors.primaryGreen.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(5),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'You',
                             style: TextStyle(
                               fontSize: 9,
@@ -9075,7 +9357,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
         const Color(0xFF2196F3));
 
     if (chips.isEmpty) {
-      return Text(
+      return TText(
         'No vital values recorded',
         style: TextStyle(
           fontSize: 12,
@@ -9202,7 +9484,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
             ElevatedButton.icon(
               onPressed: _loadVitals,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,
@@ -9219,4 +9501,60 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
       ),
     );
   }
+}
+/// Inline banner shown at the top of a form when a local draft was restored.
+/// Rendered in the form body (not a snackbar) so it never covers save buttons.
+Widget _draftRestoredBannerWidget({
+  required String message,
+  required VoidCallback onDiscard,
+  required VoidCallback onDismiss,
+}) {
+  return Container(
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    decoration: BoxDecoration(
+      color: const Color(0xFFE8F2FD),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.restore, color: Color(0xFF1976D2), size: 18),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            message.tr,
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: Color(0xFF1565C0),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onDiscard,
+          style: TextButton.styleFrom(
+            minimumSize: Size.zero,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          child: const TText(
+            'Discard',
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1976D2),
+            ),
+          ),
+        ),
+        GestureDetector(
+          onTap: onDismiss,
+          child: Padding(
+            padding: const EdgeInsets.all(4),
+            child: Icon(Icons.close, size: 16, color: Colors.blueGrey[400]),
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseCertificationsScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -107,7 +109,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Certifications & Licenses',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -145,7 +147,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
         backgroundColor: AppColors.primaryGreen,
         elevation: 4,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
+        label: const TText(
           'Add New',
           style: TextStyle(
             color: Colors.white,
@@ -240,7 +242,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                   AppColors.primaryGreen.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Certifications Found',
                 style: TextStyle(
                   fontSize: 22,
@@ -256,7 +258,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
             
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
+              child: TText(
                 'Add your professional certifications and licenses to keep track of renewals and stay compliant.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -514,7 +516,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                             child: OutlinedButton.icon(
                               onPressed: () {},
                               icon: const Icon(Icons.download, size: 18),
-                              label: const Text('Download'),
+                              label: const TText('Download'),
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(vertical: 12),
                                 side: BorderSide(color: Colors.grey.shade300),
@@ -529,7 +531,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                             child: ElevatedButton.icon(
                               onPressed: () {},
                               icon: const Icon(Icons.refresh, size: 18),
-                              label: const Text('Renew'),
+                              label: const TText('Renew'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppColors.primaryGreen,
                                 foregroundColor: Colors.white,
@@ -686,7 +688,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                 ),
                 const SizedBox(height: 24),
                 
-                const Text(
+                const TText(
                   'Filter Certifications',
                   style: TextStyle(
                     fontSize: 22,
@@ -697,7 +699,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                 const SizedBox(height: 24),
                 
                 // Status Filter
-                Text(
+                TText(
                   'Status',
                   style: TextStyle(
                     fontSize: 14,
@@ -711,25 +713,25 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                   runSpacing: 8,
                   children: [
                     _buildFilterChip(
-                      label: 'All',
+                      label: 'All'.tr,
                       isSelected: tempStatusFilter == 'all',
                       color: Colors.grey.shade600,
                       onTap: () => setModalState(() => tempStatusFilter = 'all'),
                     ),
                     _buildFilterChip(
-                      label: 'Active',
+                      label: 'Active'.tr,
                       isSelected: tempStatusFilter == 'active',
                       color: AppColors.primaryGreen,
                       onTap: () => setModalState(() => tempStatusFilter = 'active'),
                     ),
                     _buildFilterChip(
-                      label: 'Expiring Soon',
+                      label: 'Expiring Soon'.tr,
                       isSelected: tempStatusFilter == 'expiring_soon',
                       color: const Color(0xFFFF9A00),
                       onTap: () => setModalState(() => tempStatusFilter = 'expiring_soon'),
                     ),
                     _buildFilterChip(
-                      label: 'Expired',
+                      label: 'Expired'.tr,
                       isSelected: tempStatusFilter == 'expired',
                       color: const Color(0xFFFF5722),
                       onTap: () => setModalState(() => tempStatusFilter = 'expired'),
@@ -740,7 +742,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                 const SizedBox(height: 24),
                 
                 // Type Filter
-                Text(
+                TText(
                   'Type',
                   style: TextStyle(
                     fontSize: 14,
@@ -754,19 +756,19 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                   runSpacing: 8,
                   children: [
                     _buildFilterChip(
-                      label: 'All Types',
+                      label: 'All Types'.tr,
                       isSelected: tempTypeFilter == 'all',
                       color: Colors.grey.shade600,
                       onTap: () => setModalState(() => tempTypeFilter = 'all'),
                     ),
                     _buildFilterChip(
-                      label: 'License',
+                      label: 'License'.tr,
                       isSelected: tempTypeFilter == 'license',
                       color: const Color(0xFF2196F3),
                       onTap: () => setModalState(() => tempTypeFilter = 'license'),
                     ),
                     _buildFilterChip(
-                      label: 'Certification',
+                      label: 'Certification'.tr,
                       isSelected: tempTypeFilter == 'certification',
                       color: const Color(0xFF9C27B0),
                       onTap: () => setModalState(() => tempTypeFilter = 'certification'),
@@ -793,7 +795,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
+                        child: TText(
                           'Reset',
                           style: TextStyle(
                             fontSize: 16,
@@ -815,7 +817,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                           
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Filters applied successfully'),
+                              content: const TText('Filters applied successfully'),
                               backgroundColor: AppColors.primaryGreen,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
@@ -833,7 +835,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
+                        child: const TText(
                           'Apply Filters',
                           style: TextStyle(
                             fontSize: 16,
@@ -891,21 +893,21 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: const TText(
           'Add Certification/License',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: const Text(
+        content: const TText(
           'This feature would allow you to add new certifications and licenses with document upload capabilities.',
           style: TextStyle(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const TText('Close'),
           ),
         ],
       ),

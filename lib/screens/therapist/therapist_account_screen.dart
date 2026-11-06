@@ -8,6 +8,9 @@ import '../nurse/nurse_notification_preferences.dart';
 import '../nurse/nurse_faq_screen.dart';
 import '../help_center.dart';
 import '../onboarding/login_signup_screen.dart';
+import '../../widgets/language_picker_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 /// Account screen for physiotherapists / speech therapists.
 /// Mirrors the nurse account screen but without nurse-only items
@@ -200,7 +203,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          TText(
             'Professional',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700, letterSpacing: 0.5),
           ),
@@ -277,6 +280,15 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
             context,
             MaterialPageRoute(builder: (_) => NotificationPreferencesScreen(userData: _currentData)),
           ),
+        ),
+        _buildDivider(),
+        _buildSettingTile(
+          icon: Icons.translate,
+          title: 'Language',
+          subtitle: 'Change the app language',
+          iconColor: const Color(0xFF5C6BC0),
+          iconBg: const Color(0xFFE8EAF6),
+          onTap: () => showLanguagePickerSheet(context),
         ),
       ],
     );
@@ -409,7 +421,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
             children: [
               Icon(Icons.logout, color: Color(0xFFFF4757), size: 22),
               SizedBox(width: 12),
-              Text(
+              TText(
                 'Sign Out',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFFFF4757), letterSpacing: -0.2),
               ),
@@ -450,22 +462,22 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
           children: [
             Icon(Icons.logout, color: Color(0xFFFF4757)),
             SizedBox(width: 12),
-            Text('Sign Out'),
+            TText('Sign Out'),
           ],
         ),
-        content: Text(
+        content: TText(
           'Are you sure you want to sign out of your account?',
           style: TextStyle(color: Colors.grey.shade700, height: 1.5),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const TText('Cancel')),
           ElevatedButton(
             onPressed: _handleLogout,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFFF4757),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Sign Out', style: TextStyle(color: Colors.white)),
+            child: const TText('Sign Out', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -506,7 +518,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
       if (!mounted) return;
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to sign out. Please try again.'), backgroundColor: Colors.red),
+        const SnackBar(content: TText('Failed to sign out. Please try again.'), backgroundColor: Colors.red),
       );
     }
   }

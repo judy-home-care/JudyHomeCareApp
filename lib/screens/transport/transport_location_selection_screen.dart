@@ -4,6 +4,8 @@ import 'dart:async';
 import '../../utils/app_colors.dart';
 import '../../services/location_service.dart';
 import 'transport_booking_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class TransportLocationSelectionScreen extends StatefulWidget {
   final String transportType;
@@ -195,7 +197,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                 Icon(Icons.error_outline, color: Colors.white),
                 SizedBox(width: 12),
                 Expanded(
-                  child: Text('Error searching locations'),
+                  child: TText('Error searching locations'),
                 ),
               ],
             ),
@@ -214,7 +216,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
     if (_currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please wait for your location to be detected'),
+          content: const TText('Please wait for your location to be detected'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -242,7 +244,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
               ),
               const SizedBox(height: 16),
-            //   const Text('Loading location details...'),
+            //   const TText('Loading location details...'),
             ],
           ),
         ),
@@ -277,7 +279,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Failed to load location details'),
+          content: const TText('Failed to load location details'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -436,8 +438,8 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                   child: TextField(
                     controller: _destinationController,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                      hintText: 'Where to?',
+                    decoration: InputDecoration(
+                      hintText: 'Where to?'.tr,
                       border: InputBorder.none,
                       hintStyle: TextStyle(
                         fontSize: 15,
@@ -497,7 +499,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
               valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
             ),
             const SizedBox(height: 16),
-            //const Text('Searching for locations...'),
+            //const TText('Searching for locations...'),
           ],
         ),
       );
@@ -523,7 +525,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
               color: Colors.grey.shade300,
             ),
             const SizedBox(height: 24),
-            Text(
+            TText(
               'Search for your destination',
               style: TextStyle(
                 fontSize: 18,
@@ -532,7 +534,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Type the hospital, clinic, or address where you need to go',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -560,7 +562,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
               color: Colors.grey.shade300,
             ),
             const SizedBox(height: 24),
-            Text(
+            TText(
               'No locations found',
               style: TextStyle(
                 fontSize: 18,
@@ -569,7 +571,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Try a different search term',
               textAlign: TextAlign.center,
               style: TextStyle(

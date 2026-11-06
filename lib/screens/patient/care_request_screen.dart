@@ -5,6 +5,8 @@ import '../../utils/app_colors.dart';
 import '../../services/location_service.dart';
 import '../../services/care_request_service.dart';
 import '../../models/care_request/care_request_models.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class CareRequestScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -153,7 +155,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         if (results.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('No locations found. Try a different search term.'),
+              content: const TText('No locations found. Try a different search term.'),
               backgroundColor: Colors.orange,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -222,7 +224,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
       
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Failed to load location details'),
+          content: const TText('Failed to load location details'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -317,7 +319,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               children: [
                 Icon(Icons.check_circle, color: Colors.white, size: 20),
                 SizedBox(width: 12),
-                Expanded(child: Text('Location detected successfully')),
+                Expanded(child: TText('Location detected successfully')),
               ],
             ),
             backgroundColor: const Color(0xFF199A8E),
@@ -485,7 +487,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: const TText(
             'Request Home Care',
             style: TextStyle(
               color: Color(0xFF1A1A1A),
@@ -561,7 +563,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'About Care Requests',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
@@ -760,7 +762,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           maxLines: 4,
           textInputAction: TextInputAction.newline,
           decoration: InputDecoration(
-            hintText: 'Describe your care needs in detail...',
+            hintText: 'Describe your care needs in detail...'.tr,
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -789,7 +791,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           textInputAction: TextInputAction.done,
           onEditingComplete: _dismissKeyboard,
           decoration: InputDecoration(
-            hintText: 'Any special requirements? (Optional)',
+            hintText: 'Any special requirements? (Optional)'.tr,
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -869,7 +871,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                     IconButton(
                       icon: const Icon(Icons.my_location, color: Color(0xFF199A8E)),
                       onPressed: _isLoadingLocation ? null : _getCurrentLocation,
-                      tooltip: 'Use current location',
+                      tooltip: 'Use current location'.tr,
                     ),
                   ],
                 ),
@@ -921,7 +923,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                                 valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
                               ),
                               SizedBox(height: 12),
-                              Text('Searching locations...'),
+                              TText('Searching locations...'),
                             ],
                           ),
                         ),
@@ -934,9 +936,9 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                               children: [
                                 Icon(Icons.location_off, size: 48, color: Colors.grey.shade400),
                                 const SizedBox(height: 12),
-                                Text('No locations found', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
+                                TText('No locations found', style: TextStyle(fontSize: 14, color: Colors.grey.shade600)),
                                 const SizedBox(height: 4),
-                                Text('Try a different search term', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                                TText('Try a different search term', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                               ],
                             ),
                           )
@@ -961,7 +963,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 textInputAction: TextInputAction.done,
                 onEditingComplete: _dismissKeyboard,
                 decoration: InputDecoration(
-                  hintText: 'City',
+                  hintText: 'City'.tr,
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -984,7 +986,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
               child: DropdownButtonFormField<String>(
                 value: _selectedRegion,
                 decoration: InputDecoration(
-                  hintText: 'Region',
+                  hintText: 'Region'.tr,
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -1158,7 +1160,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         DropdownButtonFormField<String>(
           value: _selectedTime,
           decoration: InputDecoration(
-            hintText: 'Preferred time of day (Optional)',
+            hintText: 'Preferred time of day (Optional)'.tr,
             prefixIcon: const Icon(Icons.access_time, color: Color(0xFF199A8E)),
             filled: true,
             fillColor: Colors.white,
@@ -1208,7 +1210,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               )
-            : const Text(
+            : const TText(
                 'Submit Request',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
               ),

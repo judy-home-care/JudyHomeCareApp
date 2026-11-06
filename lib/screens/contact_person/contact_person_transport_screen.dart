@@ -4,6 +4,8 @@ import '../../utils/app_colors.dart';
 import '../../services/contact_person/contact_person_service.dart';
 import '../../models/contact_person/contact_person_models.dart';
 import '../transport/transport_location_selection_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonTransportScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -185,7 +187,7 @@ class _ContactPersonTransportScreenState
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const TText(
               'Transport Requests',
               style: TextStyle(
                 color: Color(0xFF1A1A1A),
@@ -234,7 +236,7 @@ class _ContactPersonTransportScreenState
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.add, size: 22, color: Colors.white),
-        label: const Text(
+        label: const TText(
           'New Request',
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -272,7 +274,7 @@ class _ContactPersonTransportScreenState
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Request Transport',
               style: TextStyle(
                 fontSize: 22,
@@ -429,7 +431,7 @@ class _ContactPersonTransportScreenState
           controller: _searchController,
           onChanged: _onSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Search by location...',
+            hintText: 'Search by location...'.tr,
             hintStyle: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 14,
@@ -560,7 +562,7 @@ class _ContactPersonTransportScreenState
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'Loading transport requests...',
             style: TextStyle(
               fontSize: 14,
@@ -597,7 +599,7 @@ class _ContactPersonTransportScreenState
             ElevatedButton.icon(
               onPressed: () => _loadTransportRequests(refresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,

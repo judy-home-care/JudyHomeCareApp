@@ -4,6 +4,8 @@ import '../../services/progress_notes/progress_notes_service.dart';
 import '../../models/progress_notes/progress_note_models.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ProgressNoteScreen extends StatefulWidget {
   const ProgressNoteScreen({Key? key}) : super(key: key);
@@ -432,7 +434,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Progress notes updated'),
+              child: TText('Progress notes updated'),
             ),
           ],
         ),
@@ -546,7 +548,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Filter Progress Notes',
                         style: TextStyle(
                           fontSize: 20,
@@ -568,7 +570,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Date Range
-                      const Text(
+                      const TText(
                         'Date Range',
                         style: TextStyle(
                           fontSize: 14,
@@ -623,7 +625,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                       const SizedBox(height: 24),
                       
                       // Sort By
-                      const Text(
+                      const TText(
                         'Sort By',
                         style: TextStyle(
                           fontSize: 14,
@@ -683,7 +685,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Reset'),
+                          child: const TText('Reset'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -706,7 +708,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Apply Filters',
                             style: TextStyle(
                               fontSize: 15,
@@ -777,7 +779,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Progress Notes',
                     style: TextStyle(
                       fontSize: 24,
@@ -809,7 +811,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'Progress Notes',
                 style: TextStyle(
                   fontSize: 24,
@@ -828,7 +830,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -885,7 +887,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                   color: Color(0xFF199A8E),
                 ),
                 onPressed: _showFilterModal,
-                tooltip: 'Filter',
+                tooltip: 'Filter'.tr,
               ),
               if (_hasActiveFilters())
                 Positioned(
@@ -1020,7 +1022,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          const TText(
                             'Daily Progress Note',
                             style: TextStyle(
                               fontSize: 16,
@@ -1158,7 +1160,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Text(
+                              TText(
                                 'Visiting Nurse',
                                 style: TextStyle(
                                   fontSize: 11,
@@ -1192,7 +1194,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                         size: 16,
                       ),
                       const SizedBox(width: 8),
-                      Text(
+                      TText(
                         'Tap to view complete details',
                         style: TextStyle(
                           fontSize: 12,
@@ -1215,7 +1217,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                         children: [
                           Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
                           const SizedBox(width: 4),
-                          Text(
+                          TText(
                             'Recorded',
                             style: TextStyle(
                               fontSize: 11,
@@ -1334,7 +1336,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
-                        child: Text(
+                        child: TText(
                           'Daily Progress Note',
                           style: TextStyle(
                             fontSize: 20,
@@ -1385,7 +1387,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TText(
                                   'Visit Date & Time',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -1457,7 +1459,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  TText(
                                     'Nurse',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -1503,7 +1505,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                                       color: Color(0xFF199A8E),
                                     ),
                                     const SizedBox(width: 6),
-                                    Text(
+                                    TText(
                                       'General Condition',
                                       style: TextStyle(
                                         fontSize: 12,
@@ -1543,7 +1545,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                                       color: Color(0xFFFF9A00),
                                     ),
                                     const SizedBox(width: 6),
-                                    Text(
+                                    TText(
                                       'Pain Level',
                                       style: TextStyle(
                                         fontSize: 12,
@@ -1589,35 +1591,35 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                             if (noteDetail.vitals!['temperature'] != null)
                               _buildDetailVitalBadge(
                                 icon: Icons.thermostat,
-                                label: 'Temp',
+                                label: 'Temp'.tr,
                                 value: '${noteDetail.vitals!['temperature']}°C',
                                 color: const Color(0xFFFF9A00),
                               ),
                             if (noteDetail.vitals!['pulse'] != null)
                               _buildDetailVitalBadge(
                                 icon: Icons.monitor_heart,
-                                label: 'Pulse',
+                                label: 'Pulse'.tr,
                                 value: '${noteDetail.vitals!['pulse']} bpm',
                                 color: const Color(0xFFFF4757),
                               ),
                             if (noteDetail.vitals!['blood_pressure'] != null)
                               _buildDetailVitalBadge(
                                 icon: Icons.favorite,
-                                label: 'BP',
+                                label: 'BP'.tr,
                                 value: noteDetail.vitals!['blood_pressure'].toString(),
                                 color: const Color(0xFFFF6B9D),
                               ),
                             if (noteDetail.vitals!['respiration'] != null)
                               _buildDetailVitalBadge(
                                 icon: Icons.air,
-                                label: 'Resp',
+                                label: 'Resp'.tr,
                                 value: '${noteDetail.vitals!['respiration']}/min',
                                 color: const Color(0xFF2196F3),
                               ),
                             if (noteDetail.vitals!['spo2'] != null)
                               _buildDetailVitalBadge(
                                 icon: Icons.speed,
-                                label: 'SpO₂',
+                                label: 'SpO₂'.tr,
                                 value: '${noteDetail.vitals!['spo2']}%',
                                 color: const Color(0xFF199A8E),
                               ),
@@ -1711,7 +1713,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                       children: [
                         Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text(
+                        TText(
                           'Recorded',
                           style: TextStyle(
                             fontSize: 11,
@@ -2147,7 +2149,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
               color: Colors.red.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Something went wrong',
               style: TextStyle(
                 fontSize: 20,
@@ -2168,7 +2170,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
             ElevatedButton.icon(
               onPressed: () => _loadProgressNotes(refresh: true, forceRefresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,

@@ -6,6 +6,9 @@ import '../../services/auth/auth_service.dart';
 import '../../models/auth/auth_models.dart';
 import 'login_screen.dart';
 import 'pending_approval_screen.dart';
+import '../../config/countries.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 /// Ultra-Optimized SignUp Screen - No animations, debounced typing
 /// Perfect for low-end devices with minimal CPU usage
@@ -43,12 +46,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String _selectedCountryCode = '+233';
   String _selectedCountryFlag = '🇬🇭';
 
-  final List<Map<String, String>> _countries = [
-    {'name': 'Ghana', 'code': '+233', 'flag': '🇬🇭'},
-    {'name': 'Nigeria', 'code': '+234', 'flag': '🇳🇬'},
-    {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
-    {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
-  ];
+  final List<Map<String, String>> _countries = kSupportedCountries;
   
   // OPTIMIZED: Password strength tracking
   int _passwordStrength = 0;
@@ -356,7 +354,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: [
           _buildSimpleTextField(
             controller: _nameController,
-            label: 'Full Name',
+            label: 'Full Name'.tr,
             hint: 'Enter your full name',
             icon: Icons.person_outline_rounded,
             validator: (value) {
@@ -369,7 +367,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(height: 20),
           _buildSimpleTextField(
             controller: _emailController,
-            label: 'Email Address',
+            label: 'Email Address'.tr,
             hint: 'your.email@example.com',
             icon: Icons.mail_outline_rounded,
             keyboardType: TextInputType.emailAddress,
@@ -492,7 +490,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   return null;
                 },
                 decoration: InputDecoration(
-                  hintText: 'Phone number',
+                  hintText: 'Phone number'.tr,
                   hintStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
@@ -549,7 +547,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         children: [
           _buildSimpleTextField(
             controller: _passwordController,
-            label: 'Password',
+            label: 'Password'.tr,
             hint: 'Create a strong password',
             icon: Icons.lock_outline_rounded,
             obscureText: !_isPasswordVisible,
@@ -572,7 +570,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           const SizedBox(height: 20),
           _buildSimpleTextField(
             controller: _confirmPasswordController,
-            label: 'Confirm Password',
+            label: 'Confirm Password'.tr,
             hint: 'Re-enter your password',
             icon: Icons.lock_outline_rounded,
             obscureText: !_isConfirmPasswordVisible,
@@ -609,7 +607,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         if (_selectedUserType == 'nurse') ...[
           _buildSimpleTextField(
             controller: _licenseNumberController,
-            label: 'License Number',
+            label: 'License Number'.tr,
             hint: 'Enter your professional license number',
             icon: Icons.badge_outlined,
             validator: (value) {
@@ -734,7 +732,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       children: [
         Row(
           children: [
-            Text(
+            TText(
               'Password Strength: ',
               style: TextStyle(
                 fontSize: 13,
@@ -787,7 +785,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Specialization',
           style: TextStyle(
             fontSize: 13,
@@ -808,7 +806,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           child: DropdownButtonFormField<String>(
             value: _selectedSpecialization,
             decoration: InputDecoration(
-              hintText: 'Select your specialization',
+              hintText: 'Select your specialization'.tr,
               hintStyle: TextStyle(
                 color: Colors.grey.shade400,
                 fontSize: 14,
@@ -1099,7 +1097,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Back',
                   style: TextStyle(
                     fontSize: 16,
@@ -1151,7 +1149,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 size: 20,
                               ),
                               SizedBox(width: 6),
-                              Text(
+                              TText(
                                 'Create Account',
                                 style: TextStyle(
                                   fontSize: 16,
@@ -1165,7 +1163,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
+                            TText(
                               'Continue',
                               style: TextStyle(
                                 fontSize: 16,
@@ -1191,7 +1189,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text(
+        TText(
           'Already have an account? ',
           style: TextStyle(
             fontSize: 14,
@@ -1200,7 +1198,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         GestureDetector(
           onTap: () => Navigator.pop(context),
-          child: const Text(
+          child: const TText(
             'Sign In',
             style: TextStyle(
               fontSize: 14,
@@ -1361,7 +1359,7 @@ class _CountryPicker extends StatelessWidget {
         ),
         const Padding(
           padding: EdgeInsets.all(20),
-          child: Text(
+          child: TText(
             'Select Country',
             style: TextStyle(
               fontSize: 18,

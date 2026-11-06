@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'firebase_options.dart';
+import 'services/i18n/app_language.dart';
 import 'utils/app_colors.dart';
 import 'utils/secure_storage.dart';
 import 'services/auth/auth_service.dart';
@@ -18,6 +20,7 @@ import 'screens/therapist/therapist_main_screen.dart';
 import 'screens/patient/patient_main_screen.dart';
 import 'screens/contact_person/patient_selector_screen.dart';
 import 'screens/contact_person/contact_person_main_screen.dart';
+import 'services/i18n/t_text.dart';
 
 /// Global RouteObserver for tracking navigation and refreshing data
 final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
@@ -58,6 +61,9 @@ void main() async {
   } catch (e) {
     print('❌ PreferencesService initialization failed: $e');
   }
+
+  // 🌍 Load the saved app language so the UI renders translated from frame one
+  await AppLanguage.init();
   
   // 🔔 Initialize Notification Service
   try {
@@ -83,16 +89,29 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Judy Home Healthcare',
-      debugShowCheckedModeBanner: false,
-      navigatorObservers: [routeObserver],
-      theme: ThemeData(
-        primaryColor: AppColors.primaryGreen,
-        scaffoldBackgroundColor: Colors.white,
-        useMaterial3: true,
-      ),
-      home: const AppInitializer(),
+    return ValueListenableBuilder<String>(
+      valueListenable: AppLanguage.current,
+      builder: (context, languageCode, _) {
+        return MaterialApp(
+          title: 'Judy Home Healthcare',
+          debugShowCheckedModeBanner: false,
+          navigatorObservers: [routeObserver],
+          locale: Locale(languageCode),
+          supportedLocales:
+              AppLanguage.supported.map((l) => Locale(l['code']!)).toList(),
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          theme: ThemeData(
+            primaryColor: AppColors.primaryGreen,
+            scaffoldBackgroundColor: Colors.white,
+            useMaterial3: true,
+          ),
+          home: const AppInitializer(),
+        );
+      },
     );
   }
 }
@@ -480,7 +499,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Logout',
                   style: TextStyle(
                     fontSize: 16,

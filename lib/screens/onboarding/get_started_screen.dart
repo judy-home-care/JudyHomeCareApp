@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/registration_screen.dart';
+import '../../services/i18n/t_text.dart';
 
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
@@ -68,7 +69,7 @@ class GetStartedScreen extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           const Expanded(
-            child: Text(
+            child: TText(
               'Our Services',
               style: TextStyle(
                 fontSize: 20,
@@ -122,7 +123,7 @@ class GetStartedScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
+          TText(
             'Professional nursing and care services designed to meet the needs of every stage of life. Reliable, compassionate, and dignified care.',
             style: TextStyle(
               fontSize: 14,
@@ -172,7 +173,7 @@ class GetStartedScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'What We Offer',
           style: TextStyle(
             fontSize: 22,
@@ -181,7 +182,7 @@ class GetStartedScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        TText(
           'Choose a single service or build a complete care plan',
           style: TextStyle(
             fontSize: 14,
@@ -279,7 +280,7 @@ class GetStartedScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'How It Works',
           style: TextStyle(
             fontSize: 22,
@@ -404,7 +405,7 @@ class GetStartedScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                TText(
                   'After registration, our team will contact you on the phone number you provide to discuss your care needs.',
                   style: TextStyle(
                     fontSize: 13,
@@ -449,7 +450,7 @@ class GetStartedScreen extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TText(
                       'Want to learn more?',
                       style: TextStyle(
                         fontSize: 16,
@@ -458,7 +459,7 @@ class GetStartedScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 2),
-                    Text(
+                    TText(
                       'Visit our website for detailed information',
                       style: TextStyle(
                         fontSize: 13,
@@ -476,7 +477,7 @@ class GetStartedScreen extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: () => _launchWebsite(),
               icon: const Icon(Icons.open_in_new_rounded, size: 18),
-              label: const Text('Visit judyscareagency.com'),
+              label: const TText('Visit judyscareagency.com'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _primaryColor,
                 side: const BorderSide(color: _primaryColor),
@@ -539,7 +540,7 @@ class GetStartedScreen extends StatelessWidget {
               children: [
                 Icon(Icons.how_to_reg_rounded, size: 22),
                 SizedBox(width: 12),
-                Text(
+                TText(
                   'Request a Callback',
                   style: TextStyle(
                     fontSize: 17,

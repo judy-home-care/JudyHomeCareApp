@@ -8,6 +8,8 @@ import '../../services/patients_assessments/progress_note_service.dart';
 import '../../services/location_service.dart';
 import '../../utils/app_colors.dart';
 import '../../models/care_request/care_request_models.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 // ==================== VITAL SIGNS VALIDATION ====================
 enum VitalStatus { normal, low, high, critical }
@@ -712,7 +714,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
             onPressed: () => Navigator.of(context).pop(),
           ),
-          title: const Text(
+          title: const TText(
             'Medical Assessment',
             style: TextStyle(
               color: Color(0xFF1A1A1A),
@@ -834,7 +836,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                         ]
                       : null,
                 ),
-                child: Text(
+                child: TText(
                   'New Patient',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -868,7 +870,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                         ]
                       : null,
                 ),
-                child: Text(
+                child: TText(
                   'Existing Patient',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -894,7 +896,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             Expanded(
               child: _buildTextField(
                 controller: _patientFirstNameController,
-                label: 'First Name',
+                label: 'First Name'.tr,
                 icon: Icons.person_outline,
                 validator: (value) {
                   if (_isNewPatient && (value == null || value.isEmpty)) {
@@ -908,7 +910,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             Expanded(
               child: _buildTextField(
                 controller: _patientLastNameController,
-                label: 'Last Name',
+                label: 'Last Name'.tr,
                 icon: Icons.person_outline,
                 validator: (value) {
                   if (_isNewPatient && (value == null || value.isEmpty)) {
@@ -924,7 +926,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         
         _buildTextField(
           controller: _patientPhoneController,
-          label: 'Phone Number',
+          label: 'Phone Number'.tr,
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
           validator: (value) {
@@ -938,7 +940,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         
         _buildTextField(
           controller: _patientGhanaCardController,
-          label: 'Ghana Card Number',
+          label: 'Ghana Card Number'.tr,
           icon: Icons.badge_outlined,
           validator: (value) {
             if (_isNewPatient && (value == null || value.isEmpty)) {
@@ -951,7 +953,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         
         _buildDateField(
           controller: _patientDoBController,
-          label: 'Date of Birth',
+          label: 'Date of Birth'.tr,
           icon: Icons.calendar_today_outlined,
         ),
         const SizedBox(height: 16),
@@ -986,7 +988,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               color: Colors.grey.shade400,
             ),
             const SizedBox(height: 16),
-            Text(
+            TText(
               'No patients found',
               style: TextStyle(
                 fontSize: 16,
@@ -995,7 +997,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            TText(
               'Switch to "New Patient" to create one',
               style: TextStyle(
                 fontSize: 14,
@@ -1010,7 +1012,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TText(
           'Select Patient',
           style: TextStyle(
             fontSize: 14,
@@ -1043,7 +1045,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               ),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
-            hint: const Text('Choose a patient'),
+            hint: const TText('Choose a patient'),
             isExpanded: true,
             items: _patients.map((patient) {
               String patientInfo = patient.name;
@@ -1090,7 +1092,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TText(
           'Gender',
           style: TextStyle(
             fontSize: 14,
@@ -1169,7 +1171,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           _buildSectionHeader('Client & Emergency Info', 'Step 2 of $_totalSteps'),
           const SizedBox(height: 24),
           
-          Text(
+          TText(
             'Client Information',
             style: TextStyle(
               fontSize: 16,
@@ -1187,7 +1189,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Expanded(
                 child: _buildTextField(
                   controller: _occupationController,
-                  label: 'Occupation (Optional)',
+                  label: 'Occupation (Optional)'.tr,
                   icon: Icons.work_outline,
                 ),
               ),
@@ -1195,7 +1197,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Expanded(
                 child: _buildTextField(
                   controller: _religionController,
-                  label: 'Religion (Optional)',
+                  label: 'Religion (Optional)'.tr,
                   icon: Icons.church_outlined,
                 ),
               ),
@@ -1204,7 +1206,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           const SizedBox(height: 32),
           
-          Text(
+          TText(
             'Emergency Contact 1',
             style: TextStyle(
               fontSize: 16,
@@ -1216,7 +1218,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           _buildTextField(
             controller: _emergencyContact1NameController,
-            label: 'Contact Name',
+            label: 'Contact Name'.tr,
             icon: Icons.person_outline,
             onChanged: (_) => setState(() {}),
             validator: (value) {
@@ -1233,7 +1235,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Expanded(
                 child: _buildTextField(
                   controller: _emergencyContact1RelationshipController,
-                  label: 'Relationship',
+                  label: 'Relationship'.tr,
                   icon: Icons.family_restroom_outlined,
                   onChanged: (_) => setState(() {}),
                   validator: (value) {
@@ -1248,7 +1250,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Expanded(
                 child: _buildTextField(
                   controller: _emergencyContact1PhoneController,
-                  label: 'Phone',
+                  label: 'Phone'.tr,
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   onChanged: (_) => setState(() {}),
@@ -1265,7 +1267,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           const SizedBox(height: 32),
           
-          Text(
+          TText(
             'Contact Person',
             style: TextStyle(
               fontSize: 16,
@@ -1277,7 +1279,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
           _buildTextField(
             controller: _emergencyContact2NameController,
-            label: 'Contact Name *',
+            label: 'Contact Name *'.tr,
             icon: Icons.person_outline,
             onChanged: (_) => setState(() {}),
             validator: (value) {
@@ -1294,7 +1296,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Expanded(
                 child: _buildTextField(
                   controller: _emergencyContact2RelationshipController,
-                  label: 'Relationship *',
+                  label: 'Relationship *'.tr,
                   icon: Icons.family_restroom_outlined,
                   onChanged: (_) => setState(() {}),
                   validator: (value) {
@@ -1309,7 +1311,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Expanded(
                 child: _buildTextField(
                   controller: _emergencyContact2PhoneController,
-                  label: 'Phone *',
+                  label: 'Phone *'.tr,
                   icon: Icons.phone_outlined,
                   keyboardType: TextInputType.phone,
                   onChanged: (_) => setState(() {}),
@@ -1335,7 +1337,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            TText(
               'Physical Address',
               style: TextStyle(
                 fontSize: 14,
@@ -1355,7 +1357,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
+                  TText(
                     'Getting location...',
                     style: TextStyle(
                       fontSize: 12,
@@ -1372,7 +1374,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                   size: 16,
                   color: Color(0xFF199A8E),
                 ),
-                label: const Text(
+                label: const TText(
                   'Refresh',
                   style: TextStyle(
                     fontSize: 12,
@@ -1536,7 +1538,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           _buildTextField(
             controller: _presentingConditionController,
-            label: 'Presenting Condition/Diagnosis',
+            label: 'Presenting Condition/Diagnosis'.tr,
             icon: Icons.medical_services_outlined,
             maxLines: 3,
             onChanged: (_) => setState(() {}),
@@ -1551,7 +1553,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
           _buildTextField(
             controller: _pastMedicalHistoryController,
-            label: 'Past Medical History',
+            label: 'Past Medical History'.tr,
             icon: Icons.history_outlined,
             maxLines: 3,
             onChanged: (_) => setState(() {}),
@@ -1566,7 +1568,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
           _buildTextField(
             controller: _allergiesController,
-            label: 'Allergies',
+            label: 'Allergies'.tr,
             icon: Icons.warning_amber_outlined,
             maxLines: 2,
             onChanged: (_) => setState(() {}),
@@ -1581,7 +1583,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
           _buildTextField(
             controller: _currentMedicationsController,
-            label: 'Current Medications',
+            label: 'Current Medications'.tr,
             icon: Icons.medication_outlined,
             maxLines: 3,
             onChanged: (_) => setState(() {}),
@@ -1596,7 +1598,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
           _buildTextField(
             controller: _specialNeedsController,
-            label: 'Special Needs',
+            label: 'Special Needs'.tr,
             icon: Icons.accessible_outlined,
             maxLines: 2,
             onChanged: (_) => setState(() {}),
@@ -1621,7 +1623,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           _buildSectionHeader('Assessment & Vitals', 'Step 4 of $_totalSteps'),
           const SizedBox(height: 24),
           
-          Text(
+          TText(
             'Initial Assessment',
             style: TextStyle(
               fontSize: 16,
@@ -1632,7 +1634,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           const SizedBox(height: 16),
           
           _buildDropdownField(
-            label: 'General Condition',
+            label: 'General Condition'.tr,
             value: _generalCondition,
             items: const ['stable', 'unstable'],
             onChanged: (value) {
@@ -1647,7 +1649,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             children: [
               Expanded(
                 child: _buildDropdownField(
-                  label: 'Hydration',
+                  label: 'Hydration'.tr,
                   value: _hydrationStatus,
                   items: const ['adequate', 'dehydrated'],
                   onChanged: (value) {
@@ -1660,7 +1662,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               const SizedBox(width: 12),
               Expanded(
                 child: _buildDropdownField(
-                  label: 'Nutrition',
+                  label: 'Nutrition'.tr,
                   value: _nutritionStatus,
                   items: const ['adequate', 'malnourished'],
                   onChanged: (value) {
@@ -1675,7 +1677,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           const SizedBox(height: 16),
           
           _buildDropdownField(
-            label: 'Mobility',
+            label: 'Mobility'.tr,
             value: _mobilityStatus,
             items: const ['independent', 'assisted', 'bedridden'],
             onChanged: (value) {
@@ -1692,7 +1694,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           if (_hasWounds) ...[
             _buildTextField(
               controller: _woundDescriptionController,
-              label: 'Wound Description',
+              label: 'Wound Description'.tr,
               icon: Icons.note_outlined,
               maxLines: 2,
               validator: (value) {
@@ -1709,7 +1711,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           const SizedBox(height: 32),
           
-          Text(
+          TText(
             'Vital Signs',
             style: TextStyle(
               fontSize: 16,
@@ -1725,7 +1727,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             children: [
               Expanded(
                 child: _buildVitalFieldWithValidation(
-                  label: 'Temperature (°C)',
+                  label: 'Temperature (°C)'.tr,
                   controller: _temperatureController,
                   hint: 'e.g., 36.5',
                   vitalType: 'temperature',
@@ -1735,7 +1737,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               const SizedBox(width: 12),
               Expanded(
                 child: _buildVitalFieldWithValidation(
-                  label: 'Pulse (bpm)',
+                  label: 'Pulse (bpm)'.tr,
                   controller: _pulseController,
                   hint: 'e.g., 72',
                   vitalType: 'pulse',
@@ -1752,7 +1754,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             children: [
               Expanded(
                 child: _buildVitalFieldWithValidation(
-                  label: 'Resp Rate (/min)',
+                  label: 'Resp Rate (/min)'.tr,
                   controller: _respiratoryRateController,
                   hint: 'e.g., 16',
                   vitalType: 'respiration',
@@ -1762,7 +1764,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               const SizedBox(width: 12),
               Expanded(
                 child: _buildBloodPressureFieldWithValidation(
-                  label: 'BP (mmHg)',
+                  label: 'BP (mmHg)'.tr,
                   controller: _bloodPressureController,
                   hint: 'e.g., 120/80',
                 ),
@@ -1777,7 +1779,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             children: [
               Expanded(
                 child: _buildVitalFieldWithValidation(
-                  label: 'SpO₂ (%)',
+                  label: 'SpO₂ (%)'.tr,
                   controller: _spo2Controller,
                   hint: 'e.g., 98',
                   vitalType: 'spo2',
@@ -1787,7 +1789,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               const SizedBox(width: 12),
               Expanded(
                 child: _buildWeightFieldWithValidation(
-                  label: 'Weight (kg)',
+                  label: 'Weight (kg)'.tr,
                   controller: _weightController,
                   hint: 'e.g., 70',
                 ),
@@ -1797,7 +1799,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           const SizedBox(height: 32),
           
-          Text(
+          TText(
             'Nursing Impression',
             style: TextStyle(
               fontSize: 16,
@@ -1809,7 +1811,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           
           _buildTextField(
             controller: _nursingImpressionController,
-            label: 'Initial Nursing Impression',
+            label: 'Initial Nursing Impression'.tr,
             icon: Icons.description_outlined,
             maxLines: 5,
             hint: 'Describe the patient\'s general condition and details of care given...',
@@ -1870,7 +1872,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
+              child: TText(
                 'Patient has wounds/ulcers',
                 style: TextStyle(
                   fontSize: 15,
@@ -1892,7 +1894,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
+            TText(
               'Pain Level',
               style: TextStyle(
                 fontSize: 14,
@@ -1957,14 +1959,14 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  TText(
                     'No Pain',
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
                     ),
                   ),
-                  Text(
+                  TText(
                     'Worst Pain',
                     style: TextStyle(
                       fontSize: 12,
@@ -2015,7 +2017,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    TText(
                       'Back',
                       style: TextStyle(
                         fontSize: 16,
@@ -2395,7 +2397,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           ],
         ),
         const SizedBox(height: 4),
-        Text(
+        TText(
           'Normal: <120/<80 mmHg',
           style: TextStyle(
             fontSize: 11,
@@ -2545,7 +2547,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           ],
         ),
         const SizedBox(height: 4),
-        Text(
+        TText(
           'Enter weight in kg',
           style: TextStyle(
             fontSize: 11,
@@ -2676,7 +2678,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               return null;
             },
             decoration: InputDecoration(
-              hintText: 'YYYY-MM-DD',
+              hintText: 'YYYY-MM-DD'.tr,
               hintStyle: TextStyle(
                 color: Colors.grey.shade400,
                 fontSize: 14,

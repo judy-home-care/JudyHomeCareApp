@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import 'widgets/saved_cards_autopay_section.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({Key? key}) : super(key: key);
@@ -16,7 +18,7 @@ class PaymentMethodsScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Payment Methods',
           style: TextStyle(
             color: Colors.white,
@@ -68,7 +70,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              const TText(
                                 'Secure Payments',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -77,7 +79,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
+                              TText(
                                 'All transactions are encrypted and secure',
                                 style: TextStyle(
                                   color: Colors.white.withOpacity(0.9),
@@ -102,7 +104,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             // Payment Methods List
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
+              child: TText(
                 'Available Payment Methods',
                 style: TextStyle(
                   fontSize: 16,
@@ -206,7 +208,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        const TText(
                           'Payment Information',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -215,7 +217,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
+                        TText(
                           'Select a payment method during checkout. Your payment details are never stored on our servers.',
                           style: TextStyle(
                             fontSize: 13,
@@ -396,7 +398,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             // Features
-            const Text(
+            const TText(
               'Features',
               style: TextStyle(
                 fontSize: 16,
@@ -449,7 +451,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text(
+                    child: TText(
                       'You can select this payment method during checkout.',
                       style: TextStyle(
                         fontSize: 13,
@@ -474,7 +476,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
+                child: const TText(
                   'Got it',
                   style: TextStyle(
                     fontSize: 16,
@@ -558,7 +560,7 @@ class PaymentMethodsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: const Center(
-        child: Text(
+        child: TText(
           'VISA',
           style: TextStyle(
             color: Colors.white,
@@ -621,7 +623,7 @@ class PaymentMethodsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: const Center(
-        child: Text(
+        child: TText(
           'AMEX',
           style: TextStyle(
             color: Colors.white,

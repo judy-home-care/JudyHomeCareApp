@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class CarePlanHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -131,7 +133,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'My Care Plans',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -437,7 +439,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                   AppColors.primaryGreen.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Care Plans Found',
                 style: TextStyle(
                   fontSize: 22,
@@ -453,7 +455,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
             
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
+              child: TText(
                 'Your assigned care plans will appear here. Check back later or adjust your filters.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -660,7 +662,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            TText(
                               'Progress',
                               style: TextStyle(
                                 fontSize: 12,
@@ -954,7 +956,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                 ),
                 const SizedBox(height: 24),
                 
-                const Text(
+                const TText(
                   'Filter Care Plans',
                   style: TextStyle(
                     fontSize: 22,
@@ -965,7 +967,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                 const SizedBox(height: 24),
                 
                 // Status Filter
-                Text(
+                TText(
                   'Status',
                   style: TextStyle(
                     fontSize: 14,
@@ -979,19 +981,19 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                   runSpacing: 8,
                   children: [
                     _buildFilterChip(
-                      label: 'All',
+                      label: 'All'.tr,
                       isSelected: tempStatusFilter == 'all',
                       color: Colors.grey.shade600,
                       onTap: () => setModalState(() => tempStatusFilter = 'all'),
                     ),
                     _buildFilterChip(
-                      label: 'Active',
+                      label: 'Active'.tr,
                       isSelected: tempStatusFilter == 'active',
                       color: AppColors.primaryGreen,
                       onTap: () => setModalState(() => tempStatusFilter = 'active'),
                     ),
                     _buildFilterChip(
-                      label: 'Completed',
+                      label: 'Completed'.tr,
                       isSelected: tempStatusFilter == 'completed',
                       color: const Color(0xFF2196F3),
                       onTap: () => setModalState(() => tempStatusFilter = 'completed'),
@@ -1002,7 +1004,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                 const SizedBox(height: 24),
                 
                 // Care Type Filter
-                Text(
+                TText(
                   'Care Type',
                   style: TextStyle(
                     fontSize: 14,
@@ -1016,19 +1018,19 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                   runSpacing: 8,
                   children: [
                     _buildFilterChip(
-                      label: 'All Types',
+                      label: 'All Types'.tr,
                       isSelected: tempCareTypeFilter == 'all',
                       color: Colors.grey.shade600,
                       onTap: () => setModalState(() => tempCareTypeFilter = 'all'),
                     ),
                     _buildFilterChip(
-                      label: 'Elderly Care',
+                      label: 'Elderly Care'.tr,
                       isSelected: tempCareTypeFilter == 'elderly_care',
                       color: const Color(0xFF2196F3),
                       onTap: () => setModalState(() => tempCareTypeFilter = 'elderly_care'),
                     ),
                     _buildFilterChip(
-                      label: 'Pediatric Care',
+                      label: 'Pediatric Care'.tr,
                       isSelected: tempCareTypeFilter == 'pediatric_care',
                       color: const Color(0xFFFF9A00),
                       onTap: () => setModalState(() => tempCareTypeFilter = 'pediatric_care'),
@@ -1039,7 +1041,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                 const SizedBox(height: 24),
                 
                 // Priority Filter
-                Text(
+                TText(
                   'Priority',
                   style: TextStyle(
                     fontSize: 14,
@@ -1053,25 +1055,25 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                   runSpacing: 8,
                   children: [
                     _buildFilterChip(
-                      label: 'All',
+                      label: 'All'.tr,
                       isSelected: tempPriorityFilter == 'all',
                       color: Colors.grey.shade600,
                       onTap: () => setModalState(() => tempPriorityFilter = 'all'),
                     ),
                     _buildFilterChip(
-                      label: 'High',
+                      label: 'High'.tr,
                       isSelected: tempPriorityFilter == 'high',
                       color: const Color(0xFFFF5722),
                       onTap: () => setModalState(() => tempPriorityFilter = 'high'),
                     ),
                     _buildFilterChip(
-                      label: 'Medium',
+                      label: 'Medium'.tr,
                       isSelected: tempPriorityFilter == 'medium',
                       color: const Color(0xFFFF9A00),
                       onTap: () => setModalState(() => tempPriorityFilter = 'medium'),
                     ),
                     _buildFilterChip(
-                      label: 'Low',
+                      label: 'Low'.tr,
                       isSelected: tempPriorityFilter == 'low',
                       color: const Color(0xFF2196F3),
                       onTap: () => setModalState(() => tempPriorityFilter = 'low'),
@@ -1099,7 +1101,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text(
+                        child: TText(
                           'Reset',
                           style: TextStyle(
                             fontSize: 16,
@@ -1122,7 +1124,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                           
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text('Filters applied successfully'),
+                              content: const TText('Filters applied successfully'),
                               backgroundColor: AppColors.primaryGreen,
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(
@@ -1140,7 +1142,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
+                        child: const TText(
                           'Apply Filters',
                           style: TextStyle(
                             fontSize: 16,

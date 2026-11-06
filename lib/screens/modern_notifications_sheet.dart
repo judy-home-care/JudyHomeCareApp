@@ -20,6 +20,8 @@ import 'nurse/nurse_care_requests_lists_screen.dart';
 import 'schedules/schedule_patients_screen.dart';
 // Models for contact person
 import '../models/contact_person/contact_person_models.dart';
+import '../services/i18n/t_text.dart';
+import '../services/i18n/app_language.dart';
 
 class ModernNotificationsSheet extends StatefulWidget {
   const ModernNotificationsSheet({Key? key}) : super(key: key);
@@ -616,7 +618,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TText(
                       'Notifications',
                       style: TextStyle(
                         fontSize: 24,
@@ -685,7 +687,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                               color: AppColors.primaryGreen,
                             ),
                             const SizedBox(width: 8),
-                            Text(
+                            TText(
                               'Mark all',
                               style: TextStyle(
                                 fontSize: 14,
@@ -737,7 +739,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
             ),
           ),
           const SizedBox(height: 24),
-          Text(
+          TText(
             'Loading notifications...',
             style: TextStyle(
               fontSize: 15,
@@ -806,7 +808,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               child: ElevatedButton.icon(
                 onPressed: _loadNotifications,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
+                label: const TText('Retry'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
@@ -865,7 +867,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
+            const TText(
               'All Clear!',
               style: TextStyle(
                 fontSize: 28,
@@ -957,7 +959,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
           children: const [
             Icon(Icons.delete_rounded, color: Colors.white, size: 28),
             SizedBox(height: 4),
-            Text(
+            TText(
               'Delete',
               style: TextStyle(
                 color: Colors.white,
@@ -1096,7 +1098,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                   size: 20,
                 ),
                 const SizedBox(height: 2),
-                Text(
+                TText(
                   'View',
                   style: TextStyle(
                     fontSize: 10,
@@ -1410,7 +1412,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                           _deleteNotification(notification);
                         },
                         icon: const Icon(Icons.delete_outline, size: 20),
-                        label: const Text('Delete Notification'),
+                        label: const TText('Delete Notification'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFFFF4757),
                           side: const BorderSide(
@@ -1464,7 +1466,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               ),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text(
+                child: TText(
                   'Delete Notification',
                   style: TextStyle(
                     fontSize: 18,
@@ -1474,7 +1476,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               ),
             ],
           ),
-          content: const Text(
+          content: const TText(
             'Are you sure you want to delete this notification?',
             style: TextStyle(
               fontSize: 15,
@@ -1484,7 +1486,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: Text(
+              child: TText(
                 'Cancel',
                 style: TextStyle(
                   color: Colors.grey.shade600,
@@ -1509,7 +1511,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               ),
               child: TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text(
+                child: const TText(
                   'Delete',
                   style: TextStyle(
                     color: Colors.white,

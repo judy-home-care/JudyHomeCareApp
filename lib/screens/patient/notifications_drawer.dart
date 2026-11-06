@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification/notification_models.dart';
 import '../../utils/app_colors.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NotificationsDrawer extends StatefulWidget {
   const NotificationsDrawer({Key? key}) : super(key: key);
@@ -152,7 +154,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
               children: const [
                 Icon(Icons.check_circle, color: Colors.white, size: 20),
                 SizedBox(width: 12),
-                Text('All notifications marked as read'),
+                TText('All notifications marked as read'),
               ],
             ),
             backgroundColor: AppColors.primaryGreen,
@@ -167,7 +169,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to mark all as read'),
+            content: TText('Failed to mark all as read'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -191,7 +193,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
               children: const [
                 Icon(Icons.delete_outline, color: Colors.white, size: 20),
                 SizedBox(width: 12),
-                Text('Notification deleted'),
+                TText('Notification deleted'),
               ],
             ),
             backgroundColor: AppColors.primaryGreen,
@@ -206,7 +208,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to delete notification'),
+            content: TText('Failed to delete notification'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -290,7 +292,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TText(
                       'Notifications',
                       style: TextStyle(
                         fontSize: 22,
@@ -334,7 +336,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                   child: TextButton.icon(
                     onPressed: _markAllAsRead,
                     icon: const Icon(Icons.done_all, size: 16, color: Colors.white),
-                    label: const Text(
+                    label: const TText(
                       'Mark all read',
                       style: TextStyle(
                         fontSize: 13,
@@ -365,7 +367,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'Loading notifications...',
             style: TextStyle(
               fontSize: 14,
@@ -402,7 +404,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
             ElevatedButton.icon(
               onPressed: _loadNotifications,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,
@@ -459,7 +461,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
+            const TText(
               'All Clear!',
               style: TextStyle(
                 fontSize: 24,
@@ -540,7 +542,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
           children: const [
             Icon(Icons.delete_outline, color: Colors.white, size: 24),
             SizedBox(height: 4),
-            Text(
+            TText(
               'Delete',
               style: TextStyle(
                 color: Colors.white,
@@ -573,20 +575,20 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                const TText(
                   'Delete Notification',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                 ),
               ],
             ),
-            content: const Text(
+            content: const TText(
               'Are you sure you want to delete this notification?',
               style: TextStyle(fontSize: 14, height: 1.5),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text(
+                child: TText(
                   'Cancel',
                   style: TextStyle(
                     color: Colors.grey.shade600,
@@ -603,7 +605,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                 ),
                 child: TextButton(
                   onPressed: () => Navigator.pop(context, true),
-                  child: const Text(
+                  child: const TText(
                     'Delete',
                     style: TextStyle(
                       color: Colors.white,

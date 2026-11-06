@@ -7,6 +7,8 @@ import 'care_request_screen.dart';
 import '../payment/care_payment_screen.dart';
 import 'widgets/installment_section.dart';
 import 'widgets/tabbed_care_request_card.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class CareRequestListsScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -245,7 +247,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Care requests updated'),
+              child: TText('Care requests updated'),
             ),
           ],
         ),
@@ -329,7 +331,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Filter Care Requests',
                         style: TextStyle(
                           fontSize: 20,
@@ -350,7 +352,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Status',
                         style: TextStyle(
                           fontSize: 14,
@@ -370,11 +372,11 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                           value: _selectedStatus,
                           isExpanded: true,
                           underline: const SizedBox(),
-                          hint: const Text('All Statuses'),
+                          hint: const TText('All Statuses'),
                           items: [
                             const DropdownMenuItem<String>(
                               value: null,
-                              child: Text('All Statuses'),
+                              child: TText('All Statuses'),
                             ),
                             ...['pending_payment', 'payment_received', 'nurse_assigned', 
                                'assessment_scheduled', 'assessment_completed', 'care_active', 
@@ -416,7 +418,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Reset'),
+                          child: const TText('Reset'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -439,7 +441,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Apply Filters',
                             style: TextStyle(
                               fontSize: 15,
@@ -634,7 +636,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Request Details',
           style: TextStyle(
             fontSize: 18,
@@ -709,7 +711,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                 children: [
                   Icon(Icons.description, size: 16, color: Colors.grey[600]),
                   const SizedBox(width: 8),
-                  Text(
+                  TText(
                     'Description',
                     style: TextStyle(
                       fontSize: 14,
@@ -747,7 +749,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   children: [
                     const Icon(Icons.info_outline, size: 16, color: Color(0xFFFF9A00)),
                     const SizedBox(width: 8),
-                    Text(
+                    TText(
                       'Special Requirements',
                       style: TextStyle(
                         fontSize: 14,
@@ -823,7 +825,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Request Progress',
           style: TextStyle(
             fontSize: 18,
@@ -1054,7 +1056,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                       color: const Color(0xFF199A8E).withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Current Step',
                       style: TextStyle(
                         fontSize: 11,
@@ -1085,7 +1087,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
             child: ElevatedButton.icon(
               onPressed: () => _continueToPayment(request),
               icon: const Icon(Icons.payment),
-              label: const Text(
+              label: const TText(
                 'Pay Assessment Fee',
                 style: TextStyle(
                   fontSize: 15,
@@ -1116,7 +1118,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
+              child: const TText(
                 'Close',
                 style: TextStyle(
                   fontSize: 15,
@@ -1152,7 +1154,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    TText(
                       'Care Service Payment Required',
                       style: TextStyle(
                         fontSize: 14,
@@ -1169,7 +1171,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
+                      TText(
                         'Amount Due:',
                         style: TextStyle(
                           fontSize: 13,
@@ -1195,7 +1197,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
             child: ElevatedButton.icon(
               onPressed: () => _continueToCarePayment(request),
               icon: const Icon(Icons.payment),
-              label: const Text(
+              label: const TText(
                 'Pay for Care Services',
                 style: TextStyle(
                   fontSize: 15,
@@ -1226,7 +1228,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
+              child: const TText(
                 'Close',
                 style: TextStyle(
                   fontSize: 15,
@@ -1249,7 +1251,7 @@ class _CareRequestListsScreenState extends State<CareRequestListsScreen>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
+              child: const TText(
                 'Close',
                 style: TextStyle(
                   fontSize: 15,
@@ -1328,7 +1330,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
-                    child: Text(
+                    child: TText(
                       'Care service payment successful! Your care will begin shortly.',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
@@ -1365,7 +1367,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
-                    child: Text(
+                    child: TText(
                       'Payment was not completed. You can try again from the request details.',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
@@ -1379,7 +1381,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
               ),
               duration: const Duration(seconds: 3),
               action: SnackBarAction(
-                label: 'OK',
+                label: 'OK'.tr,
                 textColor: Colors.white,
                 onPressed: () {},
               ),
@@ -1519,7 +1521,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'My Care Requests',
                     style: TextStyle(
                       fontSize: 20,
@@ -1550,7 +1552,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'My Care Requests',
                 style: TextStyle(
                   fontSize: 20,
@@ -1586,7 +1588,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
                   color: Color(0xFF199A8E),
                 ),
                 onPressed: _showFilterModal,
-                tooltip: 'Filter',
+                tooltip: 'Filter'.tr,
               ),
               if (_hasActiveFilters())
                 Positioned(
@@ -1628,7 +1630,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
         },
         backgroundColor: const Color(0xFF199A8E),
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
+        label: const TText(
           'New Care Request',
           style: TextStyle(
             color: Colors.white,
@@ -1778,7 +1780,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
             
             const SizedBox(height: 32),
             
-            const Text(
+            const TText(
               'No Care Requests Yet',
               style: TextStyle(
                 fontSize: 24,
@@ -1791,7 +1793,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
             
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'Tap the button below to create your first care request',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1820,7 +1822,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
               color: Colors.red.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Something went wrong',
               style: TextStyle(
                 fontSize: 20,
@@ -1841,7 +1843,7 @@ Future<void> _continueToCarePayment(CareRequest request) async {
             ElevatedButton.icon(
               onPressed: () => _loadCareRequests(refresh: true, forceRefresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,

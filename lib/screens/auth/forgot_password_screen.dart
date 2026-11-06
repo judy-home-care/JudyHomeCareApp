@@ -4,6 +4,9 @@ import '../../utils/app_colors.dart';
 import '../../services/auth/forgot_password_service.dart';
 import '../../models/auth/forgot_password_models.dart';
 import 'login_screen.dart';
+import '../../config/countries.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -51,12 +54,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String _selectedCountryCode = '+233';
   String _selectedCountryFlag = '🇬🇭';
 
-  final List<Map<String, String>> _countries = [
-    {'name': 'Ghana', 'code': '+233', 'flag': '🇬🇭'},
-    {'name': 'Nigeria', 'code': '+234', 'flag': '🇳🇬'},
-    {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
-    {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
-  ];
+  final List<Map<String, String>> _countries = kSupportedCountries;
 
   @override
   void initState() {
@@ -131,7 +129,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 30),
                 _SimplifiedButton(
-                  label: 'Send Code',
+                  label: 'Send Code'.tr,
                   icon: Icons.send_rounded,
                   isLoading: _isLoading,
                   onPressed: _handleSendCode,
@@ -178,7 +176,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 ),
                 const SizedBox(height: 30),
                 _SimplifiedButton(
-                  label: 'Verify & Continue',
+                  label: 'Verify & Continue'.tr,
                   isLoading: _isVerifying,
                   onPressed: _handleVerifyCode,
                 ),
@@ -213,7 +211,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 30),
                   _PasswordField(
                     controller: _newPasswordController,
-                    label: 'New Password',
+                    label: 'New Password'.tr,
                     hint: 'Enter your new password',
                     isVisible: _isNewPasswordVisible,
                     onToggle: () => setState(() => _isNewPasswordVisible = !_isNewPasswordVisible),
@@ -221,7 +219,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 20),
                   _PasswordField(
                     controller: _confirmPasswordController,
-                    label: 'Confirm Password',
+                    label: 'Confirm Password'.tr,
                     hint: 'Re-enter your new password',
                     isVisible: _isConfirmPasswordVisible,
                     onToggle: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
@@ -241,7 +239,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   const SizedBox(height: 30),
                   _SimplifiedButton(
-                    label: 'Reset Password',
+                    label: 'Reset Password'.tr,
                     icon: Icons.check_circle_outline,
                     isLoading: _isResetting,
                     onPressed: _handleResetPassword,
@@ -263,7 +261,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           children: [
             const _SuccessIcon(),
             const SizedBox(height: 40),
-            const Text(
+            const TText(
               'Password Changed!',
               style: TextStyle(
                 fontSize: 28,
@@ -272,7 +270,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Your password has been successfully reset',
               style: TextStyle(
                 fontSize: 16,
@@ -281,7 +279,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
             const SizedBox(height: 40),
             _SimplifiedButton(
-              label: 'Back to Login',
+              label: 'Back to Login'.tr,
               onPressed: () {
                 Navigator.of(context).pushAndRemoveUntil(
                   PageRouteBuilder(
@@ -618,7 +616,7 @@ class _Header extends StatelessWidget {
                 color: _ForgotPasswordScreenState._primaryColor,
               ),
               SizedBox(width: 6),
-              Text(
+              TText(
                 'Secure Reset',
                 style: TextStyle(
                   fontSize: 12,
@@ -664,7 +662,7 @@ class _WelcomeSection extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TText(
           'Reset Password',
           style: TextStyle(
             fontSize: 36,
@@ -675,7 +673,7 @@ class _WelcomeSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: 8),
-        Text(
+        TText(
           'Enter your registered phone number to receive a verification code via SMS',
           style: TextStyle(
             fontSize: 15,
@@ -734,7 +732,7 @@ class _ContactMethodToggle extends StatelessWidget {
                       size: 18,
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    TText(
                       'Email',
                       style: TextStyle(
                         color: contactMethod == 'email'
@@ -772,7 +770,7 @@ class _ContactMethodToggle extends StatelessWidget {
                       size: 18,
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    TText(
                       'Phone',
                       style: TextStyle(
                         color: contactMethod == 'phone'
@@ -811,7 +809,7 @@ class _EmailField extends StatelessWidget {
           color: _ForgotPasswordScreenState._textDark,
         ),
         decoration: InputDecoration(
-          hintText: 'Enter your email address',
+          hintText: 'Enter your email address'.tr,
           hintStyle: const TextStyle(
             color: Color(0xFF9E9E9E),
             fontSize: 14,
@@ -927,11 +925,11 @@ class _PhoneField extends StatelessWidget {
               ),
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
+                LengthLimitingTextInputFormatter(12),
                 _NoLeadingZeroFormatter(),
               ],
               decoration: InputDecoration(
-                hintText: '24 XXX XXXX',
+                hintText: '24 XXX XXXX'.tr,
                 hintStyle: const TextStyle(
                   color: Color(0xFF9E9E9E),
                   fontSize: 14,
@@ -1118,7 +1116,7 @@ class _OtpHeader extends StatelessWidget {
         const SizedBox(height: 20),
         FittedBox(
           fit: BoxFit.scaleDown,
-          child: const Text(
+          child: const TText(
             'Enter Verification Code',
             style: TextStyle(
               fontSize: 24,
@@ -1258,7 +1256,7 @@ class _ResetPasswordHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        const Text(
+        const TText(
           'Create New Password',
           style: TextStyle(
             fontSize: 28,
@@ -1267,7 +1265,7 @@ class _ResetPasswordHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
+        const TText(
           'Your new password must be different from previous ones',
           style: TextStyle(
             fontSize: 14,
@@ -1322,7 +1320,7 @@ class _PasswordStrengthIndicator extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Text(
+            const TText(
               'Password Strength: ',
               style: TextStyle(
                 fontSize: 13,
@@ -1433,7 +1431,7 @@ class _ResendSection extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        const TText(
           "Didn't receive code? ",
           style: TextStyle(
             color: _ForgotPasswordScreenState._textGrey,
@@ -1452,7 +1450,7 @@ class _ResendSection extends StatelessWidget {
         else
           GestureDetector(
             onTap: onResend,
-            child: const Text(
+            child: const TText(
               'Resend Code',
               style: TextStyle(
                 color: _ForgotPasswordScreenState._primaryColor,
@@ -1476,7 +1474,7 @@ class _BottomLink extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text(
+          const TText(
             'Remember your password? ',
             style: TextStyle(
               fontSize: 14,
@@ -1485,7 +1483,7 @@ class _BottomLink extends StatelessWidget {
           ),
           GestureDetector(
             onTap: () => Navigator.pop(context),
-            child: const Text(
+            child: const TText(
               'Sign In',
               style: TextStyle(
                 fontSize: 14,
@@ -1545,7 +1543,7 @@ class _CountryPicker extends StatelessWidget {
         ),
         const Padding(
           padding: EdgeInsets.all(20),
-          child: Text(
+          child: TText(
             'Select Country',
             style: TextStyle(
               fontSize: 18,

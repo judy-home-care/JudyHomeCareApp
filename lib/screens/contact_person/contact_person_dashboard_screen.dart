@@ -17,6 +17,8 @@ import 'contact_person_care_request_lists_screen.dart';
 import 'contact_person_feedback_screen.dart';
 import 'contact_person_transport_screen.dart';
 import 'patient_selector_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonDashboardScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -397,7 +399,7 @@ class ContactPersonDashboardScreenState
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Dashboard updated'),
+              child: TText('Dashboard updated'),
             ),
           ],
         ),
@@ -430,7 +432,7 @@ class ContactPersonDashboardScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Dashboard',
                     style: TextStyle(
                       fontSize: 24,
@@ -489,7 +491,7 @@ class ContactPersonDashboardScreenState
                     ),
                   );
                 },
-                tooltip: 'Switch Patient',
+                tooltip: 'Switch Patient'.tr,
               ),
             ),
           Stack(
@@ -612,7 +614,7 @@ class ContactPersonDashboardScreenState
             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'Loading dashboard...',
             style: TextStyle(
               fontSize: 14,
@@ -649,7 +651,7 @@ class ContactPersonDashboardScreenState
             ElevatedButton.icon(
               onPressed: _forceRefresh,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,
@@ -895,7 +897,7 @@ class ContactPersonDashboardScreenState
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.access_time_outlined,
-                label: 'Week Hours',
+                label: 'Week Hours'.tr,
                 value: '${_dashboardData!.weekHours}h',
                 iconColor: const Color(0xFF199A8E),
                 bgColor: const Color(0xFFE8F5F5),
@@ -905,7 +907,7 @@ class ContactPersonDashboardScreenState
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.people_outline,
-                label: 'Nurses Today',
+                label: 'Nurses Today'.tr,
                 value: '${_dashboardData!.nursesToday}',
                 iconColor: const Color(0xFF6C63FF),
                 bgColor: const Color(0xFFEDE9FF),
@@ -919,7 +921,7 @@ class ContactPersonDashboardScreenState
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.assignment_outlined,
-                label: 'Care Plans',
+                label: 'Care Plans'.tr,
                 value: '${_dashboardData!.activePlans}',
                 iconColor: const Color(0xFFFF6B6B),
                 bgColor: const Color(0xFFFFE5E5),
@@ -929,7 +931,7 @@ class ContactPersonDashboardScreenState
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.calendar_today_outlined,
-                label: 'Weekly Visits',
+                label: 'Weekly Visits'.tr,
                 value: '${_dashboardData!.scheduleVisits.length}',
                 iconColor: const Color(0xFFFF9A00),
                 bgColor: const Color(0xFFFFF3E0),
@@ -1094,7 +1096,7 @@ class ContactPersonDashboardScreenState
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            const TText(
               'Scheduled visits',
               style: TextStyle(
                 fontSize: 20,
@@ -1111,7 +1113,7 @@ class ContactPersonDashboardScreenState
               },
               child: Row(
                 children: [
-                  Text(
+                  TText(
                     'See all',
                     style: TextStyle(
                       fontSize: 14,
@@ -1301,7 +1303,7 @@ class ContactPersonDashboardScreenState
                       size: 14,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
+                    const TText(
                       'Completed',
                       style: TextStyle(
                         fontSize: 12,
@@ -1361,7 +1363,7 @@ class ContactPersonDashboardScreenState
                       size: 14,
                     ),
                     SizedBox(width: 6),
-                    Text(
+                    TText(
                       'In Progress',
                       style: TextStyle(
                         fontSize: 12,
@@ -1480,7 +1482,7 @@ class ContactPersonDashboardScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Visit Details',
                         style: TextStyle(
                           fontSize: 22,
@@ -1511,7 +1513,7 @@ class ContactPersonDashboardScreenState
                                 size: 14,
                               ),
                               SizedBox(width: 6),
-                              Text(
+                              TText(
                                 'COMPLETED',
                                 style: TextStyle(
                                   fontSize: 11,
@@ -1717,7 +1719,7 @@ class ContactPersonDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Quick actions',
           style: TextStyle(
             fontSize: 20,
@@ -1895,7 +1897,7 @@ class ContactPersonDashboardScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Assigned nurses',
           style: TextStyle(
             fontSize: 20,
@@ -2211,7 +2213,7 @@ class ContactPersonDashboardScreenState
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  TText(
                                     'Phone Number',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -2369,7 +2371,7 @@ class ContactPersonDashboardScreenState
                                   size: 20,
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
+                                TText(
                                   'Care Type',
                                   style: TextStyle(
                                     fontSize: 11,
@@ -2408,7 +2410,7 @@ class ContactPersonDashboardScreenState
                                   size: 20,
                                 ),
                                 const SizedBox(height: 8),
-                                Text(
+                                TText(
                                   'Location',
                                   style: TextStyle(
                                     fontSize: 11,
@@ -2481,7 +2483,7 @@ class ContactPersonDashboardScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'All Clear',
                   style: TextStyle(
                     fontSize: 16,
@@ -2536,16 +2538,16 @@ class ContactPersonDashboardScreenState
               ),
             ),
             const SizedBox(width: 12),
-            const Text('Emergency'),
+            const TText('Emergency'),
           ],
         ),
-        content: const Text(
+        content: const TText(
           'Are you sure you want to call emergency services?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -2556,7 +2558,7 @@ class ContactPersonDashboardScreenState
               backgroundColor: const Color(0xFFFF4757),
               foregroundColor: Colors.white,
             ),
-            child: const Text('Call'),
+            child: const TText('Call'),
           ),
         ],
       ),

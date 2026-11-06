@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../auth/login_screen.dart';
 import '../onboarding/get_started_screen.dart';
+import '../../services/i18n/t_text.dart';
 
 class LoginSignupScreen extends StatelessWidget {
   const LoginSignupScreen({super.key});
@@ -98,7 +99,7 @@ class _SimplifiedIllustration extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          const TText(
             'Judy Home HealthCare',
             style: TextStyle(
               fontSize: 24,
@@ -117,7 +118,7 @@ class _SimplifiedIllustration extends StatelessWidget {
               color: LoginSignupScreen._primaryLight,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Text(
+            child: const TText(
               'Healthcare at your fingertips',
               style: TextStyle(
                 fontSize: 12,
@@ -139,7 +140,7 @@ class _WelcomeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Column(
       children: [
-        Text(
+        TText(
           'Welcome!',
           style: TextStyle(
             fontSize: 32,
@@ -199,7 +200,7 @@ class _ActionButtons extends StatelessWidget {
               children: [
                 Icon(Icons.login_rounded, size: 20),
                 SizedBox(width: 12),
-                Text(
+                TText(
                   'Login to your account',
                   style: TextStyle(
                     fontSize: 16,
@@ -254,7 +255,7 @@ class _ActionButtons extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                const TText(
                   'Get Started',
                   style: TextStyle(
                     fontSize: 16,

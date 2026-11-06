@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/contact_person/contact_person_survey_service.dart';
 import '../../models/survey/survey_models.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonSurveySubmissionScreen extends StatefulWidget {
   final int patientId;
@@ -116,7 +118,7 @@ class _ContactPersonSurveySubmissionScreenState
     if (!_isCurrentQuestionAnswered()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please answer this question before continuing'),
+          content: TText('Please answer this question before continuing'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -144,7 +146,7 @@ class _ContactPersonSurveySubmissionScreenState
     if (!_areAllRequiredQuestionsAnswered()) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please answer all required questions'),
+          content: TText('Please answer all required questions'),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -210,7 +212,7 @@ class _ContactPersonSurveySubmissionScreenState
                 ),
               ),
               const SizedBox(height: 24),
-              const Text(
+              const TText(
                 'Thank You!',
                 style: TextStyle(
                   fontSize: 24,
@@ -219,7 +221,7 @@ class _ContactPersonSurveySubmissionScreenState
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
+              TText(
                 'The survey has been submitted successfully on behalf of the patient. Thank you for your feedback!',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -245,7 +247,7 @@ class _ContactPersonSurveySubmissionScreenState
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
+                  child: const TText(
                     'Done',
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
@@ -298,7 +300,7 @@ class _ContactPersonSurveySubmissionScreenState
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          const Text('Loading survey...'),
+          const TText('Loading survey...'),
         ],
       ),
     );
@@ -331,7 +333,7 @@ class _ContactPersonSurveySubmissionScreenState
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Retry'),
+              child: const TText('Retry'),
             ),
           ],
         ),
@@ -464,7 +466,7 @@ class _ContactPersonSurveySubmissionScreenState
                           color: Colors.red.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Text(
+                        child: const TText(
                           'Required',
                           style: TextStyle(
                             fontSize: 10,
@@ -527,7 +529,7 @@ class _ContactPersonSurveySubmissionScreenState
       ),
       child: Column(
         children: [
-          const Text(
+          const TText(
             'Tap a star to rate',
             style: TextStyle(
               fontSize: 14,
@@ -583,7 +585,7 @@ class _ContactPersonSurveySubmissionScreenState
           child: _buildYesNoOption(
             question: question,
             value: true,
-            label: 'Yes',
+            label: 'Yes'.tr,
             icon: Icons.check_circle_outline,
             isSelected: currentAnswer == true,
           ),
@@ -593,7 +595,7 @@ class _ContactPersonSurveySubmissionScreenState
           child: _buildYesNoOption(
             question: question,
             value: false,
-            label: 'No',
+            label: 'No'.tr,
             icon: Icons.cancel_outlined,
             isSelected: currentAnswer == false,
           ),
@@ -686,7 +688,7 @@ class _ContactPersonSurveySubmissionScreenState
           });
         },
         decoration: InputDecoration(
-          hintText: 'Type your answer here...',
+          hintText: 'Type your answer here...'.tr,
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -822,7 +824,7 @@ class _ContactPersonSurveySubmissionScreenState
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Previous',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -906,14 +908,14 @@ class _ContactPersonSurveySubmissionScreenState
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text('Exit Survey?'),
-        content: const Text(
+        title: const TText('Exit Survey?'),
+        content: const TText(
           'Your progress will be lost. Are you sure you want to exit?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -927,7 +929,7 @@ class _ContactPersonSurveySubmissionScreenState
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Exit'),
+            child: const TText('Exit'),
           ),
         ],
       ),

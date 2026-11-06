@@ -9,6 +9,8 @@ import '../../models/expense/expense_models.dart';
 import '../../services/expense_service.dart';
 import '../../services/file_download_service.dart';
 import '../../utils/app_colors.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ExpensesScreen extends StatefulWidget {
   /// For contact persons viewing a patient's expenses.
@@ -128,7 +130,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const TText(
               'Expenses',
               style: TextStyle(
                 color: Color(0xFF1A1A1A),
@@ -197,7 +199,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
-            Text(
+            TText(
               'Failed to load expenses',
               style: TextStyle(
                   fontSize: 18,
@@ -212,7 +214,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Retry',
+              child: const TText('Retry',
                   style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -278,7 +280,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ],
           ),
           const SizedBox(height: 20),
-          Text(
+          TText(
             'Total Expenses',
             style: TextStyle(
               color: Colors.white.withOpacity(0.8),
@@ -350,7 +352,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           Icon(Icons.receipt_long_outlined,
               size: 64, color: Colors.grey.shade300),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'No expenses yet',
             style: TextStyle(
                 fontSize: 16,
@@ -358,7 +360,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 color: Colors.grey.shade600),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'Expense records will appear here',
             style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
@@ -467,7 +469,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           Icon(Icons.account_balance_wallet,
                               size: 12, color: Colors.grey.shade500),
                           const SizedBox(width: 4),
-                          Text(
+                          TText(
                             'Wallet',
                             style: TextStyle(
                                 fontSize: 11, color: Colors.grey.shade500),
@@ -709,7 +711,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
                     // Items section
                     const SizedBox(height: 24),
-                    Text(
+                    TText(
                       'Items',
                       style: TextStyle(
                         fontSize: 16,
@@ -777,7 +779,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Text(
+                          const TText(
                             'Total',
                             style: TextStyle(
                               fontSize: 15,
@@ -803,7 +805,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       const SizedBox(height: 24),
                       Row(
                         children: [
-                          Text(
+                          TText(
                             'Receipts',
                             style: TextStyle(
                               fontSize: 16,
@@ -850,7 +852,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         _downloadReceipt(expense);
                       },
                       icon: const Icon(Icons.download, size: 20),
-                      label: const Text(
+                      label: const TText(
                         'Download Receipt',
                         style: TextStyle(
                           fontSize: 15,
@@ -1091,7 +1093,7 @@ class _ReceiptImageViewerState extends State<_ReceiptImageViewer> {
               fileName: widget.receipts[_currentIndex].displayName,
               context: context,
             ),
-            tooltip: 'Share',
+            tooltip: 'Share'.tr,
           ),
         ],
       ),
@@ -1118,7 +1120,7 @@ class _ReceiptImageViewerState extends State<_ReceiptImageViewer> {
                       Icon(Icons.broken_image_outlined,
                           size: 64, color: Colors.white.withOpacity(0.5)),
                       const SizedBox(height: 12),
-                      Text(
+                      TText(
                         'Failed to load image',
                         style: TextStyle(
                             color: Colors.white.withOpacity(0.7),
@@ -1158,7 +1160,7 @@ class _RemoteFileShare {
               ),
             ),
             SizedBox(width: 12),
-            Text('Loading receipt...'),
+            TText('Loading receipt...'),
           ],
         ),
         backgroundColor: const Color(0xFF6C63FF),

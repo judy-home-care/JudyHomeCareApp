@@ -18,6 +18,8 @@ import '../modern_notifications_sheet.dart';
 import '../../services/notification_service.dart';
 import '../wallet/wallet_screen.dart';
 import '../../main.dart' show routeObserver;
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -523,7 +525,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Dashboard updated'),
+              child: TText('Dashboard updated'),
             ),
           ],
         ),
@@ -558,7 +560,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Dashboard',
                     style: TextStyle(
                       fontSize: 24,
@@ -707,7 +709,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'Loading dashboard...',
             style: TextStyle(
               fontSize: 14,
@@ -744,7 +746,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             ElevatedButton.icon(
               onPressed: _forceRefresh,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,
@@ -816,7 +818,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
+              TText(
                 'How are you feeling today?',
                 style: TextStyle(
                   fontSize: 16,
@@ -912,7 +914,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TText(
                     'Wallet Balance',
                     style: TextStyle(
                       fontSize: 13,
@@ -979,7 +981,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.access_time_outlined,
-                label: 'Week Hours',
+                label: 'Week Hours'.tr,
                 value: '${_dashboardData!.weekHours}h',
                 iconColor: const Color(0xFF199A8E),
                 bgColor: const Color(0xFFE8F5F5),
@@ -989,7 +991,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.people_outline,
-                label: 'Nurses Today',
+                label: 'Nurses Today'.tr,
                 value: '${_dashboardData!.nursesToday}',
                 iconColor: const Color(0xFF6C63FF),
                 bgColor: const Color(0xFFEDE9FF),
@@ -1003,7 +1005,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.assignment_outlined,
-                label: 'Care Plans',
+                label: 'Care Plans'.tr,
                 value: '${_dashboardData!.activePlans}',
                 iconColor: const Color(0xFFFF6B6B),
                 bgColor: const Color(0xFFFFE5E5),
@@ -1013,7 +1015,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.calendar_today_outlined,
-                label: 'Weekly Visits',
+                label: 'Weekly Visits'.tr,
                 value: '${_dashboardData!.scheduleVisits.length}',
                 iconColor: const Color(0xFFFF9A00),
                 bgColor: const Color(0xFFFFF3E0),
@@ -1142,7 +1144,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            const TText(
               'Scheduled visits',
               style: TextStyle(
                 fontSize: 20,
@@ -1159,7 +1161,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
               },
               child: Row(
                 children: [
-                  Text(
+                  TText(
                     'See all',
                     style: TextStyle(
                       fontSize: 14,
@@ -1433,7 +1435,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                       size: 14,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
+                    const TText(
                       'Completed',
                       style: TextStyle(
                         fontSize: 12,
@@ -1491,7 +1493,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                       size: 14,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
+                    const TText(
                       'In Progress',
                       style: TextStyle(
                         fontSize: 12,
@@ -1639,7 +1641,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    const TText(
                       'Visit Details',
                       style: TextStyle(
                         fontSize: 22,
@@ -1670,7 +1672,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               size: 14,
                             ),
                             SizedBox(width: 6),
-                            Text(
+                            TText(
                               'COMPLETED',
                               style: TextStyle(
                                 fontSize: 11,
@@ -1880,7 +1882,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TText(
                                 'Time Worked',
                                 style: TextStyle(
                                   fontSize: 13,
@@ -2032,7 +2034,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Quick actions',
           style: TextStyle(
             fontSize: 20,
@@ -2297,7 +2299,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               : Colors.grey.shade500,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        TText(
                           'Initial Assessment',
                           style: TextStyle(
                             fontSize: 14,
@@ -2351,7 +2353,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               : Colors.grey.shade500,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        TText(
                           'My Nurses',
                           style: TextStyle(
                             fontSize: 14,
@@ -2456,7 +2458,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Initial Assessment',
                         style: TextStyle(
                           fontSize: 18,
@@ -2575,7 +2577,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                       color: _getPainColor(assessment.painLevel!),
                     ),
                     const SizedBox(width: 10),
-                    Text(
+                    TText(
                       'Pain Level',
                       style: TextStyle(
                         fontSize: 13,
@@ -2631,7 +2633,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          const TText(
                             'Wounds Present',
                             style: TextStyle(
                               fontSize: 13,
@@ -2683,7 +2685,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                           color: Colors.grey.shade600,
                         ),
                         const SizedBox(width: 6),
-                        Text(
+                        TText(
                           'Presenting Condition',
                           style: TextStyle(
                             fontSize: 12,
@@ -2731,7 +2733,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                           color: Colors.grey.shade600,
                         ),
                         const SizedBox(width: 6),
-                        Text(
+                        TText(
                           'Initial Vitals',
                           style: TextStyle(
                             fontSize: 12,
@@ -2790,7 +2792,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                           color: Color(0xFF7C3AED),
                         ),
                         const SizedBox(width: 6),
-                        const Text(
+                        const TText(
                           'Nursing Impression',
                           style: TextStyle(
                             fontSize: 12,
@@ -2941,7 +2943,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
 
   Color _getConditionColor(String? condition) {
     switch (condition?.toLowerCase()) {
-      case 'good':
+      case '.trgood':
         return const Color(0xFF199A8E);
       case 'fair':
         return const Color(0xFFFF9A00);
@@ -3015,7 +3017,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'My nurses',
           style: TextStyle(
             fontSize: 20,
@@ -3141,7 +3143,7 @@ Widget _buildNurseCard(UpcomingNurse nurseVisit) {
                                 color: Color(0xFF199A8E),
                               ),
                               const SizedBox(width: 6),
-                              Text(
+                              TText(
                                 'Your Latest Vitals Picked By Nurse',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -3394,7 +3396,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TText(
                                 'Phone Number',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -3546,7 +3548,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                   color: Colors.grey.shade600,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
+                                TText(
                                   'Assignment Duration',
                                   style: TextStyle(
                                     fontSize: 13,
@@ -3603,7 +3605,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 size: 20,
                               ),
                               const SizedBox(height: 8),
-                              Text(
+                              TText(
                                 'Care Type',
                                 style: TextStyle(
                                   fontSize: 11,
@@ -3643,7 +3645,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 size: 20,
                               ),
                               const SizedBox(height: 8),
-                              Text(
+                              TText(
                                 'Location',
                                 style: TextStyle(
                                   fontSize: 11,
@@ -3918,7 +3920,7 @@ Widget _buildSectionTitle(String title) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'All Clear',
                   style: TextStyle(
                     fontSize: 16,
@@ -3982,7 +3984,7 @@ Widget _buildSectionTitle(String title) {
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text(
+              child: TText(
                 'Emergency Services',
                 style: TextStyle(
                   fontSize: 18,
@@ -3996,7 +3998,7 @@ Widget _buildSectionTitle(String title) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            const TText(
               'Select emergency service to call:',
               style: TextStyle(
                 fontSize: 14,
@@ -4037,7 +4039,7 @@ Widget _buildSectionTitle(String title) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -4142,7 +4144,7 @@ Widget _buildSectionTitle(String title) {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
+            const TText(
               'Confirm Call',
               style: TextStyle(
                 fontSize: 18,
@@ -4158,7 +4160,7 @@ Widget _buildSectionTitle(String title) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -4178,7 +4180,7 @@ Widget _buildSectionTitle(String title) {
                 Navigator.of(context).pop();
                 _makeEmergencyCall(phoneNumber);
               },
-              child: const Text(
+              child: const TText(
                 'Call Now',
                 style: TextStyle(
                   color: Colors.white,

@@ -9,6 +9,8 @@ import '../../../services/payment_service.dart';
 import '../../../utils/api_config.dart';
 import '../../../utils/string_utils.dart';
 import 'installment_section.dart';
+import '../../../services/i18n/t_text.dart';
+import '../../../services/i18n/app_language.dart';
 
 /// A care request card with tabs for Details and Payment
 class TabbedCareRequestCard extends StatefulWidget {
@@ -258,14 +260,14 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   Expanded(
                     child: _buildTabButton(
                       index: 0,
-                      label: 'Details',
+                      label: 'Details'.tr,
                       icon: Icons.info_outline,
                     ),
                   ),
                   Expanded(
                     child: _buildTabButton(
                       index: 1,
-                      label: 'Payment',
+                      label: 'Payment'.tr,
                       icon: Icons.payment_outlined,
                       badgeCount: (needsPayment ? 1 : 0) + _getPendingInstallmentsCount(),
                     ),
@@ -625,7 +627,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   color: Colors.grey[500],
                 ),
                 const SizedBox(width: 12),
-                Text(
+                TText(
                   'No pending payments',
                   style: TextStyle(
                     fontSize: 13,
@@ -785,7 +787,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                 ),
               ),
               const SizedBox(width: 10),
-              const Text(
+              const TText(
                 'Care Payment Summary',
                 style: TextStyle(
                   fontSize: 13,
@@ -801,7 +803,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              TText(
                 'Total Amount',
                 style: TextStyle(
                   fontSize: 12,
@@ -850,7 +852,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        Text(
+                        TText(
                           'Paid',
                           style: TextStyle(
                             fontSize: 11,
@@ -887,7 +889,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        Text(
+                        TText(
                           'Pending',
                           style: TextStyle(
                             fontSize: 11,
@@ -981,7 +983,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                     color: Color(0xFF199A8E),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
+                  const TText(
                     'View All Installments',
                     style: TextStyle(
                       fontSize: 12,
@@ -1058,7 +1060,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               ),
               const SizedBox(width: 10),
               const Expanded(
-                child: Text(
+                child: TText(
                   'Installment Plan Available',
                   style: TextStyle(
                     fontSize: 13,
@@ -1073,7 +1075,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   color: const Color(0xFFFF9A00),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
+                child: const TText(
                   'Pending',
                   style: TextStyle(
                     fontSize: 10,
@@ -1091,7 +1093,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                TText(
                   'Total Care Payment',
                   style: TextStyle(
                     fontSize: 12,
@@ -1127,7 +1129,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child: TText(
                     'Complete initial payment to activate installment plan',
                     style: TextStyle(
                       fontSize: 11,
@@ -1180,7 +1182,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    const TText(
                       'All Installments',
                       style: TextStyle(
                         fontSize: 20,
@@ -1207,7 +1209,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                         color: Color(0xFF199A8E),
                       ),
                       const SizedBox(width: 8),
-                      Text(
+                      TText(
                         'Completed Payments',
                         style: TextStyle(
                           fontSize: 14,
@@ -1248,7 +1250,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                                 color: Color(0xFFFF9A00),
                               ),
                               const SizedBox(width: 8),
-                              Text(
+                              TText(
                                 'Pending Payments',
                                 style: TextStyle(
                                   fontSize: 14,
@@ -1277,7 +1279,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                             color: Colors.grey[500],
                           ),
                           const SizedBox(width: 8),
-                          Text(
+                          TText(
                             'Refunded',
                             style: TextStyle(
                               fontSize: 14,
@@ -1372,7 +1374,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   children: [
                     _buildReceiptButton(
                       icon: Icons.visibility_outlined,
-                      label: 'Preview',
+                      label: 'Preview'.tr,
                       onTap: () {
                         Navigator.pop(context);
                         _previewReceipt(installment);
@@ -1381,7 +1383,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                     const SizedBox(width: 8),
                     _buildReceiptButton(
                       icon: Icons.download_outlined,
-                      label: 'Download',
+                      label: 'Download'.tr,
                       onTap: () {
                         Navigator.pop(context);
                         _downloadReceipt(installment);
@@ -1449,7 +1451,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               ),
             ),
             SizedBox(width: 12),
-            Text('Loading receipt...'),
+            TText('Loading receipt...'),
           ],
         ),
         backgroundColor: const Color(0xFF199A8E),
@@ -1531,7 +1533,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  const TText(
                     'Payment Receipt',
                     style: TextStyle(
                       fontSize: 20,
@@ -1572,7 +1574,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                             size: 48,
                           ),
                           const SizedBox(height: 12),
-                          const Text(
+                          const TText(
                             'Payment Successful',
                             style: TextStyle(
                               fontSize: 18,
@@ -1717,7 +1719,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                     decoration: TextDecoration.lineThrough,
                   ),
                 ),
-                Text(
+                TText(
                   'Refunded',
                   style: TextStyle(
                     fontSize: 11,
@@ -1893,7 +1895,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                           color: isOverdue ? Colors.red : const Color(0xFF199A8E),
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
+                        child: const TText(
                           'Pay Now',
                           style: TextStyle(
                             fontSize: 10,

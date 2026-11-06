@@ -4,6 +4,8 @@ import '../../utils/app_colors.dart';
 import '../../models/patients/nurse_patient_models.dart';
 import '../../services/patients/nurse_patient_service.dart';
 import 'transport_location_selection_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class TransportPatientSelectionScreen extends StatefulWidget {
   const TransportPatientSelectionScreen({Key? key}) : super(key: key);
@@ -103,7 +105,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
     if (_selectedPatient == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Please select a patient'),
+          content: const TText('Please select a patient'),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -143,7 +145,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Request Transport',
               style: TextStyle(
                 fontSize: 22,
@@ -296,7 +298,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
           icon: const Icon(Icons.close, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Select Patient',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -314,7 +316,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search patients...',
+                hintText: 'Search patients...'.tr,
                 prefixIcon: Icon(Icons.search, color: Colors.grey.shade400),
                 filled: true,
                 fillColor: Colors.grey.shade50,
@@ -416,7 +418,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
                         children: const [
                           Icon(Icons.arrow_forward, size: 22),
                           SizedBox(width: 12),
-                          Text(
+                          TText(
                             'Continue',
                             style: TextStyle(
                               fontSize: 16,
@@ -444,7 +446,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          const Text('Loading patients...'),
+          const TText('Loading patients...'),
         ],
       ),
     );
@@ -475,7 +477,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
             ElevatedButton.icon(
               onPressed: _loadPatients,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,

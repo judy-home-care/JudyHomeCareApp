@@ -16,7 +16,10 @@ import '../wallet/wallet_screen.dart';
 import 'patient_notification_preferences.dart';
 import 'patient_faq_screen.dart';
 import 'help_patient_center.dart';
+import '../../widgets/language_picker_sheet.dart';
 import 'payment_methods_screen.dart'; 
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientAccountScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -247,7 +250,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                         color: Colors.white,
                       ),
                       SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Valued Patient',
                         style: TextStyle(
                           fontSize: 12,
@@ -302,7 +305,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Account Settings',
               style: TextStyle(
                 fontSize: 16,
@@ -338,6 +341,15 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
             iconBg: const Color(0xFFFFF4E5),
             onTap: () => _navigateToNotificationPreferences(),
           ),
+          _buildDivider(),
+          _buildSettingTile(
+            icon: Icons.translate,
+            title: 'Language',
+            subtitle: 'Change the app language',
+            iconColor: const Color(0xFF5C6BC0),
+            iconBg: const Color(0xFFE8EAF6),
+            onTap: () => showLanguagePickerSheet(context),
+          ),
         ],
       ),
     );
@@ -362,7 +374,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'My Wallet',
               style: TextStyle(
                 fontSize: 16,
@@ -438,7 +450,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Expenses',
               style: TextStyle(
                 fontSize: 16,
@@ -489,7 +501,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Communication',
               style: TextStyle(
                 fontSize: 16,
@@ -532,7 +544,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'My Services',
               style: TextStyle(
                 fontSize: 16,
@@ -574,7 +586,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Help & Support',
               style: TextStyle(
                 fontSize: 16,
@@ -746,7 +758,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                 size: 22,
               ),
               SizedBox(width: 12),
-              Text(
+              TText(
                 'Sign Out',
                 style: TextStyle(
                   fontSize: 16,
@@ -869,14 +881,14 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
           children: [
             Icon(Icons.medical_services, color: AppColors.primaryGreen),
             SizedBox(width: 12),
-            Text('About'),
+            TText('About'),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const TText(
               'Judy Home HealthCare',
               style: TextStyle(
                 fontSize: 18,
@@ -884,7 +896,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            TText(
               'Version 1.0.0',
               style: TextStyle(
                 fontSize: 14,
@@ -892,7 +904,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            TText(
               'Providing quality home healthcare services with compassion and excellence.',
               style: TextStyle(
                 fontSize: 14,
@@ -905,7 +917,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: const TText('Close'),
           ),
         ],
       ),
@@ -923,10 +935,10 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
           children: [
             Icon(Icons.logout, color: Color(0xFFFF4757)),
             SizedBox(width: 12),
-            Text('Sign Out'),
+            TText('Sign Out'),
           ],
         ),
-        content: Text(
+        content: TText(
           'Are you sure you want to sign out of your account?',
           style: TextStyle(
             color: Colors.grey.shade700,
@@ -936,7 +948,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => _handleLogout(),
@@ -946,7 +958,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
+            child: const TText(
               'Sign Out',
               style: TextStyle(color: Colors.white),
             ),
@@ -979,7 +991,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
               ),
               const SizedBox(height: 16),
-              Text(
+              TText(
                 'Signing out...',
                 style: TextStyle(
                   fontSize: 14,

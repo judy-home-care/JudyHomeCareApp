@@ -4,6 +4,8 @@ import '../../services/care_request_service.dart';
 import '../../models/care_request/care_request_models.dart';
 import '../../utils/string_utils.dart';
 import 'nurse_medical_assessment_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseCareRequestsListScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -205,7 +207,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        const TText(
                           'Care Request Details',
                           style: TextStyle(
                             fontSize: 20,
@@ -238,7 +240,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                         DateFormat('MMM d, yyyy • h:mm a').format(request.assessmentCompletedAt!),
                       ),
                     const SizedBox(height: 12),
-                    const Text(
+                    const TText(
                       'Description',
                       style: TextStyle(
                         fontSize: 14,
@@ -309,7 +311,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text(
+        title: const TText(
           'My Care Requests',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -444,7 +446,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Center(
-                                  child: Text(
+                                  child: TText(
                                     'P',
                                     style: TextStyle(
                                       fontSize: 16,
@@ -534,7 +536,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
+                              TText(
                                 'Assessment Scheduled',
                                 style: TextStyle(
                                   fontSize: 11,
@@ -724,7 +726,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
             
             const SizedBox(height: 32),
             
-            const Text(
+            const TText(
               'No Care Requests',
               style: TextStyle(
                 fontSize: 24,
@@ -766,7 +768,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
               color: Colors.red.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Something went wrong',
               style: TextStyle(
                 fontSize: 20,
@@ -787,7 +789,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
             ElevatedButton.icon(
               onPressed: () => _loadCareRequests(refresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,

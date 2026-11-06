@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../services/notification_service.dart';
 import '../../models/notification/notification_models.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -120,7 +122,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('All notifications marked as read')),
+        const SnackBar(content: TText('All notifications marked as read')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -142,7 +144,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Notification deleted')),
+        const SnackBar(content: TText('Notification deleted')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -158,7 +160,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Notifications'),
+            const TText('Notifications'),
             if (_unreadCount > 0)
               Text(
                 '$_unreadCount unread',
@@ -170,7 +172,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           if (_unreadCount > 0)
             IconButton(
               icon: const Icon(Icons.done_all),
-              tooltip: 'Mark all as read',
+              tooltip: 'Mark all as read'.tr,
               onPressed: _markAllAsRead,
             ),
         ],
@@ -195,7 +197,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _loadNotifications(),
-              child: const Text('Retry'),
+              child: const TText('Retry'),
             ),
           ],
         ),
@@ -209,7 +211,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             const Icon(Icons.notifications_none, size: 64, color: Colors.grey),
             const SizedBox(height: 16),
-            const Text('No notifications yet'),
+            const TText('No notifications yet'),
             const SizedBox(height: 8),
             Text(
               'You\'ll see updates about your care here',
@@ -232,7 +234,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Center(
                 child: ElevatedButton(
                   onPressed: () => _loadNotifications(loadMore: true),
-                  child: const Text('Load More'),
+                  child: const TText('Load More'),
                 ),
               ),
             );

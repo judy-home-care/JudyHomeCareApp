@@ -12,6 +12,7 @@ import '../../models/wallet/wallet_models.dart';
 import '../wallet/wallet_deposit_screen.dart';
 import '../../utils/app_colors.dart';
 import '../patient/widgets/autopay_prompt.dart';
+import '../../services/i18n/t_text.dart';
 
 class CarePaymentScreen extends StatefulWidget {
   final CareRequest careRequest;
@@ -245,7 +246,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Insufficient Balance',
               style: TextStyle(
                 fontSize: 24,
@@ -273,7 +274,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  TText(
                     'Shortfall: ',
                     style: TextStyle(
                       fontSize: 14,
@@ -304,7 +305,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                       ),
                       side: BorderSide(color: Colors.grey.shade400),
                     ),
-                    child: Text(
+                    child: TText(
                       'Cancel',
                       style: TextStyle(
                         fontSize: 16,
@@ -343,7 +344,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Deposit',
                       style: TextStyle(
                         fontSize: 16,
@@ -388,7 +389,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Payment Successful!',
               style: TextStyle(
                 fontSize: 24,
@@ -397,7 +398,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Your payment has been completed successfully using your wallet.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -417,7 +418,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
+                    TText(
                       'New Balance: ',
                       style: TextStyle(
                         fontSize: 14,
@@ -451,7 +452,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Done',
                   style: TextStyle(
                     fontSize: 16,
@@ -494,7 +495,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Payment Cancelled',
               style: TextStyle(
                 fontSize: 24,
@@ -503,7 +504,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Your payment was cancelled. You can try again or go back to your requests.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -528,7 +529,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                       ),
                       side: BorderSide(color: Colors.grey.shade400),
                     ),
-                    child: Text(
+                    child: TText(
                       'Go Back',
                       style: TextStyle(
                         fontSize: 16,
@@ -552,7 +553,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Try Again',
                       style: TextStyle(
                         fontSize: 16,
@@ -690,7 +691,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Done',
                   style: TextStyle(
                     fontSize: 16,
@@ -768,7 +769,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          const TText(
             'Select Payment Method',
             style: TextStyle(
               fontSize: 18,
@@ -907,7 +908,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                           color: Colors.orange.shade600,
                         ),
                         const SizedBox(width: 4),
-                        Text(
+                        TText(
                           'Insufficient balance - deposit to pay',
                           style: TextStyle(
                             fontSize: 11,
@@ -1040,7 +1041,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          const TText(
             'Secure Payment',
             style: TextStyle(
               fontSize: 18,
@@ -1084,7 +1085,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
             children: [
               Icon(Icons.verified_user, color: Colors.green.shade700, size: 20),
               const SizedBox(width: 8),
-              Text(
+              TText(
                 'Powered by Paystack',
                 style: TextStyle(
                   fontSize: 14,
@@ -1294,16 +1295,16 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
         final shouldPop = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Cancel Payment?'),
-            content: const Text('Are you sure you want to cancel this payment?'),
+            title: const TText('Cancel Payment?'),
+            content: const TText('Are you sure you want to cancel this payment?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('No'),
+                child: const TText('No'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Yes, Cancel'),
+                child: const TText('Yes, Cancel'),
               ),
             ],
           ),
@@ -1320,7 +1321,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          title: const Text(
+          title: const TText(
             'Complete Payment',
             style: TextStyle(
               color: Color(0xFF1A1A1A),
@@ -1337,21 +1338,21 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  title: const Text('Cancel Payment?'),
-                  content: const Text(
+                  title: const TText('Cancel Payment?'),
+                  content: const TText(
                     'Are you sure you want to cancel this payment? You will be returned to your care requests.',
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('No, Continue'),
+                      child: const TText('No, Continue'),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      child: const Text(
+                      child: const TText(
                         'Yes, Cancel',
                         style: TextStyle(color: Colors.white),
                       ),
@@ -1490,7 +1491,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                         valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      TText(
                         'Loading secure payment page...',
                         style: TextStyle(
                           color: Colors.grey.shade600,
@@ -1541,7 +1542,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                             size: 24,
                           ),
                           const SizedBox(width: 12),
-                          const Text(
+                          const TText(
                             'Payment Successful - Continue',
                             style: TextStyle(
                               color: Colors.white,

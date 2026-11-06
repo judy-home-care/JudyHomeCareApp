@@ -8,6 +8,8 @@ import '../../models/messages/message_models.dart';
 import '../../services/messages/message_service.dart';
 import '../../services/notification_service.dart';
 import 'chat_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ConversationsScreen extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -173,7 +175,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                const Text(
+                const TText(
                   'New Message',
                   style: TextStyle(
                     fontSize: 20,
@@ -203,7 +205,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                           color: Colors.grey[300],
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        TText(
                           'No contacts available',
                           style: TextStyle(
                             fontSize: 16,
@@ -267,7 +269,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
           color: AppColors.primaryGreen.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Text(
+        child: const TText(
           'Message',
           style: TextStyle(
             color: AppColors.primaryGreen,
@@ -323,7 +325,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
           icon: const Icon(Icons.arrow_back_ios, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Messages',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -345,7 +347,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                   )
                 : const Icon(Icons.edit_square, color: AppColors.primaryGreen),
             onPressed: _isLoadingContacts ? null : _loadContacts,
-            tooltip: 'New Message',
+            tooltip: 'New Message'.tr,
           ),
         ],
       ),
@@ -404,7 +406,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            TText(
               'Failed to load messages',
               style: TextStyle(
                 fontSize: 18,
@@ -426,7 +428,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
             ElevatedButton.icon(
               onPressed: _loadConversations,
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,
@@ -464,7 +466,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                 ),
               ),
               const SizedBox(height: 32),
-              Text(
+              TText(
                 'No messages yet',
                 style: TextStyle(
                   fontSize: 20,

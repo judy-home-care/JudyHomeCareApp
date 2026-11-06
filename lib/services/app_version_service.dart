@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/i18n/t_text.dart';
+import '../services/i18n/app_language.dart';
 
 /// Model for version requirements from the backend
 class VersionRequirement {
@@ -190,7 +192,7 @@ class AppVersionService {
               ),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text(
+                child: TText(
                   'Update Required',
                   style: TextStyle(
                     fontSize: 18,

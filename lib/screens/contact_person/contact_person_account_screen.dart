@@ -14,6 +14,9 @@ import '../expenses/expenses_screen.dart';
 import '../wallet/wallet_screen.dart';
 import 'patient_selector_screen.dart';
 import '../auth/login_screen.dart';
+import '../../widgets/language_picker_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonAccountScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -234,7 +237,7 @@ class _ContactPersonAccountScreenState
                         color: Colors.white,
                       ),
                       SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Contact Person',
                         style: TextStyle(
                           fontSize: 12,
@@ -291,7 +294,7 @@ class _ContactPersonAccountScreenState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                TText(
                   'Currently Viewing',
                   style: TextStyle(
                     fontSize: 16,
@@ -317,7 +320,7 @@ class _ContactPersonAccountScreenState
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Switch',
                       style: TextStyle(
                         color: AppColors.primaryGreen,
@@ -443,7 +446,7 @@ class _ContactPersonAccountScreenState
                               color: AppColors.primaryGreen,
                             ),
                             SizedBox(width: 4),
-                            Text(
+                            TText(
                               'Primary',
                               style: TextStyle(
                                 fontSize: 11,
@@ -547,7 +550,7 @@ class _ContactPersonAccountScreenState
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Expenses',
               style: TextStyle(
                 fontSize: 16,
@@ -601,7 +604,7 @@ class _ContactPersonAccountScreenState
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Account Settings',
               style: TextStyle(
                 fontSize: 16,
@@ -618,6 +621,15 @@ class _ContactPersonAccountScreenState
             iconColor: const Color(0xFFFF9A00),
             iconBg: const Color(0xFFFFF4E5),
             onTap: () => _navigateToNotificationPreferences(),
+          ),
+          _buildDivider(),
+          _buildSettingTile(
+            icon: Icons.translate,
+            title: 'Language',
+            subtitle: 'Change the app language',
+            iconColor: const Color(0xFF5C6BC0),
+            iconBg: const Color(0xFFE8EAF6),
+            onTap: () => showLanguagePickerSheet(context),
           ),
           _buildDivider(),
           _buildSettingTile(
@@ -704,7 +716,7 @@ class _ContactPersonAccountScreenState
         children: [
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Text(
+            child: TText(
               'Communication',
               style: TextStyle(
                 fontSize: 16,
@@ -848,7 +860,7 @@ class _ContactPersonAccountScreenState
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Text(
+                TText(
                   'Linked Patients',
                   style: TextStyle(
                     fontSize: 16,
@@ -985,7 +997,7 @@ class _ContactPersonAccountScreenState
                             color: AppColors.primaryGreen,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Active',
                             style: TextStyle(
                               fontSize: 11,
@@ -1077,7 +1089,7 @@ class _ContactPersonAccountScreenState
                 size: 22,
               ),
               SizedBox(width: 12),
-              Text(
+              TText(
                 'Sign Out',
                 style: TextStyle(
                   fontSize: 16,
@@ -1104,10 +1116,10 @@ class _ContactPersonAccountScreenState
           children: [
             Icon(Icons.logout, color: Color(0xFFFF4757)),
             SizedBox(width: 12),
-            Text('Sign Out'),
+            TText('Sign Out'),
           ],
         ),
-        content: Text(
+        content: TText(
           'Are you sure you want to sign out of your account?',
           style: TextStyle(
             color: Colors.grey.shade700,
@@ -1117,7 +1129,7 @@ class _ContactPersonAccountScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => _handleLogout(),
@@ -1127,7 +1139,7 @@ class _ContactPersonAccountScreenState
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
+            child: const TText(
               'Sign Out',
               style: TextStyle(color: Colors.white),
             ),
@@ -1163,7 +1175,7 @@ class _ContactPersonAccountScreenState
                 valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
               ),
               const SizedBox(height: 16),
-              Text(
+              TText(
                 'Signing out...',
                 style: TextStyle(
                   fontSize: 14,

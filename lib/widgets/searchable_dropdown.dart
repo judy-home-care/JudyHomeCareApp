@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
+import '../services/i18n/t_text.dart';
+import '../services/i18n/app_language.dart';
 
 class SearchableDropdown extends StatefulWidget {
   final String label;
@@ -307,7 +309,7 @@ class _SearchableDropdownModalState extends State<_SearchableDropdownModal> {
                           color: Colors.grey.shade300,
                         ),
                         const SizedBox(height: 16),
-                        Text(
+                        TText(
                           'No results found',
                           style: TextStyle(
                             fontSize: 16,
@@ -316,7 +318,7 @@ class _SearchableDropdownModalState extends State<_SearchableDropdownModal> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        TText(
                           'Try adjusting your search',
                           style: TextStyle(
                             fontSize: 14,

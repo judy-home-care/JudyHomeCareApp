@@ -3,6 +3,8 @@ import '../../utils/app_colors.dart';
 import '../../services/care_plans/care_plan_service.dart';
 import '../../models/care_plans/care_plan_models.dart';
 import '../../widgets/searchable_dropdown.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class EditCarePlanModal extends StatefulWidget {
   final CarePlan carePlan;
@@ -181,7 +183,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                 const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Expanded(
-                  child: Text(
+                  child: TText(
                     'Could not load all options. Using available data.',
                     style: TextStyle(fontSize: 14),
                   ),
@@ -455,7 +457,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           right: 16,
         ),
         action: SnackBarAction(
-          label: 'DISMISS',
+          label: 'DISMISS'.tr,
           textColor: Colors.white,
           onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
@@ -549,7 +551,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TText(
                       'Edit Care Plan',
                       style: TextStyle(
                         fontSize: 22,
@@ -600,7 +602,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           children: [
             Expanded(
               child: SearchableDropdown(
-                label: 'Patient *',
+                label: 'Patient *'.tr,
                 value: _selectedPatientId,
                 items: _patients.map((p) {
                   final id = p['id'];
@@ -621,13 +623,13 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                   }
                 },
                 enabled: !_isSaving,
-                hintText: 'Search patients...',
+                hintText: 'Search patients...'.tr,
               ),
             ),
             const SizedBox(width: 16),
             Expanded(
               child: SearchableDropdown(
-                label: 'Doctor',
+                label: 'Doctor'.tr,
                 value: _selectedDoctorId,
                 items: _doctors.map((d) {
                   final id = d['id'];
@@ -639,7 +641,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                 }).toList(),
                 onChanged: (value) => setState(() => _selectedDoctorId = value),
                 enabled: !_isSaving,
-                hintText: 'Search doctors...',
+                hintText: 'Search doctors...'.tr,
               ),
             ),
           ],
@@ -648,7 +650,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         
         // ✅ CARE REQUEST DROPDOWN
         _buildDropdownField(
-          label: 'Care Request (Optional)',
+          label: 'Care Request (Optional)'.tr,
           value: _selectedCareRequestId,
           items: _careRequests.map((cr) {
             final id = cr['id'];
@@ -670,7 +672,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         
         const SizedBox(height: 16),
         _buildTextField(
-          label: 'Care Plan Title *',
+          label: 'Care Plan Title *'.tr,
           controller: _titleController,
           hint: 'Enter care plan title',
           validator: (value) {
@@ -682,7 +684,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         ),
         const SizedBox(height: 16),
         _buildTextField(
-          label: 'Description *',
+          label: 'Description *'.tr,
           controller: _descriptionController,
           hint: 'Describe the care plan objectives and overview',
           maxLines: 4,
@@ -704,7 +706,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           children: [
             Expanded(
               child: _buildDropdownField(
-                label: 'Care Type *',
+                label: 'Care Type *'.tr,
                 value: _selectedCareType,
                 items: _careTypes.map((type) => {
                   'value': type,
@@ -716,7 +718,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
             const SizedBox(width: 16),
             Expanded(
               child: _buildDropdownField(
-                label: 'Priority *',
+                label: 'Priority *'.tr,
                 value: _selectedPriority,
                 items: _priorities.map((priority) => {
                   'value': priority,
@@ -732,7 +734,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           children: [
             Expanded(
               child: _buildDateField(
-                label: 'Start Date *',
+                label: 'Start Date *'.tr,
                 date: _startDate,
                 onTap: () => _selectDate(context, true),
               ),
@@ -740,7 +742,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
             const SizedBox(width: 16),
             Expanded(
               child: _buildDateField(
-                label: 'End Date',
+                label: 'End Date'.tr,
                 date: _endDate,
                 onTap: () => _selectDate(context, false),
               ),
@@ -749,7 +751,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
         ),
         const SizedBox(height: 16),
         _buildDropdownField(
-          label: 'Frequency *',
+          label: 'Frequency *'.tr,
           value: _selectedFrequency,
           items: _frequencies.map((freq) => {
             'value': freq,
@@ -863,7 +865,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                         ),
                       ),
                       SizedBox(width: 12),
-                      Text(
+                      TText(
                         'Loading...',
                         style: TextStyle(fontSize: 14, color: Colors.grey),
                       ),
@@ -987,7 +989,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 disabledForegroundColor: Colors.grey.shade400,
               ),
-              child: Text(
+              child: TText(
                 'Cancel',
                 style: TextStyle(
                   fontSize: 15,
@@ -1034,7 +1036,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         ),
                       )
-                    : const Text(
+                    : const TText(
                         'Update Care Plan',
                         style: TextStyle(
                           fontSize: 15,

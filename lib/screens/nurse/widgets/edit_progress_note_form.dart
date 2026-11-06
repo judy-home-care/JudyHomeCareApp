@@ -4,6 +4,8 @@ import '../../../utils/app_colors.dart';
 import '../../../services/patients_assessments/progress_note_service.dart';
 import '../../../models/patients_assessments/progress_note_models.dart';
 import '../../../models/patients/nurse_patient_models.dart';
+import '../../../services/i18n/t_text.dart';
+import '../../../services/i18n/app_language.dart';
 
 // ==================== EDIT PROGRESS NOTE FORM ====================
 class EditProgressNoteForm extends StatefulWidget {
@@ -528,7 +530,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            const TText(
                               'Edit Progress Note',
                               style: TextStyle(
                                 fontSize: 22,
@@ -576,7 +578,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          const TText(
                             'Visit Date *',
                             style: TextStyle(
                               fontSize: 14,
@@ -612,7 +614,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                             ),
                           ),
                           const SizedBox(height: 16),
-                          const Text(
+                          const TText(
                             'Visit Time *',
                             style: TextStyle(
                               fontSize: 14,
@@ -656,7 +658,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           const Icon(Icons.favorite, color: AppColors.primaryGreen, size: 20),
                           const SizedBox(width: 8),
-                          const Text(
+                          const TText(
                             'Vital Signs (All Required)',
                             style: TextStyle(
                               fontSize: 16,
@@ -727,7 +729,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           const Icon(Icons.medical_services, color: Color(0xFFFF9A00), size: 20),
                           const SizedBox(width: 8),
-                          const Text(
+                          const TText(
                             'Interventions Provided',
                             style: TextStyle(
                               fontSize: 16,
@@ -740,7 +742,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const Divider(height: 24),
                       
                       _buildExpandableCheckbox(
-                        label: 'Medication Administered',
+                        label: 'Medication Administered'.tr,
                         value: _medicationAdministered,
                         interventionKey: 'medication',
                         controller: _medicationDetailsController,
@@ -754,7 +756,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       ),
                       
                       _buildExpandableCheckbox(
-                        label: 'Wound Care',
+                        label: 'Wound Care'.tr,
                         value: _woundCare,
                         interventionKey: 'wound',
                         controller: _woundCareDetailsController,
@@ -768,7 +770,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       ),
                       
                       _buildExpandableCheckbox(
-                        label: 'Physiotherapy/Exercise',
+                        label: 'Physiotherapy/Exercise'.tr,
                         value: _physiotherapy,
                         interventionKey: 'physio',
                         controller: _physiotherapyDetailsController,
@@ -782,7 +784,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       ),
                       
                       _buildExpandableCheckbox(
-                        label: 'Nutrition/Feeding Support',
+                        label: 'Nutrition/Feeding Support'.tr,
                         value: _nutritionSupport,
                         interventionKey: 'nutrition',
                         controller: _nutritionDetailsController,
@@ -796,7 +798,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       ),
                       
                       _buildExpandableCheckbox(
-                        label: 'Hygiene/Personal Care',
+                        label: 'Hygiene/Personal Care'.tr,
                         value: _hygieneCare,
                         interventionKey: 'hygiene',
                         controller: _hygieneDetailsController,
@@ -810,7 +812,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       ),
                       
                       _buildExpandableCheckbox(
-                        label: 'Counseling/Education',
+                        label: 'Counseling/Education'.tr,
                         value: _counseling,
                         interventionKey: 'counseling',
                         controller: _counselingDetailsController,
@@ -824,7 +826,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       ),
                       
                       _buildExpandableCheckbox(
-                        label: 'Other Interventions',
+                        label: 'Other Interventions'.tr,
                         value: _otherInterventions,
                         interventionKey: 'other',
                         controller: _otherInterventionsController,
@@ -843,7 +845,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           const Icon(Icons.remove_red_eye, color: Color(0xFF2196F3), size: 20),
                           const SizedBox(width: 8),
-                          const Text(
+                          const TText(
                             'Observations/Findings (Required)',
                             style: TextStyle(
                               fontSize: 16,
@@ -859,7 +861,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           Expanded(
                             child: _buildDropdown(
-                              label: 'General Condition *',
+                              label: 'General Condition *'.tr,
                               value: _generalCondition,
                               items: ['Stable', 'Improving', 'Declining', 'Critical'],
                               onChanged: (value) {
@@ -874,7 +876,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                const TText(
                                   'Pain Level (0-10) *',
                                   style: TextStyle(
                                     fontSize: 14,
@@ -942,7 +944,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const SizedBox(height: 16),
                       
                       _buildTextField(
-                        label: 'Wound Status (if any)',
+                        label: 'Wound Status (if any)'.tr,
                         controller: _woundStatusController,
                         hint: 'Describe wound status, healing progress, etc...',
                         maxLines: 3,
@@ -950,7 +952,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const SizedBox(height: 16),
                       
                       _buildTextField(
-                        label: 'Other Significant Observations',
+                        label: 'Other Significant Observations'.tr,
                         controller: _observationsController,
                         hint: 'Note any other significant observations...',
                         maxLines: 3,
@@ -962,7 +964,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           const Icon(Icons.people, color: Color(0xFF6C63FF), size: 20),
                           const SizedBox(width: 8),
-                          const Text(
+                          const TText(
                             'Family/Client Communication',
                             style: TextStyle(
                               fontSize: 16,
@@ -975,7 +977,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const Divider(height: 24),
                       
                       _buildTextField(
-                        label: 'Education Provided',
+                        label: 'Education Provided'.tr,
                         controller: _educationProvidedController,
                         hint: 'Describe education provided to patient/family...',
                         maxLines: 3,
@@ -983,7 +985,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const SizedBox(height: 16),
                       
                       _buildTextField(
-                        label: 'Concerns Raised by Family/Client',
+                        label: 'Concerns Raised by Family/Client'.tr,
                         controller: _familyConcernsController,
                         hint: 'Note any concerns raised by family or client...',
                         maxLines: 3,
@@ -995,7 +997,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                         children: [
                           const Icon(Icons.event_note, color: AppColors.primaryGreen, size: 20),
                           const SizedBox(width: 8),
-                          const Text(
+                          const TText(
                             'Plan / Next Steps',
                             style: TextStyle(
                               fontSize: 16,
@@ -1008,7 +1010,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                       const Divider(height: 24),
                       
                       _buildTextField(
-                        label: 'Plan for Next Visit',
+                        label: 'Plan for Next Visit'.tr,
                         controller: _nextVisitPlanController,
                         hint: 'Outline plans for the next visit, follow-up care, adjustments needed...',
                         maxLines: 4,
@@ -1029,7 +1031,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                              child: const Text('Cancel'),
+                              child: const TText('Cancel'),
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -1056,7 +1058,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                       ),
                                     )
-                                  : const Text(
+                                  : const TText(
                                       'Update Note',
                                       style: TextStyle(
                                         fontSize: 15,

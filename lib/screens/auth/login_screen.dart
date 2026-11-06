@@ -18,6 +18,10 @@ import '../../services/contact_person/contact_person_auth_service.dart';
 import 'two_factor_login_screen.dart';
 import '../onboarding/login_signup_screen.dart';
 import '../onboarding/get_started_screen.dart';
+import '../../config/countries.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
+import '../../widgets/language_picker_sheet.dart';
 
 // CRITICAL: Cache regex patterns as static constants
 class _ValidationPatterns {
@@ -57,12 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String _selectedCountryCode = '+233';
   String _selectedCountryFlag = '🇬🇭';
 
-  final List<Map<String, String>> _countries = [
-    {'name': 'Ghana', 'code': '+233', 'flag': '🇬🇭'},
-    {'name': 'Nigeria', 'code': '+234', 'flag': '🇳🇬'},
-    {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
-    {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
-  ];
+  final List<Map<String, String>> _countries = kSupportedCountries;
 
   @override
   void dispose() {
@@ -528,29 +527,57 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: _LoginScreenState._primaryLighter,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Row(
-              children: [
-                CircleAvatar(
-                  radius: 4,
-                  backgroundColor: _LoginScreenState._primaryColor,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _LoginScreenState._primaryLighter,
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                SizedBox(width: 8),
-                Text(
-                  'Secure Login',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: _LoginScreenState._primaryColor,
-                    fontWeight: FontWeight.w600,
+                child: const Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 4,
+                      backgroundColor: _LoginScreenState._primaryColor,
+                    ),
+                    SizedBox(width: 8),
+                    TText(
+                      'Secure Login',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _LoginScreenState._primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Material(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                child: InkWell(
+                  onTap: () => showLanguagePickerSheet(context),
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _LoginScreenState._borderGrey,
+                        width: 1,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.translate,
+                      color: _LoginScreenState._textDark,
+                      size: 20,
+                    ),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),
@@ -566,7 +593,7 @@ class _WelcomeSection extends StatelessWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        TText(
           'Welcome',
           style: TextStyle(
             fontSize: 36,
@@ -577,7 +604,7 @@ class _WelcomeSection extends StatelessWidget {
           ),
         ),
         SizedBox(height: 8),
-        Text(
+        TText(
           'Sign in to continue your healthcare journey',
           style: TextStyle(
             fontSize: 15,
@@ -638,7 +665,7 @@ class _LoginForm extends StatelessWidget {
           const SizedBox(height: 20),
           _OptimizedTextField(
             controller: passwordController,
-            label: 'Password',
+            label: 'Password'.tr,
             hint: '••••••••',
             icon: Icons.lock_outline,
             obscureText: !isPasswordVisible,
@@ -690,7 +717,7 @@ class _PhoneTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Phone Number',
           style: TextStyle(
             fontSize: 13,
@@ -749,7 +776,7 @@ class _PhoneTextField extends StatelessWidget {
                 textInputAction: TextInputAction.next,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(10),
+                  LengthLimitingTextInputFormatter(12),
                   _NoLeadingZeroFormatter(),
                 ],
                 validator: (value) {
@@ -762,7 +789,7 @@ class _PhoneTextField extends StatelessWidget {
                   return null;
                 },
                 decoration: InputDecoration(
-                  hintText: '24 XXX XXXX',
+                  hintText: '24 XXX XXXX'.tr,
                   hintStyle: const TextStyle(
                     color: Color(0xFF9E9E9E),
                     fontSize: 14,
@@ -1081,7 +1108,7 @@ class _OptionsRow extends StatelessWidget {
                     : null,
               ),
               const SizedBox(width: 8),
-              const Text(
+              const TText(
                 'Remember me',
                 style: TextStyle(
                   fontSize: 13,
@@ -1103,7 +1130,7 @@ class _OptionsRow extends StatelessWidget {
               ),
             );
           },
-          child: const Text(
+          child: const TText(
             'Forgot Password?',
             style: TextStyle(
               fontSize: 13,
@@ -1161,7 +1188,7 @@ class _OptimizedLoginButton extends StatelessWidget {
                     size: 20,
                   ),
                   SizedBox(width: 12),
-                  Text(
+                  TText(
                     'Sign In',
                     style: TextStyle(
                       fontSize: 16,
@@ -1184,7 +1211,7 @@ class _SignUpLink extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Text(
+        const TText(
           "Don't have an account? ",
           style: TextStyle(
             fontSize: 14,
@@ -1202,7 +1229,7 @@ class _SignUpLink extends StatelessWidget {
               ),
             );
           },
-          child: const Text(
+          child: const TText(
             'Get Started',
             style: TextStyle(
               fontSize: 14,
@@ -1245,7 +1272,7 @@ class _CountryPicker extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          const TText(
             'Select Country',
             style: TextStyle(
               fontSize: 20,
@@ -1254,31 +1281,36 @@ class _CountryPicker extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          ...countries.map((country) => ListTile(
-            leading: Text(
-              country['flag']!,
-              style: const TextStyle(fontSize: 28),
+          Flexible(
+            child: ListView(
+              shrinkWrap: true,
+              children: countries.map((country) => ListTile(
+                leading: Text(
+                  country['flag']!,
+                  style: const TextStyle(fontSize: 28),
+                ),
+                title: Text(
+                  country['name']!,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: Text(
+                  country['code']!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  onCountrySelected(country['code']!, country['flag']!);
+                  Navigator.pop(context);
+                },
+              )).toList(),
             ),
-            title: Text(
-              country['name']!,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            trailing: Text(
-              country['code']!,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            onTap: () {
-              onCountrySelected(country['code']!, country['flag']!);
-              Navigator.pop(context);
-            },
-          )),
+          ),
           const SizedBox(height: 20),
         ],
       ),

@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/time_tracking_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseTimeLogsScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -352,7 +354,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Time Logs',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -597,7 +599,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Retry',
                   style: TextStyle(
                     fontSize: 16,
@@ -702,7 +704,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
                   AppColors.primaryGreen.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Time Logs Yet',
                 style: TextStyle(
                   fontSize: 22,
@@ -718,7 +720,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
             
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Text(
+              child: TText(
                 'Your clock-in and clock-out sessions will appear here once you start working',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -752,7 +754,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TText(
                   'Loading more time logs...',
                   style: TextStyle(
                     fontSize: 14,
@@ -1025,7 +1027,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                         ],
                         if (tasks.isNotEmpty) ...[
                           const SizedBox(height: 16),
-                          Text(
+                          TText(
                             'Tasks Completed',
                             style: TextStyle(
                               fontSize: 13,
@@ -1194,7 +1196,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                   const SizedBox(height: 24),
                   
                   // Title
-                  const Text(
+                  const TText(
                     'Filter Time Logs',
                     style: TextStyle(
                       fontSize: 22,
@@ -1205,7 +1207,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                   const SizedBox(height: 24),
                   
                   // Status Filter
-                  Text(
+                  TText(
                     'Status',
                     style: TextStyle(
                       fontSize: 14,
@@ -1218,7 +1220,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                     children: [
                       Expanded(
                         child: _buildFilterChip(
-                          label: 'All',
+                          label: 'All'.tr,
                           isSelected: tempStatusFilter == 'all',
                           color: Colors.grey.shade600,
                           onTap: () {
@@ -1231,7 +1233,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildFilterChip(
-                          label: 'Completed',
+                          label: 'Completed'.tr,
                           isSelected: tempStatusFilter == 'completed',
                           color: AppColors.primaryGreen,
                           onTap: () {
@@ -1244,7 +1246,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                       const SizedBox(width: 8),
                       Expanded(
                         child: _buildFilterChip(
-                          label: 'In Progress',
+                          label: 'In Progress'.tr,
                           isSelected: tempStatusFilter == 'in_progress',
                           color: Colors.orange,
                           onTap: () {
@@ -1260,7 +1262,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                   const SizedBox(height: 24),
                   
                   // Date Range
-                  Text(
+                  TText(
                     'Date Range',
                     style: TextStyle(
                       fontSize: 14,
@@ -1412,7 +1414,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                   const SizedBox(height: 24),
                   
                   // Sort By
-                  Text(
+                  TText(
                     'Sort By',
                     style: TextStyle(
                       fontSize: 14,
@@ -1449,7 +1451,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                                 ),
                               ),
                               const SizedBox(height: 24),
-                              const Text(
+                              const TText(
                                 'Sort By',
                                 style: TextStyle(
                                   fontSize: 20,
@@ -1543,7 +1545,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Text(
+                          child: TText(
                             'Reset',
                             style: TextStyle(
                               fontSize: 16,
@@ -1570,7 +1572,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                             
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: const Text('Filters applied successfully'),
+                                content: const TText('Filters applied successfully'),
                                 backgroundColor: AppColors.primaryGreen,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
@@ -1588,7 +1590,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Apply Filters',
                             style: TextStyle(
                               fontSize: 16,

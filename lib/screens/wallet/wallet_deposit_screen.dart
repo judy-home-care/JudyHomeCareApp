@@ -8,6 +8,8 @@ import '../../utils/app_colors.dart';
 import '../../services/wallet_service.dart';
 import '../../models/wallet/wallet_models.dart';
 import '../../widgets/paystack_webview.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class WalletDepositScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -219,7 +221,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Deposit Successful!',
               style: TextStyle(
                 fontSize: 24,
@@ -228,7 +230,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Your wallet has been credited successfully.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -246,7 +248,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
               ),
               child: Column(
                 children: [
-                  Text(
+                  TText(
                     'New Balance',
                     style: TextStyle(
                       fontSize: 12,
@@ -287,7 +289,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Done',
                   style: TextStyle(
                     fontSize: 16,
@@ -329,7 +331,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
+            const TText(
               'Deposit Cancelled',
               style: TextStyle(
                 fontSize: 24,
@@ -338,7 +340,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            TText(
               'Your deposit was cancelled. You can try again.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -363,7 +365,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
                       ),
                       side: BorderSide(color: Colors.grey.shade400),
                     ),
-                    child: Text(
+                    child: TText(
                       'Go Back',
                       style: TextStyle(
                         fontSize: 16,
@@ -386,7 +388,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Try Again',
                       style: TextStyle(
                         fontSize: 16,
@@ -417,7 +419,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
             icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
+          title: const TText(
             'Add Funds',
             style: TextStyle(
               color: Color(0xFF1A1A1A),
@@ -467,7 +469,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          TText(
             'Enter Amount',
             style: TextStyle(
               fontSize: 14,
@@ -478,7 +480,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              Text(
+              TText(
                 'GHS',
                 style: TextStyle(
                   fontSize: 24,
@@ -596,7 +598,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
                 ),
               ),
               const SizedBox(width: 12),
-              const Text(
+              const TText(
                 'What can you use your wallet for?',
                 style: TextStyle(
                   fontSize: 15,
@@ -739,7 +741,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
           Icon(Icons.verified_user, color: Colors.green.shade700, size: 20),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
+            child: TText(
               'Your payment is secured by Paystack. We never store your payment details.',
               style: TextStyle(
                 fontSize: 12,

@@ -4,6 +4,9 @@ import 'package:flutter/services.dart';
 import '../../models/contact_person/contact_person_models.dart';
 import '../../services/contact_person/contact_person_auth_service.dart';
 import 'patient_selector_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
+import '../../widgets/language_picker_sheet.dart';
 
 class ContactPersonLoginScreen extends StatefulWidget {
   const ContactPersonLoginScreen({super.key});
@@ -146,7 +149,7 @@ class _ContactPersonLoginScreenState extends State<ContactPersonLoginScreen> {
                 backgroundColor: _primaryColor,
               ),
               SizedBox(width: 8),
-              Text(
+              TText(
                 'Contact Person Login',
                 style: TextStyle(
                   fontSize: 12,
@@ -158,6 +161,13 @@ class _ContactPersonLoginScreenState extends State<ContactPersonLoginScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.translate, color: _textDark, size: 22),
+            tooltip: 'Choose Language'.tr,
+            onPressed: () => showLanguagePickerSheet(context),
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -181,7 +191,7 @@ class _ContactPersonLoginScreenState extends State<ContactPersonLoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                const Text(
+                const TText(
                   'Enter your registered phone number to access patient information',
                   style: TextStyle(
                     fontSize: 15,
@@ -193,7 +203,7 @@ class _ContactPersonLoginScreenState extends State<ContactPersonLoginScreen> {
                 const SizedBox(height: 40),
 
                 // Phone field
-                const Text(
+                const TText(
                   'Phone Number',
                   style: TextStyle(
                     fontSize: 13,
@@ -288,7 +298,7 @@ class _ContactPersonLoginScreenState extends State<ContactPersonLoginScreen> {
                             children: [
                               Icon(Icons.login_rounded, size: 20),
                               SizedBox(width: 12),
-                              Text(
+                              TText(
                                 'Sign In',
                                 style: TextStyle(
                                   fontSize: 16,

@@ -5,6 +5,7 @@ import '../schedules/schedule_patients_screen.dart';
 import '../care_plans/care_plan_screen.dart';
 import 'nurse_account_screen.dart';
 import 'nurse_bottom_navigation.dart';
+import '../../services/i18n/t_text.dart';
 
 class NurseMainScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -206,21 +207,21 @@ class _NurseMainScreenState extends State<NurseMainScreen> with WidgetsBindingOb
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: const Text(
+        title: const TText(
           'Exit App',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
           ),
         ),
-        content: const Text(
+        content: const TText(
           'Are you sure you want to exit?',
           style: TextStyle(fontSize: 15),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -236,7 +237,7 @@ class _NurseMainScreenState extends State<NurseMainScreen> with WidgetsBindingOb
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-            child: const Text('Exit'),
+            child: const TText('Exit'),
           ),
         ],
       ),

@@ -10,6 +10,8 @@ import '../../models/messages/message_models.dart';
 import '../../services/messages/message_service.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ChatScreen extends StatefulWidget {
   final int userId;
@@ -499,7 +501,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             children: [
               Icon(Icons.error_outline, size: 48, color: Colors.red[400]),
               const SizedBox(height: 16),
-              Text(
+              TText(
                 'Failed to load messages',
                 style: TextStyle(
                   fontSize: 16,
@@ -520,7 +522,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
                 ),
-                child: const Text('Retry'),
+                child: const TText('Retry'),
               ),
             ],
           ),
@@ -546,7 +548,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
+            TText(
               'No messages yet',
               style: TextStyle(
                 fontSize: 18,
@@ -555,7 +557,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            TText(
               'Send a message to start the conversation',
               style: TextStyle(fontSize: 14, color: Colors.grey[500]),
             ),
@@ -608,7 +610,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
+                  TText(
                     'Loading older messages...',
                     style: TextStyle(
                       fontSize: 12,
@@ -630,7 +632,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                     children: [
                       Icon(Icons.history, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Load older messages',
                         style: TextStyle(
                           fontSize: 12,
@@ -796,7 +798,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                 maxLines: 4,
                 minLines: 1,
                 decoration: InputDecoration(
-                  hintText: 'Type a message...',
+                  hintText: 'Type a message...'.tr,
                   hintStyle: TextStyle(color: Colors.grey[500]),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(
@@ -878,14 +880,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               ListTile(
                 leading: const Icon(Icons.refresh, color: AppColors.primaryGreen),
-                title: const Text('Refresh Messages'),
-                subtitle: const Text('Check for new messages'),
+                title: const TText('Refresh Messages'),
+                subtitle: const TText('Check for new messages'),
                 onTap: () {
                   Navigator.pop(context);
                   _refreshMessages();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Checking for new messages...'),
+                      content: TText('Checking for new messages...'),
                       duration: Duration(seconds: 1),
                       behavior: SnackBarBehavior.floating,
                     ),
@@ -894,7 +896,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               ListTile(
                 leading: const Icon(Icons.keyboard_double_arrow_down),
-                title: const Text('Go to latest'),
+                title: const TText('Go to latest'),
                 onTap: () {
                   Navigator.pop(context);
                   _scrollToBottom();
@@ -902,14 +904,14 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               ),
               ListTile(
                 leading: const Icon(Icons.copy),
-                title: const Text('Copy last message'),
+                title: const TText('Copy last message'),
                 onTap: () {
                   Navigator.pop(context);
                   if (_messages.isNotEmpty) {
                     Clipboard.setData(ClipboardData(text: _messages.last.message));
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Message copied to clipboard'),
+                        content: TText('Message copied to clipboard'),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );

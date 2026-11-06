@@ -5,6 +5,8 @@ import '../../services/survey_service.dart';
 import '../../models/feedback/feedback_models.dart';
 import '../../models/survey/survey_models.dart';
 import 'survey_submission_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientFeedbackScreen extends StatefulWidget {
   final int initialTabIndex;
@@ -51,7 +53,7 @@ class _PatientFeedbackScreenState extends State<PatientFeedbackScreen>
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Feedback & Surveys',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -74,9 +76,9 @@ class _PatientFeedbackScreenState extends State<PatientFeedbackScreen>
             fontWeight: FontWeight.w500,
             fontSize: 14,
           ),
-          tabs: const [
-            Tab(text: 'General Survey'),
-            Tab(text: 'Nurse Visit & Feedbacks'),
+          tabs: [
+            Tab(text: 'General Survey'.tr),
+            Tab(text: 'Nurse Visit & Feedbacks'.tr),
           ],
         ),
       ),
@@ -378,7 +380,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
                         color: const Color(0xFFFFB648).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Text(
+                      child: TText(
                         'Pending',
                         style: TextStyle(
                           fontSize: 12,
@@ -645,7 +647,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          const TText(
             'No Pending Surveys',
             style: TextStyle(
               fontSize: 18,
@@ -654,7 +656,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'You have completed all your surveys. Check back later for new ones.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -685,7 +687,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          const TText(
             'No Completed Surveys',
             style: TextStyle(
               fontSize: 18,
@@ -694,7 +696,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'Your completed surveys will appear here.',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -716,7 +718,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          const Text('Loading surveys...'),
+          const TText('Loading surveys...'),
         ],
       ),
     );
@@ -746,7 +748,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Retry'),
+              child: const TText('Retry'),
             ),
           ],
         ),
@@ -824,7 +826,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
                   AppColors.primaryGreen.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Surveys Available',
                 style: TextStyle(
                   fontSize: 24,
@@ -838,7 +840,7 @@ class _GeneralSurveyTabState extends State<GeneralSurveyTab>
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'You will receive surveys after care visits to help us improve our services',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1064,7 +1066,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                           : Colors.grey.shade600,
                     ),
                     const SizedBox(width: 6),
-                    Text(
+                    TText(
                       'Rate Nurses',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -1115,7 +1117,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                           : Colors.grey.shade600,
                     ),
                     const SizedBox(width: 6),
-                    Text(
+                    TText(
                       'My Feedback',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
@@ -1145,7 +1147,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
+          child: TText(
             'Rate Your Nurses',
             style: TextStyle(
               fontSize: 16,
@@ -1170,7 +1172,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'No Nurses to Review',
             style: TextStyle(
               fontSize: 18,
@@ -1179,7 +1181,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'You can rate nurses after they complete visits with you',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -1215,7 +1217,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
         // Summary row
         Row(
           children: [
-            Text(
+            TText(
               'Your Feedback',
               style: TextStyle(
                 fontSize: 16,
@@ -1270,7 +1272,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
             color: Colors.grey.shade300,
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'No Feedback Submitted',
             style: TextStyle(
               fontSize: 18,
@@ -1279,7 +1281,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'Your submitted feedback and admin responses will appear here',
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -1441,7 +1443,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
+                      TText(
                         'Admin Response',
                         style: TextStyle(
                           fontSize: 13,
@@ -1494,7 +1496,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                     color: Colors.grey.shade500,
                   ),
                   const SizedBox(width: 6),
-                  Text(
+                  TText(
                     'Awaiting response',
                     style: TextStyle(
                       fontSize: 12,
@@ -1576,7 +1578,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Leave General Feedback',
                         style: TextStyle(
                           fontSize: 17,
@@ -1585,7 +1587,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
+                      TText(
                         'Share your overall experience with our care services',
                         style: TextStyle(
                           fontSize: 13,
@@ -1630,7 +1632,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          const Text('Loading nurses...'),
+          const TText('Loading nurses...'),
         ],
       ),
     );
@@ -1660,7 +1662,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Retry'),
+              child: const TText('Retry'),
             ),
           ],
         ),
@@ -1798,7 +1800,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        TText(
                           'Recent Visits',
                           style: TextStyle(
                             fontSize: 11,
@@ -1875,7 +1877,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
             Row(
               children: [
                 const Expanded(
-                  child: Text(
+                  child: TText(
                     'Select Visit to Review',
                     style: TextStyle(
                       fontSize: 20,
@@ -1980,7 +1982,7 @@ class _NurseVisitFeedbackTabState extends State<NurseVisitFeedbackTab>
                 Navigator.pop(context);
                 _showFeedbackDialog(nurse, scheduleId: null);
               },
-              child: const Text('Leave general feedback instead'),
+              child: const TText('Leave general feedback instead'),
             ),
           ],
         ),
@@ -2062,7 +2064,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
   Future<void> _submitFeedback() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a rating')),
+        const SnackBar(content: TText('Please select a rating')),
       );
       return;
     }
@@ -2201,7 +2203,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TText(
                       'How would you rate your experience?',
                       style: TextStyle(
                         fontSize: 16,
@@ -2233,7 +2235,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    const Text(
+                    const TText(
                       'Share your feedback',
                       style: TextStyle(
                         fontSize: 16,
@@ -2251,7 +2253,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                         FocusScope.of(context).unfocus();
                       },
                       decoration: InputDecoration(
-                        hintText: 'Tell us about your experience...',
+                        hintText: 'Tell us about your experience...'.tr,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -2276,7 +2278,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
+                            child: TText(
                               'Would you recommend this nurse?',
                               style: TextStyle(
                                 fontSize: 14,
@@ -2341,7 +2343,7 @@ class _FeedbackDialogState extends State<FeedbackDialog> {
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text(
+                      : const TText(
                           'Submit Feedback',
                           style: TextStyle(
                             fontSize: 16,
@@ -2389,7 +2391,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
   Future<void> _submitFeedback() async {
     if (_rating == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a rating')),
+        const SnackBar(content: TText('Please select a rating')),
       );
       return;
     }
@@ -2486,7 +2488,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            TText(
                               'General Feedback',
                               style: TextStyle(
                                 fontSize: 20,
@@ -2495,7 +2497,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                               ),
                             ),
                             SizedBox(height: 4),
-                            Text(
+                            TText(
                               'Share your overall experience with our services',
                               style: TextStyle(
                                 fontSize: 13,
@@ -2523,7 +2525,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TText(
                       'How would you rate your experience?',
                       style: TextStyle(
                         fontSize: 16,
@@ -2555,7 +2557,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    const Text(
+                    const TText(
                       'Share your feedback',
                       style: TextStyle(
                         fontSize: 16,
@@ -2573,7 +2575,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                         FocusScope.of(context).unfocus();
                       },
                       decoration: InputDecoration(
-                        hintText: 'Tell us about your experience...',
+                        hintText: 'Tell us about your experience...'.tr,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: Colors.grey.shade300),
@@ -2598,7 +2600,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
+                            child: TText(
                               'Would you recommend our services?',
                               style: TextStyle(
                                 fontSize: 14,
@@ -2665,7 +2667,7 @@ class _GeneralFeedbackDialogState extends State<GeneralFeedbackDialog> {
                             valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         )
-                      : const Text(
+                      : const TText(
                           'Submit Feedback',
                           style: TextStyle(
                             fontSize: 16,

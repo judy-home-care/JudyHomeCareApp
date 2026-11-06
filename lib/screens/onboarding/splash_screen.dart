@@ -7,6 +7,8 @@ import 'models/auth/auth_models.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/nurse/nurse_dashboard_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -209,7 +211,7 @@ class _AppInitializerState extends State<AppInitializer> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
+                child: const TText(
                   'Logout',
                   style: TextStyle(
                     fontSize: 16,

@@ -6,6 +6,8 @@ import '../../models/schedules/schedule_models.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import 'dart:async';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class SchedulePatientsScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -505,7 +507,7 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Schedules updated'),
+              child: TText('Schedules updated'),
             ),
           ],
         ),
@@ -715,7 +717,7 @@ void _showFilterOptions() {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  const TText(
                     'Filter Schedules',
                     style: TextStyle(
                       fontSize: 22,
@@ -731,7 +733,7 @@ void _showFilterOptions() {
                           tempStatusFilter = 'All Status';
                         });
                       },
-                      child: const Text(
+                      child: const TText(
                         'Clear All',
                         style: TextStyle(
                           color: AppColors.primaryGreen,
@@ -746,7 +748,7 @@ void _showFilterOptions() {
             const SizedBox(height: 8),
             
             // Shift Type section
-            const Text(
+            const TText(
               'Shift Type',
               style: TextStyle(
                 fontSize: 16,
@@ -817,7 +819,7 @@ void _showFilterOptions() {
             const SizedBox(height: 24),
             
             // Status section
-            const Text(
+            const TText(
               'Status',
               style: TextStyle(
                 fontSize: 16,
@@ -911,7 +913,7 @@ void _showFilterOptions() {
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
+                child: const TText(
                   'Apply Filters',
                   style: TextStyle(
                     fontSize: 16,
@@ -1011,7 +1013,7 @@ void _showFilterOptions() {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'My Schedules',
                     style: TextStyle(
                       fontSize: 24,
@@ -1042,7 +1044,7 @@ void _showFilterOptions() {
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'My Schedule',
                 style: TextStyle(
                   color: Color(0xFF1A1A1A),
@@ -1060,7 +1062,7 @@ void _showFilterOptions() {
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -1092,12 +1094,12 @@ void _showFilterOptions() {
           IconButton(
             icon: const Icon(Icons.calendar_today, color: Color(0xFF1A1A1A)),
             onPressed: _showDatePicker,
-            tooltip: 'Select Date',
+            tooltip: 'Select Date'.tr,
           ),
           IconButton(
             icon: const Icon(Icons.filter_list, color: Color(0xFF1A1A1A)),
             onPressed: _showFilterOptions,
-            tooltip: 'Filter Schedules',
+            tooltip: 'Filter Schedules'.tr,
           ),
           GestureDetector(
             onLongPress: () {
@@ -1109,7 +1111,7 @@ void _showFilterOptions() {
                       const Icon(Icons.delete_sweep, color: Colors.white, size: 20),
                       const SizedBox(width: 12),
                       const Expanded(
-                        child: Text('Cache cleared! Pull to refresh.'),
+                        child: TText('Cache cleared! Pull to refresh.'),
                       ),
                     ],
                   ),
@@ -1293,7 +1295,7 @@ void _showFilterOptions() {
               color: Colors.white,
               child: Row(
                 children: [
-                  const Text(
+                  const TText(
                     'Active Filters: ',
                     style: TextStyle(
                       fontSize: 14,
@@ -1658,7 +1660,7 @@ void _showFilterOptions() {
                   Colors.red.shade500,
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'Oops! Something Went Wrong',
                 style: TextStyle(
                   fontSize: 24,
@@ -1686,7 +1688,7 @@ void _showFilterOptions() {
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'Please check your connection and try again',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1717,7 +1719,7 @@ void _showFilterOptions() {
               child: ElevatedButton.icon(
                 onPressed: () => _loadSchedules(forceRefresh: true),
                 icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Try Again'),
+                label: const TText('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
@@ -1817,7 +1819,7 @@ void _showFilterOptions() {
                   AppColors.primaryGreen.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Schedules Found',
                 style: TextStyle(
                   fontSize: 24,
@@ -1873,7 +1875,7 @@ void _showFilterOptions() {
                   _loadSchedules(forceRefresh: true);
                 },
                 icon: const Icon(Icons.clear_all, size: 20),
-                label: const Text('Clear All Filters'),
+                label: const TText('Clear All Filters'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
                   side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.5), width: 2),
@@ -1972,7 +1974,7 @@ void _showFilterOptions() {
                                         color: Colors.green,
                                       ),
                                       SizedBox(width: 4),
-                                      Text(
+                                      TText(
                                         'Completed',
                                         style: TextStyle(
                                           fontSize: 11,
@@ -2133,7 +2135,7 @@ void _showFilterOptions() {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Schedule Details',
                         style: TextStyle(
                           fontSize: 20,
@@ -2293,7 +2295,7 @@ void _showFilterOptions() {
                     //           Navigator.pop(context);
                     //         },
                     //         icon: const Icon(Icons.person_outline),
-                    //         label: const Text('Patient Profile'),
+                    //         label: const TText('Patient Profile'),
                     //         style: OutlinedButton.styleFrom(
                     //           foregroundColor: AppColors.primaryGreen,
                     //           side: const BorderSide(color: AppColors.primaryGreen),
@@ -2311,13 +2313,13 @@ void _showFilterOptions() {
                     //           Navigator.pop(context);
                     //           ScaffoldMessenger.of(context).showSnackBar(
                     //             const SnackBar(
-                    //               content: Text('Clock-in feature coming soon!'),
+                    //               content: TText('Clock-in feature coming soon!'),
                     //               backgroundColor: AppColors.primaryGreen,
                     //             ),
                     //           );
                     //         },
                     //         icon: const Icon(Icons.access_time),
-                    //         label: const Text('Clock In'),
+                    //         label: const TText('Clock In'),
                     //         style: ElevatedButton.styleFrom(
                     //           backgroundColor: AppColors.primaryGreen,
                     //           foregroundColor: Colors.white,

@@ -8,6 +8,8 @@ import '../modern_notifications_sheet.dart';
 import 'edit_care_plan_modal.dart';
 import 'create_care_plan_modal.dart';
 import '../../widgets/searchable_dropdown.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 
 /// Complete Optimized Care Plans Screen with Task Toggle Feature & Pagination
@@ -548,7 +550,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
         action: SnackBarAction(
-          label: 'OK',
+          label: 'OK'.tr,
           textColor: Colors.white,
           onPressed: () {},
         ),
@@ -707,7 +709,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            const TText(
               'Care Plans',
               style: TextStyle(
                 color: Color(0xFF1A1F36),
@@ -757,7 +759,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -806,7 +808,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           IconButton(
             icon: const Icon(Icons.filter_list, color: Colors.black),
             onPressed: _showFilterOptions,
-            tooltip: 'Filter Care Plans',
+            tooltip: 'Filter Care Plans'.tr,
           ),
         ],
         bottom: PreferredSize(
@@ -857,7 +859,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
               const SizedBox(height: 16),
-              Text(
+              TText(
                 'Error',
                 style: TextStyle(
                   fontSize: 20,
@@ -875,7 +877,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
               ElevatedButton.icon(
                 onPressed: () => _loadCarePlans(forceRefresh: true),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Try Again'),
+                label: const TText('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryGreen,
                   foregroundColor: Colors.white,
@@ -918,7 +920,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
               ),
             ),
             const SizedBox(height: 24),
-            Text(
+            TText(
               'No care plans found',
               style: TextStyle(
                 fontSize: 20,
@@ -946,7 +948,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
       elevation: 4,
       heroTag: 'create_care_plan_fab',
       icon: const Icon(Icons.add, size: 24, color: Colors.white),
-      label: const Text(
+      label: const TText(
         'New Care Plan',
         style: TextStyle(
           fontSize: 15,
@@ -999,7 +1001,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   _loadCarePlans(forceRefresh: true);
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search care plans, patients, doctors...',
+                  hintText: 'Search care plans, patients, doctors...'.tr,
                   hintStyle: TextStyle(
                     color: Colors.grey[400],
                     fontSize: 15,
@@ -1171,7 +1173,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  const TText(
                     'Filter Care Plans',
                     style: TextStyle(
                       fontSize: 22,
@@ -1190,7 +1192,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                         Navigator.pop(context);
                         _loadCarePlans(forceRefresh: true);
                       },
-                      child: const Text(
+                      child: const TText(
                         'Clear All',
                         style: TextStyle(
                           color: AppColors.primaryGreen,
@@ -1201,7 +1203,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                 ],
               ),
             ),
-            const Text(
+            const TText(
               'Status',
               style: TextStyle(
                 fontSize: 16,
@@ -1306,7 +1308,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TText(
                   'Loading more care plans...',
                   style: TextStyle(
                     fontSize: 14,
@@ -1632,7 +1634,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          tooltip: 'Edit Care Plan',
+                          tooltip: 'Edit Care Plan'.tr,
                         ),
                         const SizedBox(width: 8),
                         IconButton(
@@ -1708,7 +1710,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  TText(
                                     'Start Date',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -1739,7 +1741,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
+                                    TText(
                                       'End Date',
                                       style: TextStyle(
                                         fontSize: 12,
@@ -1974,7 +1976,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
+                                  TText(
                                     'per day',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -2011,7 +2013,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
+                                  TText(
                                     'frequency',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -2255,10 +2257,10 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           children: [
             Icon(Icons.warning_amber_rounded, color: Color(0xFFFF9A00)),
             SizedBox(width: 12),
-            Text('Discard Changes?'),
+            TText('Discard Changes?'),
           ],
         ),
-        content: Text(
+        content: TText(
           'Are you sure you want to go back? Any unsaved changes will be lost.',
           style: TextStyle(
             color: Colors.grey.shade700,
@@ -2268,7 +2270,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Continue Editing'),
+            child: const TText('Continue Editing'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -2281,7 +2283,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Discard'),
+            child: const TText('Discard'),
           ),
         ],
       ),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_colors.dart';
+import '../services/i18n/t_text.dart';
+import '../services/i18n/app_language.dart';
 
 class NurseHelpCenterScreen extends StatefulWidget {
   const NurseHelpCenterScreen({Key? key}) : super(key: key);
@@ -261,7 +263,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        const TText(
                           'Help Center',
                           style: TextStyle(
                             color: Colors.white,
@@ -300,7 +302,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search for help articles...',
+                  hintText: 'Search for help articles...'.tr,
                   hintStyle: TextStyle(
                     color: Colors.grey.shade400,
                     fontSize: 14,
@@ -349,7 +351,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                  child: Text(
+                  child: TText(
                     'Quick Actions',
                     style: TextStyle(
                       fontSize: 18,
@@ -381,7 +383,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
-              child: Text(
+              child: TText(
                 'Browse by Category',
                 style: TextStyle(
                   fontSize: 18,
@@ -603,7 +605,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                     const SizedBox(height: 8), // Replace Spacer with fixed spacing
                     Row(
                       children: [
-                        Text(
+                        TText(
                           'View articles',
                           style: TextStyle(
                             fontSize: 12,
@@ -653,7 +655,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
+            content: TText(
               'Unable to make phone call',
               style: TextStyle(color: Colors.white), 
             ),
@@ -725,7 +727,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          TText(
                             'Report Technical Issue',
                             style: TextStyle(
                               fontSize: 20,
@@ -763,7 +765,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Name
-                        const Text(
+                        const TText(
                           'Your Name *',
                           style: TextStyle(
                             fontSize: 14,
@@ -775,7 +777,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                         TextFormField(
                           controller: nameController,
                           decoration: InputDecoration(
-                            hintText: 'Enter your full name',
+                            hintText: 'Enter your full name'.tr,
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -797,7 +799,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                         const SizedBox(height: 20),
                         
                         // Email
-                        const Text(
+                        const TText(
                           'Email Address *',
                           style: TextStyle(
                             fontSize: 14,
@@ -810,7 +812,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
-                            hintText: 'your.email@example.com',
+                            hintText: 'your.email@example.com'.tr,
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -835,7 +837,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                         const SizedBox(height: 20),
                         
                         // Phone
-                        const Text(
+                        const TText(
                           'Phone Number',
                           style: TextStyle(
                             fontSize: 14,
@@ -848,7 +850,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                           controller: phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: InputDecoration(
-                            hintText: '+233 XXX XXX XXX',
+                            hintText: '+233 XXX XXX XXX'.tr,
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -864,7 +866,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                         const SizedBox(height: 20),
                         
                         // Category
-                        const Text(
+                        const TText(
                           'Issue Category *',
                           style: TextStyle(
                             fontSize: 14,
@@ -890,23 +892,23 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                           items: const [
                             DropdownMenuItem(
                               value: 'Technical Issue',
-                              child: Text('Technical Issue'),
+                              child: TText('Technical Issue'),
                             ),
                             DropdownMenuItem(
                               value: 'Login Problem',
-                              child: Text('Login Problem'),
+                              child: TText('Login Problem'),
                             ),
                             DropdownMenuItem(
                               value: 'App Crash',
-                              child: Text('App Crash'),
+                              child: TText('App Crash'),
                             ),
                             DropdownMenuItem(
                               value: 'Feature Request',
-                              child: Text('Feature Request'),
+                              child: TText('Feature Request'),
                             ),
                             DropdownMenuItem(
                               value: 'Other',
-                              child: Text('Other'),
+                              child: TText('Other'),
                             ),
                           ],
                           onChanged: (value) {
@@ -918,7 +920,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                         const SizedBox(height: 20),
                         
                         // Issue Description
-                        const Text(
+                        const TText(
                           'Describe the Issue *',
                           style: TextStyle(
                             fontSize: 14,
@@ -931,7 +933,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                           controller: issueController,
                           maxLines: 6,
                           decoration: InputDecoration(
-                            hintText: 'Please provide as much detail as possible...',
+                            hintText: 'Please provide as much detail as possible...'.tr,
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -996,7 +998,7 @@ class _NurseHelpCenterScreenState extends State<NurseHelpCenterScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: const Text(
+                      child: const TText(
                         'Submit Report',
                         style: TextStyle(
                           fontSize: 16,
@@ -1044,7 +1046,7 @@ $description
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Opening email app...'),
+              content: TText('Opening email app...'),
               backgroundColor: Colors.green,
             ),
           );
@@ -1053,7 +1055,7 @@ $description
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No email app available. Please email theophilusboateng7@gmail.com directly.'),
+              content: TText('No email app available. Please email theophilusboateng7@gmail.com directly.'),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 4),
             ),
@@ -1064,7 +1066,7 @@ $description
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Error opening email app'),
+            content: TText('Error opening email app'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1081,29 +1083,29 @@ $description
           children: [
             Icon(Icons.emergency, color: Colors.red.shade600),
             const SizedBox(width: 8),
-            const Text('Emergency Services'),
+            const TText('Emergency Services'),
           ],
         ),
         content: const Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            TText(
               'Select emergency service:',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 16),
-            Text('🚑 Ambulance: 112 or 193'),
+            TText('🚑 Ambulance: 112 or 193'),
             SizedBox(height: 8),
-            Text('🚒 Fire Service: 192'),
+            TText('🚒 Fire Service: 192'),
             SizedBox(height: 8),
-            Text('👮 Police: 191 or 18555'),
+            TText('👮 Police: 191 or 18555'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -1116,7 +1118,7 @@ $description
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-          child: const Text(
+          child: const TText(
             'Call Ambulance (112)',
             style: TextStyle(color: Colors.white),
           ),
@@ -1345,7 +1347,7 @@ class ArticleDetailScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Article',
           style: TextStyle(
             color: Colors.white,

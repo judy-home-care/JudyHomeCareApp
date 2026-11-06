@@ -18,6 +18,8 @@ import '../transport/transport_request_screen.dart';
 import 'nurse_care_requests_lists_screen.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/notification_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseDashboardScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -328,7 +330,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                     valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  const TText(
                     'Getting your location...',
                     style: TextStyle(
                       fontSize: 16,
@@ -337,7 +339,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  TText(
                     'Please wait',
                     style: TextStyle(
                       fontSize: 14,
@@ -414,7 +416,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
+            const TText(
               'Location Required',
               style: TextStyle(
                 fontSize: 18,
@@ -423,14 +425,14 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
             ),
           ],
         ),
-        content: const Text(
+        content: const TText(
           'Time tracking requires location permission. Please enable location permissions in your device settings.',
           style: TextStyle(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -450,7 +452,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                 Navigator.of(context).pop();
                 Geolocator.openAppSettings();
               },
-              child: const Text(
+              child: const TText(
                 'Open Settings',
                 style: TextStyle(
                   color: Colors.white,
@@ -535,7 +537,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                   Icon(Icons.info_outline, color: Colors.white, size: 20),
                   SizedBox(width: 12),
                   Expanded(
-                    child: Text('Session completed'),
+                    child: TText('Session completed'),
                   ),
                 ],
               ),
@@ -644,7 +646,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                 ),
               ),
               SizedBox(width: 12),
-              Text('Starting timer...'),
+              TText('Starting timer...'),
             ],
           ),
           backgroundColor: const Color(0xFF199A8E),
@@ -766,7 +768,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                 ),
               ),
               SizedBox(width: 12),
-              Text('Stopping timer...'),
+              TText('Stopping timer...'),
             ],
           ),
           backgroundColor: const Color(0xFF199A8E),
@@ -963,7 +965,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
+            const TText(
               'Stop Timer',
               style: TextStyle(
                 fontSize: 18,
@@ -972,14 +974,14 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
             ),
           ],
         ),
-        content: const Text(
+        content: const TText(
           'Are you sure you want to stop the timer? This will end the current time tracking session.',
           style: TextStyle(fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -999,7 +1001,7 @@ class _NurseDashboardScreenState extends State<NurseDashboardScreen>
                 Navigator.of(context).pop();
                 _stopTimer();
               },
-              child: const Text(
+              child: const TText(
                 'Stop Timer',
                 style: TextStyle(
                   color: Colors.white,
@@ -1344,7 +1346,7 @@ String _getRemainingCacheTime() {
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Dashboard updated'),
+              child: TText('Dashboard updated'),
             ),
           ],
         ),
@@ -1377,7 +1379,7 @@ String _getRemainingCacheTime() {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Dashboard',
                     style: TextStyle(
                       fontSize: 24,
@@ -1526,7 +1528,7 @@ actions: [
             valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'Loading dashboard...',
             style: TextStyle(
               fontSize: 14,
@@ -1563,7 +1565,7 @@ actions: [
             ElevatedButton.icon(
               onPressed: _forceRefresh,
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,
@@ -1645,7 +1647,7 @@ actions: [
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  TText(
                     'How is your shift going today?',
                     style: TextStyle(
                       fontSize: 16,
@@ -1750,7 +1752,7 @@ actions: [
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        const TText(
                           'Active Session',
                           style: TextStyle(
                             fontSize: 11,
@@ -1760,7 +1762,7 @@ actions: [
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(
+                        TText(
                           'Time tracking in progress',
                           style: TextStyle(
                             fontSize: 12,
@@ -1820,7 +1822,7 @@ actions: [
                     child: ElevatedButton.icon(
                       onPressed: _showStopTimerConfirmation,
                       icon: const Icon(Icons.stop_circle_outlined, size: 18),
-                      label: const Text(
+                      label: const TText(
                         'Stop Timer',
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                       ),
@@ -1852,7 +1854,7 @@ actions: [
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.access_time_outlined,
-                label: 'Week Hours',
+                label: 'Week Hours'.tr,
                 value: '${_dashboardData!.weekHours}h',
                 iconColor: const Color(0xFF199A8E),
                 bgColor: const Color(0xFFE8F5F5),
@@ -1862,7 +1864,7 @@ actions: [
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.favorite_outline,
-                label: 'Patients Today',
+                label: 'Patients Today'.tr,
                 value: '${_dashboardData!.todayPatients}',
                 iconColor: const Color(0xFFFF6B6B),
                 bgColor: const Color(0xFFFFE5E5),
@@ -1876,7 +1878,7 @@ actions: [
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.assignment_outlined,
-                label: 'Care Plans',
+                label: 'Care Plans'.tr,
                 value: '${_dashboardData!.activePlans}',
                 iconColor: const Color(0xFF6C63FF),
                 bgColor: const Color(0xFFEDE9FF),
@@ -1886,7 +1888,7 @@ actions: [
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.calendar_today_outlined,
-                label: 'Weekly Schedule',
+                label: 'Weekly Schedule'.tr,
                 value: '${_dashboardData!.scheduleVisits.length}',
                 iconColor: const Color(0xFFFF9A00),
                 bgColor: const Color(0xFFFFF3E0),
@@ -2063,7 +2065,7 @@ Widget _buildTodaySchedule() {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              const TText(
                 'Scheduled visits',
                 style: TextStyle(
                   fontSize: 20,
@@ -2083,7 +2085,7 @@ Widget _buildTodaySchedule() {
                         color: Color(0xFF199A8E),
                       ),
                       const SizedBox(width: 4),
-                      Text(
+                      TText(
                         'All visits completed today',
                         style: TextStyle(
                           fontSize: 12,
@@ -2118,7 +2120,7 @@ Widget _buildTodaySchedule() {
             },
             child: Row(
               children: [
-                Text(
+                TText(
                   'See all',
                   style: TextStyle(
                     fontSize: 14,
@@ -2308,7 +2310,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                     size: 14,
                   ),
                   const SizedBox(width: 6),
-                  const Text(
+                  const TText(
                     'Completed',
                     style: TextStyle(
                       fontSize: 12,
@@ -2460,7 +2462,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          const TText(
                             'Schedule Details',
                             style: TextStyle(
                               fontSize: 22,
@@ -2488,7 +2490,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                     size: 14,
                                   ),
                                   SizedBox(width: 6),
-                                  Text(
+                                  TText(
                                     'COMPLETED',
                                     style: TextStyle(
                                       fontSize: 11,
@@ -2665,7 +2667,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                       size: 24,
                                     ),
                                     SizedBox(width: 12),
-                                    Text(
+                                    TText(
                                       'Session Completed',
                                       style: TextStyle(
                                         fontSize: 16,
@@ -2692,7 +2694,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                           size: 20,
                                         ),
                                         const SizedBox(width: 8),
-                                        const Text(
+                                        const TText(
                                           'Time Worked:',
                                           style: TextStyle(
                                             fontSize: 14,
@@ -2804,7 +2806,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                                 Navigator.of(context).pop();
                                               },
                                               icon: const Icon(Icons.stop_circle_outlined),
-                                              label: const Text('Stop Timer'),
+                                              label: const TText('Stop Timer'),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor: const Color(0xFFFF4757),
                                                 foregroundColor: Colors.white,
@@ -2847,7 +2849,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                 
                                 if (_isTimerRunning && isActive) ...[
                                   const SizedBox(height: 12),
-                                  Text(
+                                  TText(
                                     'Recording time for this visit...',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -3021,7 +3023,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Quick actions',
           style: TextStyle(
             fontSize: 20,
@@ -3212,7 +3214,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            const TText(
               'My patients',
               style: TextStyle(
                 fontSize: 20,
@@ -3229,7 +3231,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
               },
               child: Row(
                 children: [
-                  Text(
+                  TText(
                     'See all',
                     style: TextStyle(
                       fontSize: 14,
@@ -3664,7 +3666,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                     color: const Color(0xFF199A8E),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text(
+                  child: const TText(
                     'TODAY',
                     style: TextStyle(
                       fontSize: 10,
@@ -3831,7 +3833,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'All Clear',
                   style: TextStyle(
                     fontSize: 16,
@@ -3897,7 +3899,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text(
+              child: TText(
                 'Emergency Services',
                 style: TextStyle(
                   fontSize: 18,
@@ -3911,7 +3913,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            const TText(
               'Select emergency service to call:',
               style: TextStyle(
                 fontSize: 14,
@@ -3952,7 +3954,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -4057,7 +4059,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
               ),
             ),
             const SizedBox(width: 12),
-            const Text(
+            const TText(
               'Confirm Call',
               style: TextStyle(
                 fontSize: 18,
@@ -4073,7 +4075,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(
+            child: TText(
               'Cancel',
               style: TextStyle(
                 color: Colors.grey.shade600,
@@ -4093,7 +4095,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                 Navigator.of(context).pop();
                 _makeEmergencyCall(phoneNumber);
               },
-              child: const Text(
+              child: const TText(
                 'Call Now',
                 style: TextStyle(
                   color: Colors.white,
@@ -4203,7 +4205,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                 Icon(Icons.check_circle, color: Colors.white, size: 20),
                 SizedBox(width: 12),
                 Expanded(
-                  child: Text('Session completed - Timer stopped'),
+                  child: TText('Session completed - Timer stopped'),
                 ),
               ],
             ),

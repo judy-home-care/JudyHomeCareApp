@@ -5,6 +5,7 @@ import '../../services/auth/auth_service.dart';
 import '../nurse/nurse_main_screen.dart';
 import '../therapist/therapist_main_screen.dart';
 import '../patient/patient_main_screen.dart';
+import '../../services/i18n/t_text.dart';
 
 class TwoFactorLoginScreen extends StatefulWidget {
   final Map<String, dynamic> twoFactorData;
@@ -74,7 +75,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Two-Factor Authentication',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -107,7 +108,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            const Text(
+            const TText(
               'Biometric Verification',
               style: TextStyle(
                 fontSize: 24,
@@ -116,7 +117,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            TText(
               'Verify your identity to continue',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -141,7 +142,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.fingerprint),
-                label: const Text(
+                label: const TText(
                   'Authenticate',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
@@ -197,7 +198,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          Text(
+          TText(
             'Enter Verification Code',
             style: const TextStyle(
               fontSize: 24,
@@ -315,7 +316,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
                           color: AppColors.primaryGreen,
                         ),
                       )
-                    : const Text(
+                    : const TText(
                         'Resend',
                         style: TextStyle(
                           fontSize: 14,
@@ -349,7 +350,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text(
+                  : const TText(
                       'Verify & Continue',
                       style: TextStyle(
                         fontSize: 16,
@@ -479,7 +480,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Failed to resend code'),
+            content: const TText('Failed to resend code'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

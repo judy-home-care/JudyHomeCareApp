@@ -7,6 +7,8 @@ import 'package:geolocator/geolocator.dart';
 import 'transport_patient_selection_screen.dart';
 import 'transport_location_selection_screen.dart';
 import 'package:intl/intl.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class TransportRequestScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -285,7 +287,7 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Transport Requests',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -343,7 +345,7 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
             // Patient but no valid ID - show error
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('Unable to create request. User ID not found.'),
+                content: const TText('Unable to create request. User ID not found.'),
                 backgroundColor: Colors.red,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -370,7 +372,7 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
         foregroundColor: Colors.white,
         elevation: 4,
         icon: const Icon(Icons.add, size: 22, color: Colors.white),
-        label: const Text(
+        label: const TText(
           'New Request',
           style: TextStyle(
             fontWeight: FontWeight.w600,
@@ -409,7 +411,7 @@ void _showTransportTypeSelector(int patientId, String patientName) {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          const TText(
             'Request Transport',
             style: TextStyle(
               fontSize: 22,
@@ -418,7 +420,7 @@ void _showTransportTypeSelector(int patientId, String patientName) {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TText(
             'Choose the type of transport you need',
             style: TextStyle(
               fontSize: 14,
@@ -570,7 +572,7 @@ Widget _buildTransportOption({
           controller: _searchController,
           onChanged: _onSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Search requests, patients, locations...',
+            hintText: 'Search requests, patients, locations...'.tr,
             hintStyle: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 14,
@@ -699,7 +701,7 @@ Widget _buildTransportOption({
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryGreen),
           ),
           const SizedBox(height: 16),
-          Text(
+          TText(
             'Loading transport requests...',
             style: TextStyle(
               fontSize: 14,
@@ -736,7 +738,7 @@ Widget _buildTransportOption({
             ElevatedButton.icon(
               onPressed: () => _loadTransportRequests(refresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: const TText('Retry'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryGreen,
                 foregroundColor: Colors.white,
@@ -794,7 +796,7 @@ Widget _buildTransportOption({
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TText(
                   'Loading more requests...',
                   style: TextStyle(
                     fontSize: 14,
@@ -1504,7 +1506,7 @@ Widget _buildEmptyState() {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                TText(
                                   'Distance',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -1543,7 +1545,7 @@ Widget _buildEmptyState() {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                TText(
                                   'Duration',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -1582,7 +1584,7 @@ Widget _buildEmptyState() {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                TText(
                                   'Est. Cost',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -1877,7 +1879,7 @@ Widget _buildEmptyState() {
                             if (request.rating != null) ...[
                               Row(
                                 children: [
-                                  Text(
+                                  TText(
                                     'Rating: ',
                                     style: TextStyle(
                                       fontSize: 14,
@@ -1908,7 +1910,7 @@ Widget _buildEmptyState() {
                                 ),
                               ),
                             ] else ...[
-                              Text(
+                              TText(
                                 'No feedback provided yet',
                                 style: TextStyle(
                                   fontSize: 14,

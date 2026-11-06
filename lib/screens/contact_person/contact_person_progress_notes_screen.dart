@@ -5,6 +5,8 @@ import '../../models/progress_notes/progress_note_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonProgressNotesScreen extends StatefulWidget {
   final int patientId;
@@ -278,7 +280,7 @@ class ContactPersonProgressNotesScreenState
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Filter Progress Notes',
                         style: TextStyle(
                           fontSize: 20,
@@ -298,7 +300,7 @@ class ContactPersonProgressNotesScreenState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Date Range',
                         style: TextStyle(
                           fontSize: 14,
@@ -351,7 +353,7 @@ class ContactPersonProgressNotesScreenState
                         ],
                       ),
                       const SizedBox(height: 24),
-                      const Text(
+                      const TText(
                         'Sort By',
                         style: TextStyle(
                           fontSize: 14,
@@ -409,7 +411,7 @@ class ContactPersonProgressNotesScreenState
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Reset'),
+                          child: const TText('Reset'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -429,7 +431,7 @@ class ContactPersonProgressNotesScreenState
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Apply Filters',
                             style: TextStyle(
                               fontSize: 15,
@@ -504,7 +506,7 @@ class ContactPersonProgressNotesScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Progress Notes',
                     style: TextStyle(
                       fontSize: 24,
@@ -536,7 +538,7 @@ class ContactPersonProgressNotesScreenState
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'Progress Notes',
                 style: TextStyle(
                   fontSize: 24,
@@ -555,7 +557,7 @@ class ContactPersonProgressNotesScreenState
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -609,7 +611,7 @@ class ContactPersonProgressNotesScreenState
                   color: Color(0xFF199A8E),
                 ),
                 onPressed: _showFilterModal,
-                tooltip: 'Filter',
+                tooltip: 'Filter'.tr,
               ),
               if (_hasActiveFilters())
                 Positioned(
@@ -727,7 +729,7 @@ class ContactPersonProgressNotesScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          const TText(
                             'Daily Progress Note',
                             style: TextStyle(
                               fontSize: 16,
@@ -860,7 +862,7 @@ class ContactPersonProgressNotesScreenState
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                              Text(
+                              TText(
                                 'Visiting Nurse',
                                 style: TextStyle(
                                   fontSize: 11,
@@ -893,7 +895,7 @@ class ContactPersonProgressNotesScreenState
                         size: 16,
                       ),
                       SizedBox(width: 8),
-                      Text(
+                      TText(
                         'Tap to view complete details',
                         style: TextStyle(
                           fontSize: 12,
@@ -915,7 +917,7 @@ class ContactPersonProgressNotesScreenState
                         children: [
                           Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
                           const SizedBox(width: 4),
-                          Text(
+                          TText(
                             'Recorded',
                             style: TextStyle(
                               fontSize: 11,
@@ -992,7 +994,7 @@ class ContactPersonProgressNotesScreenState
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Unable to load note details'),
+              content: TText('Unable to load note details'),
               backgroundColor: Colors.red,
             ),
           );
@@ -1058,7 +1060,7 @@ class ContactPersonProgressNotesScreenState
                       ),
                       const SizedBox(width: 12),
                       const Expanded(
-                        child: Text(
+                        child: TText(
                           'Daily Progress Note',
                           style: TextStyle(
                             fontSize: 20,
@@ -1109,7 +1111,7 @@ class ContactPersonProgressNotesScreenState
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
+                                TText(
                                   'Visit Date & Time',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -1182,7 +1184,7 @@ class ContactPersonProgressNotesScreenState
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  TText(
                                     'Nurse',
                                     style: TextStyle(
                                       fontSize: 12,
@@ -1229,7 +1231,7 @@ class ContactPersonProgressNotesScreenState
                                       color: Color(0xFF199A8E),
                                     ),
                                     const SizedBox(width: 6),
-                                    Text(
+                                    TText(
                                       'General Condition',
                                       style: TextStyle(
                                         fontSize: 12,
@@ -1269,7 +1271,7 @@ class ContactPersonProgressNotesScreenState
                                       color: Color(0xFFFF9A00),
                                     ),
                                     const SizedBox(width: 6),
-                                    Text(
+                                    TText(
                                       'Pain Level',
                                       style: TextStyle(
                                         fontSize: 12,
@@ -1420,7 +1422,7 @@ class ContactPersonProgressNotesScreenState
                       children: [
                         Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
                         const SizedBox(width: 4),
-                        Text(
+                        TText(
                           'Recorded',
                           style: TextStyle(
                             fontSize: 11,
@@ -1751,7 +1753,7 @@ class ContactPersonProgressNotesScreenState
                   Color(0xFF147D73),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Progress Notes Yet',
                 style: TextStyle(
                   fontSize: 24,
@@ -1795,7 +1797,7 @@ class ContactPersonProgressNotesScreenState
               color: Colors.red.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Something went wrong',
               style: TextStyle(
                 fontSize: 20,
@@ -1816,7 +1818,7 @@ class ContactPersonProgressNotesScreenState
             ElevatedButton.icon(
               onPressed: () => _loadProgressNotes(forceRefresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,

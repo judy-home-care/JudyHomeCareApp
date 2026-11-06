@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import '../services/i18n/t_text.dart';
 
 /// Reusable WebView widget for Paystack payments
 ///
@@ -92,16 +93,16 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
         final shouldPop = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Cancel Payment?'),
+            title: const TText('Cancel Payment?'),
             content: Text(widget.cancelMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('No'),
+                child: const TText('No'),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('Yes, Cancel'),
+                child: const TText('Yes, Cancel'),
               ),
             ],
           ),
@@ -133,19 +134,19 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  title: const Text('Cancel Payment?'),
+                  title: const TText('Cancel Payment?'),
                   content: Text(widget.cancelMessage),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),
-                      child: const Text('No, Continue'),
+                      child: const TText('No, Continue'),
                     ),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      child: const Text(
+                      child: const TText(
                         'Yes, Cancel',
                         style: TextStyle(color: Colors.white),
                       ),
@@ -286,7 +287,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                         valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF199A8E)),
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      TText(
                         'Loading secure payment page...',
                         style: TextStyle(
                           color: Colors.grey.shade600,
@@ -337,7 +338,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                             size: 24,
                           ),
                           SizedBox(width: 12),
-                          Text(
+                          TText(
                             'Payment Successful - Continue',
                             style: TextStyle(
                               color: Colors.white,

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/profile_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientNotificationPreferencesScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -123,7 +125,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Notification Preferences',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -231,7 +233,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'All Notifications',
                   style: TextStyle(
                     fontSize: 18,
@@ -327,7 +329,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    const TText(
                       'Do Not Disturb',
                       style: TextStyle(
                         fontSize: 15,
@@ -336,7 +338,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
+                    TText(
                       'Silence non-urgent notifications',
                       style: TextStyle(
                         fontSize: 13,
@@ -369,13 +371,13 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
               child: Column(
                 children: [
                   _buildTimeSelector(
-                    label: 'Start Time',
+                    label: 'Start Time'.tr,
                     time: _quietHoursStart,
                     onTap: () => _selectTime(context, true),
                   ),
                   const SizedBox(height: 12),
                   _buildTimeSelector(
-                    label: 'End Time',
+                    label: 'End Time'.tr,
                     time: _quietHoursEnd,
                     onTap: () => _selectTime(context, false),
                   ),
@@ -848,7 +850,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
               children: [
                 Icon(Icons.error_outline, color: Colors.white),
                 SizedBox(width: 12),
-                Text('An error occurred while saving preferences'),
+                TText('An error occurred while saving preferences'),
               ],
             ),
             backgroundColor: Color(0xFFFF4757),

@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../utils/app_colors.dart';
 import '../../models/patients/nurse_patient_models.dart';
 import '../../services/patients/nurse_patient_service.dart';
+import '../../services/drafts/draft_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 /// "Daily Notes" tab for physiotherapists and speech therapists.
 ///
@@ -37,6 +41,14 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
   final _noteController = TextEditingController();
   final _focusNode = FocusNode();
 
+  // Local draft so a crash / lost connection never loses a typed note
+  final _draftService = DraftService();
+  Timer? _draftDebounce;
+  bool _restoringDraft = false;
+  bool _draftRestoredBanner = false;
+
+  String get _draftKey => DraftService.therapyNoteKey(widget.patientDetail.id);
+
   DateTime _sessionDate = DateTime.now();
   TimeOfDay _sessionTime = TimeOfDay.now();
   bool _isSaving = false;
@@ -66,11 +78,61 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
     _noteController.addListener(() {
       final len = _noteController.text.length;
       if (len != _charCount) setState(() => _charCount = len);
+      _scheduleDraftSave();
+    });
+    _restoreDraft();
+  }
+
+  void _scheduleDraftSave() {
+    if (_restoringDraft || !mounted) return;
+    _draftDebounce?.cancel();
+    _draftDebounce = Timer(const Duration(milliseconds: 800), _saveDraftNow);
+  }
+
+  void _saveDraftNow() {
+    if (_restoringDraft) return;
+    final text = _noteController.text;
+    if (text.trim().isEmpty) {
+      _draftService.clear(_draftKey);
+    } else {
+      _draftService.save(_draftKey, {'note': text});
+    }
+  }
+
+  Future<void> _restoreDraft() async {
+    final draft = await _draftService.load(_draftKey);
+    if (draft == null || !mounted) return;
+
+    final text = draft['note']?.toString() ?? '';
+    if (text.trim().isEmpty || _noteController.text.isNotEmpty) return;
+
+    _restoringDraft = true;
+    _noteController.text = text;
+    _restoringDraft = false;
+
+    if (mounted) {
+      setState(() {
+        _charCount = text.length;
+        _draftRestoredBanner = true;
+      });
+    }
+  }
+
+  void _discardDraft() {
+    _restoringDraft = true;
+    _noteController.clear();
+    _restoringDraft = false;
+    _draftService.clear(_draftKey);
+    setState(() {
+      _charCount = 0;
+      _draftRestoredBanner = false;
     });
   }
 
   @override
   void dispose() {
+    _draftDebounce?.cancel();
+    _saveDraftNow();
     _noteController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -130,6 +192,11 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
 
       if (!mounted) return;
 
+      // Saved on the server — drop the local draft
+      _draftDebounce?.cancel();
+      _restoringDraft = true;
+      await _draftService.clear(_draftKey);
+
       // Show immediately in History without a refetch
       widget.patientDetail.therapyNotes.insert(0, saved);
       widget.onNoteSaved?.call(saved);
@@ -139,7 +206,9 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
         _sessionDate = DateTime.now();
         _sessionTime = TimeOfDay.now();
         _isSaving = false;
+        _draftRestoredBanner = false;
       });
+      _restoringDraft = false;
 
       _showSnack('$_therapyLabel note saved. It now appears under History.');
     } on NursePatientException catch (e) {
@@ -179,6 +248,10 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
           children: [
             _buildHeaderCard(),
             const SizedBox(height: 16),
+            if (_draftRestoredBanner) ...[
+              _buildDraftRestoredBanner(),
+              const SizedBox(height: 16),
+            ],
             _buildSessionMeta(),
             const SizedBox(height: 16),
             _buildEditor(),
@@ -190,6 +263,58 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  /// Inline (in-form) notice so it never covers the save button.
+  Widget _buildDraftRestoredBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F2FD),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF2196F3).withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.restore, color: Color(0xFF1976D2), size: 18),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: TText(
+              'Draft restored — your unsaved note was recovered.',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: Color(0xFF1565C0),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: _discardDraft,
+            style: TextButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const TText(
+              'Discard',
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1976D2),
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _draftRestoredBanner = false),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.close, size: 16, color: Colors.blueGrey[400]),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -249,7 +374,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
         Expanded(
           child: _buildMetaChip(
             icon: Icons.calendar_today_outlined,
-            label: 'Session date',
+            label: 'Session date'.tr,
             value: DateFormat('EEE, MMM d, yyyy').format(_sessionDate),
             onTap: _pickDate,
           ),
@@ -258,7 +383,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
         Expanded(
           child: _buildMetaChip(
             icon: Icons.access_time_outlined,
-            label: 'Time',
+            label: 'Time'.tr,
             value: _sessionTime.format(context),
             onTap: _pickTime,
           ),
@@ -342,7 +467,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
               children: [
                 const Icon(Icons.notes_rounded, size: 18, color: Color(0xFF666666)),
                 const SizedBox(width: 8),
-                const Text(
+                const TText(
                   'Session notes',
                   style: TextStyle(
                     fontSize: 14,
@@ -422,7 +547,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
       children: [
         Row(
           children: [
-            const Text(
+            const TText(
               'Your recent notes',
               style: TextStyle(
                 fontSize: 15,
@@ -431,7 +556,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
               ),
             ),
             const Spacer(),
-            Text(
+            TText(
               'See all in History',
               style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
             ),

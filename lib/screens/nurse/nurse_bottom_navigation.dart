@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseBottomNavigation extends StatelessWidget {
   final int currentIndex;
@@ -31,31 +32,31 @@ class NurseBottomNavigation extends StatelessWidget {
             children: [
               _buildNavItem(
                 icon: Icons.home_rounded,
-                label: 'Home',
+                label: 'Home'.tr,
                 index: 0,
                 isSelected: currentIndex == 0,
               ),
               _buildNavItem(
                 icon: Icons.people_rounded,
-                label: 'Patients',
+                label: 'Patients'.tr,
                 index: 1,
                 isSelected: currentIndex == 1,
               ),
               _buildNavItem(
                 icon: Icons.calendar_today_rounded,
-                label: 'Schedule',
+                label: 'Schedule'.tr,
                 index: 2,
                 isSelected: currentIndex == 2,
               ),
               _buildNavItem(
                 icon: Icons.medical_services_rounded, 
-                label: 'Care Plans',
+                label: 'Care Plans'.tr,
                 index: 3,
                 isSelected: currentIndex == 3,
               ),
               _buildNavItem(
                 icon: Icons.person_rounded,
-                label: 'Account',
+                label: 'Account'.tr,
                 index: 4,
                 isSelected: currentIndex == 4,
               ),

@@ -7,6 +7,8 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientSchedulesScreen extends StatefulWidget {
   const PatientSchedulesScreen({Key? key}) : super(key: key);
@@ -231,7 +233,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                 const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 const Expanded(
-                  child: Text('Error making phone call'),
+                  child: TText('Error making phone call'),
                 ),
               ],
             ),
@@ -519,7 +521,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Schedules updated'),
+              child: TText('Schedules updated'),
             ),
           ],
         ),
@@ -702,7 +704,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    const TText(
                       'Filter Schedules',
                       style: TextStyle(
                         fontSize: 22,
@@ -718,7 +720,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                             tempStatusFilter = 'All Status';
                           });
                         },
-                        child: const Text(
+                        child: const TText(
                           'Clear All',
                           style: TextStyle(
                             color: AppColors.primaryGreen,
@@ -732,7 +734,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
               
               const SizedBox(height: 8),
               
-              const Text(
+              const TText(
                 'Shift Type',
                 style: TextStyle(
                   fontSize: 16,
@@ -802,7 +804,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
               const Divider(height: 1),
               const SizedBox(height: 24),
               
-              const Text(
+              const TText(
                 'Status',
                 style: TextStyle(
                   fontSize: 16,
@@ -894,7 +896,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
+                  child: const TText(
                     'Apply Filters',
                     style: TextStyle(
                       fontSize: 16,
@@ -993,7 +995,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Schedules',
                     style: TextStyle(
                       fontSize: 24,
@@ -1025,7 +1027,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'Schedules',
                 style: TextStyle(
                   color: Color(0xFF1A1A1A),
@@ -1044,7 +1046,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -1076,12 +1078,12 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
           IconButton(
             icon: const Icon(Icons.calendar_today, color: Color(0xFF1A1A1A)),
             onPressed: _showDatePicker,
-            tooltip: 'Select Date',
+            tooltip: 'Select Date'.tr,
           ),
           IconButton(
             icon: const Icon(Icons.filter_list, color: AppColors.primaryGreen),
             onPressed: _showFilterOptions,
-            tooltip: 'Filter Schedules',
+            tooltip: 'Filter Schedules'.tr,
           ),
           GestureDetector(
             onLongPress: () {
@@ -1093,7 +1095,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                       const Icon(Icons.delete_sweep, color: Colors.white, size: 20),
                       const SizedBox(width: 12),
                       const Expanded(
-                        child: Text('Cache cleared! Pull to refresh.'),
+                        child: TText('Cache cleared! Pull to refresh.'),
                       ),
                     ],
                   ),
@@ -1277,7 +1279,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
               color: Colors.white,
               child: Row(
                 children: [
-                  const Text(
+                  const TText(
                     'Active Filters: ',
                     style: TextStyle(
                       fontSize: 14,
@@ -1641,7 +1643,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   Colors.red.shade500,
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'Oops! Something Went Wrong',
                 style: TextStyle(
                   fontSize: 24,
@@ -1669,7 +1671,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'Please check your connection and try again',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1700,7 +1702,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
               child: ElevatedButton.icon(
                 onPressed: () => _loadSchedules(forceRefresh: true),
                 icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Try Again'),
+                label: const TText('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
@@ -1800,7 +1802,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   AppColors.primaryGreen.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Care Visits Scheduled',
                 style: TextStyle(
                   fontSize: 24,
@@ -1856,7 +1858,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   _loadSchedules(forceRefresh: true);
                 },
                 icon: const Icon(Icons.clear_all, size: 20),
-                label: const Text('Clear All Filters'),
+                label: const TText('Clear All Filters'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryGreen,
                   side: BorderSide(color: AppColors.primaryGreen.withOpacity(0.5), width: 2),
@@ -1899,7 +1901,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
             color: Color(0xFFFF9A00),
           ),
           const SizedBox(width: 6),
-          const Text(
+          const TText(
             'Reschedule Requested',
             style: TextStyle(
               fontSize: 11,
@@ -2067,7 +2069,7 @@ Widget _buildScheduleCard(ScheduleItem schedule) {
                   child: OutlinedButton.icon(
                     onPressed: () => _showRescheduleRequestSheet(schedule),
                     icon: const Icon(Icons.schedule_send, size: 18),
-                    label: const Text('Request Reschedule'),
+                    label: const TText('Request Reschedule'),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFFF9A00),
                       side: const BorderSide(
@@ -2107,7 +2109,7 @@ Widget _buildStatusBadge(ScheduleItem schedule) {
         children: [
           Icon(Icons.check_circle, size: 12, color: Colors.green),
           SizedBox(width: 4),
-          Text(
+          TText(
             'Completed',
             style: TextStyle(
               fontSize: 11,
@@ -2265,7 +2267,7 @@ Widget _buildRescheduleStatusCard(ScheduleItem schedule) {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'New Schedule',
                         style: TextStyle(
                           fontSize: 10,
@@ -2403,7 +2405,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Care Visit Details',
                         style: TextStyle(
                           fontSize: 20,
@@ -2522,7 +2524,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                 color: Color(0xFFFF9A00),
                               ),
                               SizedBox(width: 6),
-                              Text(
+                              TText(
                                 'Reschedule Pending',
                                 style: TextStyle(
                                   fontSize: 12,
@@ -2662,7 +2664,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                             _showRescheduleRequestSheet(schedule);
                           },
                           icon: const Icon(Icons.schedule_send, size: 20),
-                          label: const Text('Request Reschedule'),
+                          label: const TText('Request Reschedule'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFFF9A00),
                             foregroundColor: Colors.white,
@@ -2707,7 +2709,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  const TText(
                                     'Reschedule Request Pending',
                                     style: TextStyle(
                                       fontSize: 14,
@@ -2870,7 +2872,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
               const Icon(Icons.info_outline, color: Colors.white, size: 20),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text('Cannot reschedule completed or cancelled visits'),
+                child: TText('Cannot reschedule completed or cancelled visits'),
               ),
             ],
           ),
@@ -2893,7 +2895,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
               const Icon(Icons.info_outline, color: Colors.white, size: 20),
               const SizedBox(width: 12),
               const Expanded(
-                child: Text('Cannot reschedule a visit that is currently in progress'),
+                child: TText('Cannot reschedule a visit that is currently in progress'),
               ),
             ],
           ),
@@ -2995,7 +2997,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              const TText(
                                 'Request Reschedule',
                                 style: TextStyle(
                                   fontSize: 20,
@@ -3058,7 +3060,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                   color: AppColors.primaryGreen,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
+                                const TText(
                                   'Current Schedule',
                                   style: TextStyle(
                                     fontSize: 13,
@@ -3121,7 +3123,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       const SizedBox(height: 24),
 
                       // Reason Selection
-                      const Text(
+                      const TText(
                         'Reason for Reschedule *',
                         style: TextStyle(
                           fontSize: 14,
@@ -3183,7 +3185,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                           controller: reasonController,
                           maxLines: 2,
                           decoration: InputDecoration(
-                            hintText: 'Please specify your reason...',
+                            hintText: 'Please specify your reason...'.tr,
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -3297,7 +3299,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       // Preferred End Date (only for multi-day schedules)
                       if (schedule.isMultiDay) ...[
                         const SizedBox(height: 16),
-                        const Text(
+                        const TText(
                           'Preferred End Date (Optional)',
                           style: TextStyle(
                             fontSize: 14,
@@ -3384,7 +3386,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       const SizedBox(height: 24),
 
                       // Preferred Time
-                      const Text(
+                      const TText(
                         'Preferred Time (Optional)',
                         style: TextStyle(
                           fontSize: 14,
@@ -3439,7 +3441,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       const SizedBox(height: 24),
 
                       // Additional Notes
-                      const Text(
+                      const TText(
                         'Additional Notes (Optional)',
                         style: TextStyle(
                           fontSize: 14,
@@ -3452,7 +3454,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                         controller: notesController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'Any additional information...',
+                          hintText: 'Any additional information...'.tr,
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -3547,7 +3549,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                             if (reason.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('Please provide a reason for reschedule'),
+                                  content: const TText('Please provide a reason for reschedule'),
                                   backgroundColor: Colors.red,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
@@ -3651,7 +3653,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                       ),
                                       SizedBox(width: 12),
                                       Expanded(
-                                        child: Text('Failed to submit request. Please try again.'),
+                                        child: TText('Failed to submit request. Please try again.'),
                                       ),
                                     ],
                                   ),
@@ -3681,7 +3683,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text(
+                        : const TText(
                             'Submit Reschedule Request',
                             style: TextStyle(
                               fontSize: 16,

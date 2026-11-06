@@ -3,6 +3,8 @@ import '../../services/care_plans/care_plan_service.dart';
 import '../../models/care_plans/care_plan_models.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientCarePlansScreen extends StatefulWidget {
   const PatientCarePlansScreen({Key? key}) : super(key: key);
@@ -433,7 +435,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
             ),
             const SizedBox(width: 12),
             const Expanded(
-              child: Text('Care plans updated'),
+              child: TText('Care plans updated'),
             ),
           ],
         ),
@@ -518,7 +520,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Filter Care Plans',
                         style: TextStyle(
                           fontSize: 20,
@@ -539,7 +541,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Status',
                         style: TextStyle(
                           fontSize: 14,
@@ -559,11 +561,11 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                           value: _selectedStatus,
                           isExpanded: true,
                           underline: const SizedBox(),
-                          hint: const Text('All Statuses'),
+                          hint: const TText('All Statuses'),
                           items: [
                             const DropdownMenuItem<String>(
                               value: null,
-                              child: Text('All Statuses'),
+                              child: TText('All Statuses'),
                             ),
                             ...['active', 'completed', 'draft', 'pending_approval', 'cancelled']
                                 .map((status) => DropdownMenuItem<String>(
@@ -581,7 +583,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                       ),
                       const SizedBox(height: 24),
                       
-                      const Text(
+                      const TText(
                         'Priority',
                         style: TextStyle(
                           fontSize: 14,
@@ -601,11 +603,11 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                           value: _selectedPriority,
                           isExpanded: true,
                           underline: const SizedBox(),
-                          hint: const Text('All Priorities'),
+                          hint: const TText('All Priorities'),
                           items: [
                             const DropdownMenuItem<String>(
                               value: null,
-                              child: Text('All Priorities'),
+                              child: TText('All Priorities'),
                             ),
                             ...['low', 'medium', 'high']
                                 .map((priority) => DropdownMenuItem<String>(
@@ -646,7 +648,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text('Reset'),
+                          child: const TText('Reset'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -669,7 +671,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: const Text(
+                          child: const TText(
                             'Apply Filters',
                             style: TextStyle(
                               fontSize: 15,
@@ -712,7 +714,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'My Care Plans',
                     style: TextStyle(
                       fontSize: 24,
@@ -744,7 +746,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'My Care Plans',
                 style: TextStyle(
                   fontSize: 24,
@@ -763,7 +765,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -820,7 +822,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   color: Color(0xFF199A8E),
                 ),
                 onPressed: _showFilterModal,
-                tooltip: 'Filter',
+                tooltip: 'Filter'.tr,
               ),
               if (_hasActiveFilters())
                 Positioned(
@@ -989,7 +991,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        TText(
                           'Progress',
                           style: TextStyle(
                             fontSize: 12,
@@ -1510,7 +1512,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   Color(0xFF147D73),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Care Plans Yet',
                 style: TextStyle(
                   fontSize: 24,
@@ -1526,7 +1528,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
             
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'Your care plans will appear here once they are assigned by your healthcare team',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -1556,7 +1558,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
               color: Colors.red.shade300,
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Something went wrong',
               style: TextStyle(
                 fontSize: 20,
@@ -1577,7 +1579,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
             ElevatedButton.icon(
               onPressed: () => _loadCarePlans(refresh: true, forceRefresh: true),
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: const TText('Try Again'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF199A8E),
                 foregroundColor: Colors.white,

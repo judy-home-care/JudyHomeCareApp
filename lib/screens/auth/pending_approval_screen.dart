@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/i18n/t_text.dart';
 
 class PendingApprovalScreen extends StatelessWidget {
   final String userName;
@@ -45,7 +46,7 @@ class PendingApprovalScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 
                 // Title
-                const Text(
+                const TText(
                   'Account Created Successfully!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
@@ -107,7 +108,7 @@ class PendingApprovalScreen extends StatelessWidget {
                               color: Colors.orange.shade700,
                             ),
                             const SizedBox(width: 6),
-                            Text(
+                            TText(
                               'PENDING VERIFICATION',
                               style: TextStyle(
                                 fontSize: 12,
@@ -170,7 +171,7 @@ class PendingApprovalScreen extends StatelessWidget {
                                 color: const Color(0xFF199A8E),
                               ),
                               const SizedBox(width: 8),
-                              const Text(
+                              const TText(
                                 'What happens next?',
                                 style: TextStyle(
                                   fontSize: 15,
@@ -227,7 +228,7 @@ class PendingApprovalScreen extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
+                          child: TText(
                             'We verify all healthcare professionals to ensure patient safety and maintain the highest standards of care.',
                             style: TextStyle(
                               fontSize: 13,
@@ -264,7 +265,7 @@ class PendingApprovalScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Back to Login',
                       style: TextStyle(
                         fontSize: 16,
@@ -291,7 +292,7 @@ class PendingApprovalScreen extends StatelessWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Could not open phone dialer'),
+                            content: TText('Could not open phone dialer'),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -308,7 +309,7 @@ class PendingApprovalScreen extends StatelessWidget {
                         color: Colors.grey.shade600,
                       ),
                       const SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Need help? Contact Support',
                         style: TextStyle(
                           fontSize: 14,

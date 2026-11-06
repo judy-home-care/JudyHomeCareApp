@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../utils/app_colors.dart';
 import '../../../services/payment_methods_service.dart';
+import '../../../services/i18n/t_text.dart';
+import '../../../services/i18n/app_language.dart';
 
 /// "Saved Cards & Auto-Pay" — shown at the top of the Payment Methods screen.
 ///
@@ -68,7 +70,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Remove Card'),
+        title: const TText('Remove Card'),
         content: Text(
           'Remove ${card.displayName}? It will no longer be charged automatically. '
           'You can save it again by paying once with this card.',
@@ -77,7 +79,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -85,7 +87,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
               backgroundColor: const Color(0xFFFF4757),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Remove', style: TextStyle(color: Colors.white)),
+            child: const TText('Remove', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -115,14 +117,14 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
           children: [
             Icon(Icons.autorenew_rounded, color: AppColors.primaryGreen),
             SizedBox(width: 10),
-            Expanded(child: Text('Enable Auto-Pay?')),
+            Expanded(child: TText('Enable Auto-Pay?')),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            TText(
               'When an invoice is due, we will automatically charge:',
               style: TextStyle(color: Colors.grey.shade700, height: 1.4),
             ),
@@ -162,7 +164,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -170,7 +172,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
               backgroundColor: AppColors.primaryGreen,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Enable Auto-Pay', style: TextStyle(color: Colors.white)),
+            child: const TText('Enable Auto-Pay', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -196,7 +198,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
+          child: TText(
             'Saved Cards & Auto-Pay',
             style: TextStyle(
               fontSize: 16,
@@ -247,12 +249,12 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                const TText(
                   'No saved cards yet',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
                 ),
                 const SizedBox(height: 3),
-                Text(
+                TText(
                   'Pay once with your card and it will appear here so you can enable auto-pay for due invoices.',
                   style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.35),
                 ),
@@ -318,7 +320,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
                               color: const Color(0xFFFF4757).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: const Text(
+                            child: const TText(
                               'Expired',
                               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFFF4757)),
                             ),
@@ -341,7 +343,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
               IconButton(
                 onPressed: busy ? null : () => _removeCard(card),
                 icon: Icon(Icons.delete_outline, color: Colors.grey.shade500, size: 20),
-                tooltip: 'Remove card',
+                tooltip: 'Remove card'.tr,
               ),
             ],
           ),
@@ -366,7 +368,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      const TText(
                         'Auto-pay due invoices',
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
                       ),

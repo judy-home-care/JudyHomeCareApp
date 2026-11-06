@@ -4,6 +4,8 @@ import '../../models/incidents/incident_report_models.dart';
 import '../../services/incidents/incident_service.dart';
 import '../../utils/app_colors.dart';
 import 'add_incident_report_screen.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class NurseIncidentReportScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -261,7 +263,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Incident Reports',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -311,7 +313,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
         },
         backgroundColor: const Color(0xFF199A8E),
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text(
+        label: const TText(
           'New Report',
           style: TextStyle(
             color: Colors.white,
@@ -341,7 +343,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
           controller: _searchController,
           onChanged: _onSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Search incidents, patients, locations...',
+            hintText: 'Search incidents, patients, locations...'.tr,
             hintStyle: TextStyle(
               color: Colors.grey.shade400,
               fontSize: 14,
@@ -497,7 +499,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                   vertical: 12,
                 ),
               ),
-              child: const Text('Retry'),
+              child: const TText('Retry'),
             ),
           ],
         ),
@@ -668,7 +670,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TText(
                   'Loading more incidents...',
                   style: TextStyle(
                     fontSize: 14,
@@ -869,7 +871,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                         size: 16,
                       ),
                       const SizedBox(width: 6),
-                      Text(
+                      TText(
                         'Requires immediate attention',
                         style: TextStyle(
                           fontSize: 11,
@@ -947,7 +949,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                   Row(
                     children: [
                       const Expanded(
-                        child: Text(
+                        child: TText(
                           'Incident Details',
                           style: TextStyle(
                             fontSize: 20,

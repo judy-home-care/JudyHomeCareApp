@@ -9,6 +9,8 @@ import '../../services/notification_service.dart';
 import '../../services/patients/nurse_patient_service.dart';
 import '../../models/dashboard/therapist_dashboard_models.dart';
 import '../modern_notifications_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 /// Dashboard for physiotherapists and speech therapists.
 ///
@@ -264,7 +266,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text('Retry'),
+            child: const TText('Retry'),
           ),
         ),
       ],
@@ -414,7 +416,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.people_outline,
-                label: 'My Patients',
+                label: 'My Patients'.tr,
                 value: '${stats.assignedPatients}',
                 iconColor: const Color(0xFF199A8E),
                 bgColor: const Color(0xFFE8F5F5),
@@ -425,7 +427,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.today_outlined,
-                label: 'Sessions Today',
+                label: 'Sessions Today'.tr,
                 value: '${stats.sessionsToday}',
                 iconColor: const Color(0xFFFF6B6B),
                 bgColor: const Color(0xFFFFE5E5),
@@ -439,7 +441,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.edit_note_rounded,
-                label: 'Notes This Week',
+                label: 'Notes This Week'.tr,
                 value: '${stats.notesThisWeek}',
                 iconColor: const Color(0xFF6C63FF),
                 bgColor: const Color(0xFFEDE9FF),
@@ -449,7 +451,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
             Expanded(
               child: _buildMetricCard(
                 icon: Icons.library_books_outlined,
-                label: 'Total Notes',
+                label: 'Total Notes'.tr,
                 value: '${stats.totalNotes}',
                 iconColor: const Color(0xFFFF9A00),
                 bgColor: const Color(0xFFFFF3E0),
@@ -541,7 +543,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
         children: [
           Row(
             children: [
-              const Text(
+              const TText(
                 'This week',
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
               ),
@@ -610,7 +612,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Quick actions',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A), letterSpacing: -0.5),
         ),
@@ -689,14 +691,14 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
           children: [
             const Icon(Icons.notification_important_outlined, size: 20, color: Color(0xFFFF9A00)),
             const SizedBox(width: 8),
-            const Text(
+            const TText(
               'Due for a session',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A), letterSpacing: -0.5),
             ),
           ],
         ),
         const SizedBox(height: 4),
-        Text(
+        TText(
           'No session recorded in the last 7 days',
           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
         ),
@@ -772,7 +774,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            const TText(
               'My patients',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A), letterSpacing: -0.5),
             ),
@@ -780,7 +782,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
               onPressed: () => widget.onTabChange?.call(1),
               child: Row(
                 children: [
-                  Text('See all', style: TextStyle(fontSize: 14, color: Colors.grey.shade600, letterSpacing: -0.2)),
+                  TText('See all', style: TextStyle(fontSize: 14, color: Colors.grey.shade600, letterSpacing: -0.2)),
                   const SizedBox(width: 4),
                   Icon(Icons.arrow_forward, size: 16, color: Colors.grey.shade600),
                 ],
@@ -882,7 +884,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        const TText(
           'Recent session notes',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A), letterSpacing: -0.5),
         ),

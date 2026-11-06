@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_colors.dart';
+import '../../services/i18n/t_text.dart';
 
 class PatientHelpCenterScreen extends StatelessWidget {
   const PatientHelpCenterScreen({Key? key}) : super(key: key);
@@ -104,7 +105,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Help Center',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -151,7 +152,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  const TText(
                     'How can we help you?',
                     style: TextStyle(
                       fontSize: 24,
@@ -161,7 +162,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Text(
+                  TText(
                     'Our support team is here to assist you 24/7',
                     style: TextStyle(
                       fontSize: 14,
@@ -179,7 +180,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TText(
                     'Contact Us',
                     style: TextStyle(
                       fontSize: 18,
@@ -215,7 +216,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                   const SizedBox(height: 32),
                   
                   // Quick Links Section
-                  Text(
+                  TText(
                     'Quick Links',
                     style: TextStyle(
                       fontSize: 18,
@@ -275,7 +276,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Text(
+                            const TText(
                               'Operating Hours',
                               style: TextStyle(
                                 fontSize: 16,
@@ -303,7 +304,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text(
+                              child: TText(
                                 'Emergency support available 24/7',
                                 style: TextStyle(
                                   fontSize: 13,

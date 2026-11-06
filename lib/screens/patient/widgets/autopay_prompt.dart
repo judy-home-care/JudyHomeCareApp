@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../utils/app_colors.dart';
 import '../../../services/payment_methods_service.dart';
 import '../../../utils/secure_storage.dart';
+import '../../../services/i18n/t_text.dart';
+import '../../../services/i18n/app_language.dart';
 
 /// After a successful CARD payment, offer to enable auto-pay on the card the
 /// patient just used ("Save this card for automatic debits?").
@@ -121,7 +123,7 @@ Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card, {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
+            const TText(
               'Save card for automatic payments?',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -214,7 +216,7 @@ Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card, {
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
-                child: const Text(
+                child: const TText(
                   'Yes, Enable Auto-Pay',
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
@@ -226,7 +228,7 @@ Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card, {
               height: 48,
               child: TextButton(
                 onPressed: () => Navigator.pop(sheetContext, false),
-                child: Text(
+                child: TText(
                   'Not Now',
                   style: TextStyle(
                     fontSize: 14,

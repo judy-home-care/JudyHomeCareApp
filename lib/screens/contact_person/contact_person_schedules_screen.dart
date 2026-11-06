@@ -5,6 +5,8 @@ import '../../models/schedules/schedule_models.dart';
 import '../../services/contact_person/contact_person_service.dart';
 import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class ContactPersonSchedulesScreen extends StatefulWidget {
   final int patientId;
@@ -478,7 +480,7 @@ class ContactPersonSchedulesScreenState
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    const TText(
                       'Filter Schedules',
                       style: TextStyle(
                         fontSize: 22,
@@ -495,7 +497,7 @@ class ContactPersonSchedulesScreenState
                             tempStatusFilter = 'All Status';
                           });
                         },
-                        child: const Text(
+                        child: const TText(
                           'Clear All',
                           style: TextStyle(
                             color: _primaryColor,
@@ -507,7 +509,7 @@ class ContactPersonSchedulesScreenState
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              const TText(
                 'Shift Type',
                 style: TextStyle(
                   fontSize: 16,
@@ -573,7 +575,7 @@ class ContactPersonSchedulesScreenState
               const SizedBox(height: 24),
               const Divider(height: 1),
               const SizedBox(height: 24),
-              const Text(
+              const TText(
                 'Status',
                 style: TextStyle(
                   fontSize: 16,
@@ -661,7 +663,7 @@ class ContactPersonSchedulesScreenState
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
+                  child: const TText(
                     'Apply Filters',
                     style: TextStyle(
                       fontSize: 16,
@@ -758,7 +760,7 @@ class ContactPersonSchedulesScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  const TText(
                     'Schedules',
                     style: TextStyle(
                       fontSize: 24,
@@ -790,7 +792,7 @@ class ContactPersonSchedulesScreenState
                   ),
                 ],
               )
-            : const Text(
+            : const TText(
                 'Schedules',
                 style: TextStyle(
                   color: Color(0xFF1A1A1A),
@@ -809,7 +811,7 @@ class ContactPersonSchedulesScreenState
                   color: Color(0xFF1A1A1A),
                 ),
                 onPressed: _openNotificationsSheet,
-                tooltip: 'Notifications',
+                tooltip: 'Notifications'.tr,
               ),
               if (_unreadNotificationCount > 0)
                 Positioned(
@@ -841,12 +843,12 @@ class ContactPersonSchedulesScreenState
           IconButton(
             icon: const Icon(Icons.calendar_today, color: Color(0xFF1A1A1A)),
             onPressed: _showDatePicker,
-            tooltip: 'Select Date',
+            tooltip: 'Select Date'.tr,
           ),
           IconButton(
             icon: const Icon(Icons.filter_list, color: _primaryColor),
             onPressed: _showFilterOptions,
-            tooltip: 'Filter Schedules',
+            tooltip: 'Filter Schedules'.tr,
           ),
           IconButton(
             icon: _isLoading && !_isCacheExpired
@@ -1022,7 +1024,7 @@ class ContactPersonSchedulesScreenState
               color: Colors.white,
               child: Row(
                 children: [
-                  const Text(
+                  const TText(
                     'Active Filters: ',
                     style: TextStyle(
                       fontSize: 14,
@@ -1468,7 +1470,7 @@ class ContactPersonSchedulesScreenState
           children: [
             Icon(Icons.check_circle, size: 12, color: Colors.green),
             SizedBox(width: 4),
-            Text(
+            TText(
               'Completed',
               style: TextStyle(
                 fontSize: 11,
@@ -1568,7 +1570,7 @@ class ContactPersonSchedulesScreenState
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      const TText(
                         'Care Visit Details',
                         style: TextStyle(
                           fontSize: 20,
@@ -1785,7 +1787,7 @@ class ContactPersonSchedulesScreenState
                             _showRescheduleRequestSheet(schedule);
                           },
                           icon: const Icon(Icons.schedule_send, size: 20),
-                          label: const Text('Request Reschedule'),
+                          label: const TText('Request Reschedule'),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: const Color(0xFFFF9A00),
                             side: const BorderSide(
@@ -1820,7 +1822,7 @@ class ContactPersonSchedulesScreenState
                             ),
                             const SizedBox(width: 10),
                             Expanded(
-                              child: Text(
+                              child: TText(
                                 'A reschedule request is pending review',
                                 style: TextStyle(
                                   fontSize: 13,
@@ -2005,7 +2007,7 @@ class ContactPersonSchedulesScreenState
                   _primaryColor.withOpacity(0.7),
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'No Care Visits Scheduled',
                 style: TextStyle(
                   fontSize: 24,
@@ -2058,7 +2060,7 @@ class ContactPersonSchedulesScreenState
                   _loadSchedules(forceRefresh: true);
                 },
                 icon: const Icon(Icons.clear_all, size: 20),
-                label: const Text('Clear All Filters'),
+                label: const TText('Clear All Filters'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _primaryColor,
                   side: BorderSide(
@@ -2147,7 +2149,7 @@ class ContactPersonSchedulesScreenState
                   Colors.red.shade500,
                 ],
               ).createShader(bounds),
-              child: const Text(
+              child: const TText(
                 'Oops! Something Went Wrong',
                 style: TextStyle(
                   fontSize: 24,
@@ -2175,7 +2177,7 @@ class ContactPersonSchedulesScreenState
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: Text(
+              child: TText(
                 'Please check your connection and try again',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -2206,7 +2208,7 @@ class ContactPersonSchedulesScreenState
               child: ElevatedButton.icon(
                 onPressed: () => _loadSchedules(forceRefresh: true),
                 icon: const Icon(Icons.refresh_rounded, size: 20),
-                label: const Text('Try Again'),
+                label: const TText('Try Again'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   foregroundColor: Colors.white,
@@ -2323,7 +2325,7 @@ class ContactPersonSchedulesScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              const TText(
                                 'Request Reschedule',
                                 style: TextStyle(
                                   fontSize: 20,
@@ -2386,7 +2388,7 @@ class ContactPersonSchedulesScreenState
                                   color: _primaryColor,
                                 ),
                                 const SizedBox(width: 8),
-                                const Text(
+                                const TText(
                                   'Current Schedule',
                                   style: TextStyle(
                                     fontSize: 13,
@@ -2449,7 +2451,7 @@ class ContactPersonSchedulesScreenState
                       const SizedBox(height: 24),
 
                       // Reason Selection
-                      const Text(
+                      const TText(
                         'Reason for Reschedule *',
                         style: TextStyle(
                           fontSize: 14,
@@ -2511,7 +2513,7 @@ class ContactPersonSchedulesScreenState
                           controller: reasonController,
                           maxLines: 2,
                           decoration: InputDecoration(
-                            hintText: 'Please specify your reason...',
+                            hintText: 'Please specify your reason...'.tr,
                             filled: true,
                             fillColor: Colors.grey.shade50,
                             border: OutlineInputBorder(
@@ -2625,7 +2627,7 @@ class ContactPersonSchedulesScreenState
                       // Preferred End Date (only for multi-day schedules)
                       if (schedule.isMultiDay) ...[
                         const SizedBox(height: 16),
-                        const Text(
+                        const TText(
                           'Preferred End Date (Optional)',
                           style: TextStyle(
                             fontSize: 14,
@@ -2712,7 +2714,7 @@ class ContactPersonSchedulesScreenState
                       const SizedBox(height: 24),
 
                       // Preferred Time
-                      const Text(
+                      const TText(
                         'Preferred Time (Optional)',
                         style: TextStyle(
                           fontSize: 14,
@@ -2767,7 +2769,7 @@ class ContactPersonSchedulesScreenState
                       const SizedBox(height: 24),
 
                       // Additional Notes
-                      const Text(
+                      const TText(
                         'Additional Notes (Optional)',
                         style: TextStyle(
                           fontSize: 14,
@@ -2780,7 +2782,7 @@ class ContactPersonSchedulesScreenState
                         controller: notesController,
                         maxLines: 3,
                         decoration: InputDecoration(
-                          hintText: 'Any additional information...',
+                          hintText: 'Any additional information...'.tr,
                           filled: true,
                           fillColor: Colors.grey.shade50,
                           border: OutlineInputBorder(
@@ -2875,7 +2877,7 @@ class ContactPersonSchedulesScreenState
                             if (reason.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('Please provide a reason for reschedule'),
+                                  content: const TText('Please provide a reason for reschedule'),
                                   backgroundColor: Colors.red,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
@@ -2983,7 +2985,7 @@ class ContactPersonSchedulesScreenState
                               strokeWidth: 2,
                             ),
                           )
-                        : const Text(
+                        : const TText(
                             'Submit Request',
                             style: TextStyle(
                               fontSize: 16,

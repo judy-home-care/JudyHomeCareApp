@@ -3,6 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 import '../../utils/app_colors.dart';
 import '../../services/profile_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PasswordSecurityScreen extends StatefulWidget {
   final Map<String, dynamic> userData; // ✅ Changed from nurseData to userData
@@ -183,7 +185,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF1A1A1A)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
+        title: const TText(
           'Password & Security',
           style: TextStyle(
             color: Color(0xFF1A1A1A),
@@ -256,7 +258,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          const TText(
             'Account Security Status',
             style: TextStyle(
               fontSize: 20,
@@ -322,21 +324,21 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           children: [
             _buildPasswordField(
               controller: _currentPasswordController,
-              label: 'Current Password',
+              label: 'Current Password'.tr,
               showPassword: _showCurrentPassword,
               onToggle: () => setState(() => _showCurrentPassword = !_showCurrentPassword),
             ),
             const SizedBox(height: 16),
             _buildPasswordField(
               controller: _newPasswordController,
-              label: 'New Password',
+              label: 'New Password'.tr,
               showPassword: _showNewPassword,
               onToggle: () => setState(() => _showNewPassword = !_showNewPassword),
             ),
             const SizedBox(height: 16),
             _buildPasswordField(
               controller: _confirmPasswordController,
-              label: 'Confirm New Password',
+              label: 'Confirm New Password'.tr,
               showPassword: _showConfirmPassword,
               onToggle: () => setState(() => _showConfirmPassword = !_showConfirmPassword),
             ),
@@ -364,7 +366,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
+                    : const TText(
                         'Update Password',
                         style: TextStyle(
                           fontSize: 16,
@@ -463,7 +465,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
       children: [
         Row(
           children: [
-            Text(
+            TText(
               'Password Strength: ',
               style: TextStyle(
                 fontSize: 12,
@@ -616,7 +618,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                     style: TextButton.styleFrom(
                       foregroundColor: Colors.red.shade600,
                     ),
-                    child: const Text('Disable'),
+                    child: const TText('Disable'),
                   ),
                 ],
               ),
@@ -977,7 +979,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
               foregroundColor: Colors.grey.shade700,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -993,7 +995,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
               ),
               elevation: 0,
             ),
-            child: const Text('Enable'),
+            child: const TText('Enable'),
           ),
         ],
       ),
@@ -1061,7 +1063,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              const TText(
                 'Enter Verification Code',
                 style: TextStyle(
                   fontSize: 20,
@@ -1133,7 +1135,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                       minimumSize: const Size(50, 30),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text(
+                    child: const TText(
                       'Resend',
                       style: TextStyle(
                         fontSize: 13,
@@ -1148,7 +1150,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           actions: [
             TextButton(
               onPressed: isVerifying ? null : () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: const TText('Cancel'),
             ),
             ElevatedButton(
               onPressed: isVerifying
@@ -1201,7 +1203,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text('Verify'),
+                  : const TText('Verify'),
             ),
           ],
         ),
@@ -1239,17 +1241,17 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.orange),
             SizedBox(width: 12),
-            Text('Disable 2FA'),
+            TText('Disable 2FA'),
           ],
         ),
-        content: const Text(
+        content: const TText(
           'Are you sure you want to disable two-factor authentication? This will make your account less secure.',
           style: TextStyle(height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: const TText('Cancel'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
@@ -1260,7 +1262,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Disable'),
+            child: const TText('Disable'),
           ),
         ],
       ),

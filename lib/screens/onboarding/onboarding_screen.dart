@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'login_signup_screen.dart';
 import '../../models/onboarding/onboarding_data.dart';
 import '../../services/preferences_service.dart';
+import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -112,7 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Failed to complete onboarding. Please try again.'),
+            content: TText('Failed to complete onboarding. Please try again.'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 3),
           ),
@@ -304,7 +306,7 @@ class _TopBar extends StatelessWidget {
                   ),
                   SizedBox(width: 6),
                   Flexible(
-                    child: Text(
+                    child: TText(
                       'Judy Home HealthCare',
                       style: TextStyle(
                         fontSize: 14,
@@ -332,7 +334,7 @@ class _TopBar extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: const Text(
+              child: const TText(
                 'Skip',
                 style: TextStyle(
                   color: Color(0xFF666666),
@@ -515,13 +517,13 @@ Widget build(BuildContext context) {
                   const Spacer(flex: 1), // Flexible spacing
                   
                   // Static feature pills
-                  const Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _FeaturePill(icon: Icons.verified_outlined, label: 'Verified'),
-                      SizedBox(width: 8),
-                      _FeaturePill(icon: Icons.security_outlined, label: 'Secure'),
-                      SizedBox(width: 8),
+                      _FeaturePill(icon: Icons.verified_outlined, label: 'Verified'.tr),
+                      const SizedBox(width: 8),
+                      _FeaturePill(icon: Icons.security_outlined, label: 'Secure'.tr),
+                      const SizedBox(width: 8),
                       _FeaturePill(icon: Icons.support_agent_outlined, label: '24/7'),
                     ],
                   ),
