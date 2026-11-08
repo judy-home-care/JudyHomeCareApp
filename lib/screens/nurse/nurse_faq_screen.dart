@@ -255,7 +255,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: Colors.red,
@@ -782,7 +782,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -791,7 +791,7 @@ class _NurseFAQScreenState extends State<NurseFAQScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,

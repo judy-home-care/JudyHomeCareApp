@@ -6,6 +6,7 @@ import '../../utils/app_colors.dart';
 import 'add_incident_report_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class NurseIncidentReportScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -239,7 +240,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more incidents: $e'),
+            content: Text('Failed to load more incidents: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -448,7 +449,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -687,7 +688,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                 onPressed: _canLoadMore ? _loadMoreIncidents : null,
                 icon: const Icon(Icons.expand_more_rounded, size: 20),
                 label: Text(
-                  'Load More (${_totalIncidents - _incidents.length} remaining)',
+                  'Load More ({0} remaining)'.trArgs([_totalIncidents - _incidents.length]),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -760,7 +761,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          incident.formattedSeverity,
+                          incident.formattedSeverity.tr,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -780,7 +781,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      incident.formattedStatus,
+                      incident.formattedStatus.tr,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -794,7 +795,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
               const SizedBox(height: 12),
               
               Text(
-                incident.formattedIncidentType,
+                incident.formattedIncidentType.tr,
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.bold,
@@ -804,7 +805,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
               
               const SizedBox(height: 6),
               
-              Text(
+              TranslatedText(
                 incident.incidentDescription,
                 style: TextStyle(
                   fontSize: 13,
@@ -826,7 +827,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      incident.patientName,
+                      incident.patientName.tr,
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade700,
@@ -844,7 +845,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    incident.incidentDate,
+                    incident.incidentDate.tr,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade600,
@@ -890,7 +891,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Reported ${incident.daysOld} days ago',
+                    'Reported {0} days ago'.trArgs([incident.daysOld]),
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade500,
@@ -968,7 +969,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          incident.formattedSeverity,
+                          incident.formattedSeverity.tr,
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1085,7 +1086,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -1117,7 +1118,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
           SizedBox(
             width: 100,
             child: Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.grey.shade600,
@@ -1127,7 +1128,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               value,
               style: const TextStyle(
                 fontSize: 13,
@@ -1146,7 +1147,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
@@ -1161,7 +1162,7 @@ class _NurseIncidentReportScreenState extends State<NurseIncidentReportScreen>
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: Colors.grey.shade200),
           ),
-          child: Text(
+          child: TranslatedText(
             description,
             style: const TextStyle(
               fontSize: 14,

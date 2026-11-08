@@ -10,6 +10,7 @@ import '../../models/wallet/wallet_models.dart';
 import 'wallet_deposit_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class WalletScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -419,7 +420,7 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         ),
         child: Text(
-          label,
+          label.tr,
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey.shade700,
             fontSize: 14,
@@ -611,7 +612,7 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
           if (_pagination != null)
             Text(
-              '${_pagination!.total} transactions',
+              '{0} transactions'.trArgs([_pagination!.total]),
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.grey.shade500,
@@ -716,7 +717,7 @@ class _WalletScreenState extends State<WalletScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.formattedCategory,
+                  transaction.formattedCategory.tr,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -724,7 +725,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
+                TranslatedText(
                   transaction.description ?? transaction.reference,
                   style: TextStyle(
                     fontSize: 13,
@@ -735,7 +736,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${dateFormatter.format(transaction.createdAt)} at ${timeFormatter.format(transaction.createdAt)}',
+                  '{0} at {1}'.trArgs([dateFormatter.format(transaction.createdAt), timeFormatter.format(transaction.createdAt)]),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade400,
@@ -749,7 +750,7 @@ class _WalletScreenState extends State<WalletScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                transaction.formattedAmount,
+                transaction.formattedAmount.tr,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -764,7 +765,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  transaction.formattedStatus,
+                  transaction.formattedStatus.tr,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
@@ -831,7 +832,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          transaction.formattedCategory,
+                          transaction.formattedCategory.tr,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -846,7 +847,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            transaction.formattedStatus,
+                            transaction.formattedStatus.tr,
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -878,7 +879,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    transaction.formattedAmount,
+                    transaction.formattedAmount.tr,
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -1023,7 +1024,7 @@ class _WalletScreenState extends State<WalletScreen> {
         SizedBox(
           width: 120,
           child: Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,
@@ -1031,7 +1032,7 @@ class _WalletScreenState extends State<WalletScreen> {
           ),
         ),
         Expanded(
-          child: Text(
+          child: TranslatedText(
             value,
             style: const TextStyle(
               fontSize: 14,
@@ -1110,7 +1111,7 @@ class _StatementDateButton extends StatelessWidget {
               Icon(icon, size: 16, color: AppColors.primaryGreen),
               const SizedBox(width: 6),
               Text(
-                label,
+                label.tr,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,

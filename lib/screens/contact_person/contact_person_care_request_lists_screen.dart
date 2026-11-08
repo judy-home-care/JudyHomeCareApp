@@ -9,6 +9,7 @@ import '../payment/care_payment_screen.dart';
 import 'contact_person_care_request_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ContactPersonCareRequestListsScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -96,7 +97,7 @@ class _ContactPersonCareRequestListsScreenState
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -149,7 +150,7 @@ class _ContactPersonCareRequestListsScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -289,7 +290,7 @@ class _ContactPersonCareRequestListsScreenState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more: $e'),
+            content: Text('Failed to load more: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
           ),
         );
@@ -628,7 +629,7 @@ class _ContactPersonCareRequestListsScreenState
               Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
               const SizedBox(width: 8),
               Text(
-                'Created: ${DateFormat('MMM d, yyyy - hh:mm a').format(request.createdAt)}',
+                'Created: {0}'.trArgs([DateFormat('MMM d, yyyy - hh:mm a').format(request.createdAt)]),
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey[700],
@@ -736,7 +737,7 @@ class _ContactPersonCareRequestListsScreenState
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
+              TranslatedText(
                 request.description,
                 style: TextStyle(
                   fontSize: 14,
@@ -776,7 +777,7 @@ class _ContactPersonCareRequestListsScreenState
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(
+                TranslatedText(
                   request.specialRequirements!,
                   style: TextStyle(
                     fontSize: 14,
@@ -809,7 +810,7 @@ class _ContactPersonCareRequestListsScreenState
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey[600],
@@ -819,7 +820,7 @@ class _ContactPersonCareRequestListsScreenState
             ],
           ),
           const SizedBox(height: 6),
-          Text(
+          TranslatedText(
             value,
             style: const TextStyle(
               fontSize: 13,
@@ -1040,7 +1041,7 @@ class _ContactPersonCareRequestListsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  title.tr,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -1051,7 +1052,7 @@ class _ContactPersonCareRequestListsScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  description,
+                  description.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: isCompleted || isCurrent
@@ -1334,7 +1335,7 @@ class _ContactPersonCareRequestListsScreenState
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Error: {0}'.trArgs([e.toString()])),
             backgroundColor: Colors.red,
           ),
         );
@@ -1475,7 +1476,7 @@ class _ContactPersonCareRequestListsScreenState
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Error: {0}'.trArgs([e.toString()])),
             backgroundColor: Colors.red,
           ),
         );
@@ -1502,7 +1503,7 @@ class _ContactPersonCareRequestListsScreenState
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${widget.selectedPatient.name}\'s Care Requests',
+                    '{0}\'s Care Requests'.trArgs([widget.selectedPatient.name]),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -1521,7 +1522,7 @@ class _ContactPersonCareRequestListsScreenState
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1533,7 +1534,7 @@ class _ContactPersonCareRequestListsScreenState
                 ],
               )
             : Text(
-                '${widget.selectedPatient.name}\'s Care Requests',
+                '{0}\'s Care Requests'.trArgs([widget.selectedPatient.name]),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -1774,7 +1775,7 @@ class _ContactPersonCareRequestListsScreenState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'Tap the button below to create your first care request for ${widget.selectedPatient.name}',
+                'Tap the button below to create your first care request for {0}'.trArgs([widget.selectedPatient.name]),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -1812,7 +1813,7 @@ class _ContactPersonCareRequestListsScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage,
+              _errorMessage.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

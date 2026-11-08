@@ -196,7 +196,7 @@ class _ContactPersonTransportScreenState
               ),
             ),
             Text(
-              'For ${widget.selectedPatient.name}',
+              'For {0}'.trArgs([widget.selectedPatient.name]),
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.grey.shade600,
@@ -284,7 +284,7 @@ class _ContactPersonTransportScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              'For ${widget.selectedPatient.name}',
+              'For {0}'.trArgs([widget.selectedPatient.name]),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -383,7 +383,7 @@ class _ContactPersonTransportScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -392,7 +392,7 @@ class _ContactPersonTransportScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -538,7 +538,7 @@ class _ContactPersonTransportScreenState
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -831,7 +831,7 @@ class _ContactPersonTransportScreenState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            widget.selectedPatient.name,
+                            widget.selectedPatient.name.tr,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -859,7 +859,7 @@ class _ContactPersonTransportScreenState
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        statusLabel,
+                        statusLabel.tr,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -909,14 +909,14 @@ class _ContactPersonTransportScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
                 ),
               ),
               Text(
-                location,
+                location.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -995,7 +995,7 @@ class _ContactPersonTransportScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.selectedPatient.name,
+                              widget.selectedPatient.name.tr,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -1004,7 +1004,7 @@ class _ContactPersonTransportScreenState
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Transport Request #${request['id'] ?? 'N/A'}',
+                              'Transport Request #{0}'.trArgs([request['id'] ?? 'N/A']),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade600,
@@ -1164,7 +1164,7 @@ class _ContactPersonTransportScreenState
         ),
         const SizedBox(width: 12),
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

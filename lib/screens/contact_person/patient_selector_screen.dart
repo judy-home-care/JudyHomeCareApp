@@ -110,7 +110,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Hello, ${widget.contactPerson.name.split(' ').first}',
+            'Hello, {0}'.trArgs([widget.contactPerson.name.split(' ').first]),
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w700,
@@ -145,7 +145,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${widget.contactPerson.linkedPatients.length} linked patient${widget.contactPerson.linkedPatients.length > 1 ? 's' : ''}',
+                  '{0} linked patient{1}'.trArgs([widget.contactPerson.linkedPatients.length, widget.contactPerson.linkedPatients.length > 1 ? 's' : '']),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -234,7 +234,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        patient.name,
+                        patient.name.tr,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -244,7 +244,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${patient.age} years old',
+                        '{0} years old'.trArgs([patient.age]),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -252,7 +252,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        patient.relationship,
+                        patient.relationship.tr,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade500,
@@ -411,7 +411,7 @@ class _PatientSelectorScreenState extends State<PatientSelectorScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error signing out: ${e.toString()}'),
+          content: Text('Error signing out: {0}'.trArgs([e.toString()])),
           backgroundColor: Colors.red,
         ),
       );

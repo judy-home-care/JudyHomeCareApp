@@ -4,6 +4,7 @@ import '../../services/survey_service.dart';
 import '../../models/survey/survey_models.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class SurveySubmissionScreen extends StatefulWidget {
   final int surveyId;
@@ -171,7 +172,7 @@ class _SurveySubmissionScreenState extends State<SurveySubmissionScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(response.message ?? 'Failed to submit survey'),
+          content: TranslatedText(response.message ?? 'Failed to submit survey'),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
@@ -267,7 +268,7 @@ class _SurveySubmissionScreenState extends State<SurveySubmissionScreen> {
           icon: const Icon(Icons.close, color: Color(0xFF1A1A1A)),
           onPressed: () => _showExitConfirmation(),
         ),
-        title: Text(
+        title: TranslatedText(
           widget.surveyTitle,
           style: const TextStyle(
             color: Color(0xFF1A1A1A),
@@ -380,7 +381,7 @@ class _SurveySubmissionScreenState extends State<SurveySubmissionScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Question ${_currentPage + 1} of $totalQuestions',
+                'Question {0} of {1}'.trArgs([_currentPage + 1, totalQuestions]),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -479,7 +480,7 @@ class _SurveySubmissionScreenState extends State<SurveySubmissionScreen> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TranslatedText(
                   question.questionText,
                   style: const TextStyle(
                     fontSize: 18,
@@ -653,7 +654,7 @@ class _SurveySubmissionScreenState extends State<SurveySubmissionScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -781,7 +782,7 @@ class _SurveySubmissionScreenState extends State<SurveySubmissionScreen> {
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
-                    choice.label,
+                    choice.label.tr,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

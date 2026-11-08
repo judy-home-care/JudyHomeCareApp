@@ -174,7 +174,7 @@ class _TransportBookingScreenState extends State<TransportBookingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.patientName,
+                    widget.patientName.tr,
                     style: const TextStyle(
                       fontSize: 16, // Reduced from 18
                       fontWeight: FontWeight.bold,
@@ -240,7 +240,7 @@ Widget _buildCompactLocationRow({
       const SizedBox(width: 10), // Reduced from 12
       Expanded(
         child: Text(
-          location,
+          location.tr,
           style: const TextStyle(
             fontSize: 14, // Reduced from 15
             fontWeight: FontWeight.w600,
@@ -356,7 +356,7 @@ Widget _buildCompactLocationRow({
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        widget.patientName,
+                        widget.patientName.tr,
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -399,7 +399,7 @@ Widget _buildCompactLocationRow({
             Padding(
               padding: const EdgeInsets.only(left: 36),
               child: Text(
-                widget.destinationAddress,
+                widget.destinationAddress.tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade500,
@@ -441,7 +441,7 @@ Widget _buildCompactLocationRow({
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
@@ -450,7 +450,7 @@ Widget _buildCompactLocationRow({
               ),
               const SizedBox(height: 2),
               Text(
-                location,
+                location.tr,
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -696,7 +696,7 @@ Widget _buildCompactLocationRow({
                       const SizedBox(height: 4),
                       if (driver.vehicleModel != null)
                         Text(
-                          driver.vehicleModel!,
+                          driver.vehicleModel!.tr,
                           style: TextStyle(
                             fontSize: 14,
                             color: Colors.grey.shade700,
@@ -744,7 +744,7 @@ Widget _buildCompactLocationRow({
                             const SizedBox(width: 4),
                             Flexible(
                               child: Text(
-                                driver.vehicleColor!,
+                                driver.vehicleColor!.tr,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey.shade600,
@@ -880,7 +880,7 @@ Widget _buildCompactLocationRow({
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Selected: ${_selectedDriver!.name ?? "Driver"} - ${_selectedDriver!.vehicleNumber ?? "N/A"}',
+                      'Selected: {0} - {1}'.trArgs([_selectedDriver!.name ?? "Driver", _selectedDriver!.vehicleNumber ?? "N/A"]),
                       style: TextStyle(
                         fontSize: 13,
                         color: AppColors.primaryGreen,

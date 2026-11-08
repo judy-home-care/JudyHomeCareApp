@@ -9,6 +9,7 @@ import 'transport_location_selection_screen.dart';
 import 'package:intl/intl.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class TransportRequestScreen extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -262,7 +263,7 @@ class _TransportRequestScreenState extends State<TransportRequestScreen>
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more requests: $e'),
+            content: Text('Failed to load more requests: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -524,7 +525,7 @@ Widget _buildTransportOption({
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -533,7 +534,7 @@ Widget _buildTransportOption({
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
+                  subtitle.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -677,7 +678,7 @@ Widget _buildTransportOption({
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -813,7 +814,7 @@ Widget _buildTransportOption({
                 onPressed: _canLoadMore ? _loadMoreRequests : null,
                 icon: const Icon(Icons.expand_more_rounded, size: 20),
                 label: Text(
-                  'Load More (${_totalRequests - _requests.length} remaining)',
+                  'Load More ({0} remaining)'.trArgs([_totalRequests - _requests.length]),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1030,7 +1031,7 @@ Widget _buildEmptyState() {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            request.patientName,
+                            request.patientName.tr,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
@@ -1039,7 +1040,7 @@ Widget _buildEmptyState() {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            request.typeLabel,
+                            request.typeLabel.tr,
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey.shade600,
@@ -1058,7 +1059,7 @@ Widget _buildEmptyState() {
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        request.statusLabel,
+                        request.statusLabel.tr,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1174,14 +1175,14 @@ Widget _buildEmptyState() {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
                 ),
               ),
               Text(
-                location,
+                location.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1265,7 +1266,7 @@ Widget _buildEmptyState() {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              request.patientName,
+                              request.patientName.tr,
                               style: const TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
@@ -1274,7 +1275,7 @@ Widget _buildEmptyState() {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Transport Request #${request.id}',
+                              'Transport Request #{0}'.trArgs([request.id]),
                               style: TextStyle(
                                 fontSize: 14, 
                                 color: Colors.grey.shade600,
@@ -1389,7 +1390,7 @@ Widget _buildEmptyState() {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  request.pickupLocation,
+                                  request.pickupLocation.tr,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -1399,7 +1400,7 @@ Widget _buildEmptyState() {
                                 if (request.pickupAddress != null) ...[
                                   const SizedBox(height: 4),
                                   Text(
-                                    request.pickupAddress!,
+                                    request.pickupAddress!.tr,
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey.shade700,
@@ -1448,7 +1449,7 @@ Widget _buildEmptyState() {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  request.destinationLocation,
+                                  request.destinationLocation.tr,
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -1458,7 +1459,7 @@ Widget _buildEmptyState() {
                                 if (request.destinationAddress != null) ...[
                                   const SizedBox(height: 4),
                                   Text(
-                                    request.destinationAddress!,
+                                    request.destinationAddress!.tr,
                                     style: TextStyle(
                                       fontSize: 13,
                                       color: Colors.grey.shade700,
@@ -1775,7 +1776,7 @@ Widget _buildEmptyState() {
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: Colors.grey.shade200),
                         ),
-                        child: Text(
+                        child: TranslatedText(
                           request.reason!,
                           style: TextStyle(
                             fontSize: 14,
@@ -1812,7 +1813,7 @@ Widget _buildEmptyState() {
                             ),
                             const SizedBox(width: 12),
                             Expanded(
-                              child: Text(
+                              child: TranslatedText(
                                 request.specialRequirements!,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -1849,7 +1850,7 @@ Widget _buildEmptyState() {
                             ),
                             const SizedBox(width: 12),
                             Text(
-                              request.contactPerson!,
+                              request.contactPerson!.tr,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -1901,7 +1902,7 @@ Widget _buildEmptyState() {
                             ],
                             if (request.feedback != null && 
                                 request.feedback!.isNotEmpty) ...[
-                              Text(
+                              TranslatedText(
                                 request.feedback!,
                                 style: TextStyle(
                                   fontSize: 14,
@@ -1960,7 +1961,7 @@ Widget _buildEmptyState() {
           ),
           const SizedBox(height: 12),
           Text(
-            title,
+            title.tr,
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
@@ -1968,7 +1969,7 @@ Widget _buildEmptyState() {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          TranslatedText(
             value,
             style: TextStyle(
               fontSize: 14,
@@ -1999,7 +2000,7 @@ Widget _buildEmptyState() {
         ),
         const SizedBox(width: 12),
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

@@ -20,6 +20,7 @@ import '../modern_notifications_sheet.dart';
 import '../../services/notification_service.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class NurseDashboardScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -1165,7 +1166,7 @@ String _getRemainingCacheTime() {
     final difference = DateTime.now().difference(_lastFetchTime!);
     
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -1223,7 +1224,7 @@ String _getRemainingCacheTime() {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                        'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                       ),
                     ),
                   ],
@@ -1399,7 +1400,7 @@ String _getRemainingCacheTime() {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1638,7 +1639,7 @@ actions: [
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Hello, ${widget.nurseData['name']?.split(' ')[0] ?? 'Nurse'}',
+                    'Hello, {0}'.trArgs([widget.nurseData['name']?.split(' ')[0] ?? 'Nurse']),
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -1945,7 +1946,7 @@ Widget _buildMetricCard({
             mainAxisSize: MainAxisSize.min, // Important for smaller screens
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: isSmallScreen ? 11 : 12, // Smaller label
                   color: Colors.grey.shade600,
@@ -1956,7 +1957,7 @@ Widget _buildMetricCard({
               ),
               SizedBox(height: isSmallScreen ? 1 : 2),
               Text(
-                value,
+                value.tr,
                 style: TextStyle(
                   fontSize: isSmallScreen ? 16 : 18, // Smaller value
                   fontWeight: FontWeight.bold,
@@ -2234,7 +2235,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            visit.dateRangeDisplay,
+                            visit.dateRangeDisplay.tr,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -2246,7 +2247,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            visit.timeRangeDisplay,
+                            visit.timeRangeDisplay.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: isCompleted
@@ -2280,7 +2281,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          TranslatedText(
             visit.carePlanTitle,
             style: TextStyle(
               fontSize: 20,
@@ -2334,7 +2335,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      visit.timeCompleted!,
+                      visit.timeCompleted!.tr,
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -2391,7 +2392,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Age ${visit.patient!.age} • $formattedCareType',
+                        'Age {0} • {1}'.trArgs([visit.patient!.age, formattedCareType]),
                         style: TextStyle(
                           fontSize: 12,
                           color: isCompleted
@@ -2529,7 +2530,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        TranslatedText(
                           visit.carePlanTitle,
                           style: const TextStyle(
                             fontSize: 24,
@@ -2588,7 +2589,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        'Age ${visit.patient!.age}',
+                                        'Age {0}'.trArgs([visit.patient!.age]),
                                         style: TextStyle(
                                           fontSize: 13,
                                           color: Colors.grey.shade600,
@@ -2703,7 +2704,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          visit.timeCompleted!,
+                                          visit.timeCompleted!.tr,
                                           style: const TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -2980,7 +2981,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
           ),
           const SizedBox(height: 6), 
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
@@ -2991,7 +2992,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
           ),
           const SizedBox(height: 3), 
           Text(
-            value,
+            value.tr,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -3187,7 +3188,7 @@ Widget _buildScheduleCard(ScheduleVisit visit) {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      title,
+                      title.tr,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -3340,7 +3341,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              priorityText,
+                              priorityText.tr,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -3353,7 +3354,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Age ${patient.patient!.age}',
+                        'Age {0}'.trArgs([patient.patient!.age]),
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,
@@ -3362,7 +3363,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        patient.careType,
+                        patient.careType.tr,
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w500,
@@ -3379,7 +3380,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '${patient.totalSchedules} upcoming visits',
+                            '{0} upcoming visits'.trArgs([patient.totalSchedules]),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -3456,7 +3457,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              patient.dateRangeDisplay,
+                              patient.dateRangeDisplay.tr,
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade800,
@@ -3576,7 +3577,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Age ${patient.patient!.age} • ${patient.careType}',
+                              'Age {0} • {1}'.trArgs([patient.patient!.age, patient.careType]),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade600,
@@ -3596,7 +3597,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                 padding: const EdgeInsets.all(20),
                 children: [
                   Text(
-                    'Upcoming Visits (${patient.totalSchedules})',
+                    'Upcoming Visits ({0})'.trArgs([patient.totalSchedules]),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -3648,7 +3649,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        schedule.dateRangeDisplay,
+                        schedule.dateRangeDisplay.tr,
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -3681,7 +3682,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
 
           // Display time range (start - end) or just start time
           Text(
-            schedule.timeRangeDisplay,
+            schedule.timeRangeDisplay.tr,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -3693,7 +3694,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           
           // Display "time until" information
           Text(
-            schedule.timeUntil,
+            schedule.timeUntil.tr,
             style: TextStyle(
               fontSize: 13,
               color: isToday ? Colors.white70 : Colors.grey.shade600,
@@ -3715,7 +3716,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  schedule.location,
+                  schedule.location.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: isToday ? Colors.white : const Color(0xFF1A1A1A),
@@ -3737,7 +3738,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Duration: ${schedule.dailyDuration}${schedule.isMultiDay ? ' (${schedule.assignmentDuration})' : ''}',
+                  'Duration: {0}{1}'.trArgs([schedule.dailyDuration, schedule.isMultiDay ? ' (${schedule.assignmentDuration})' : '']),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -3762,7 +3763,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
         ),
         const SizedBox(height: 4),
         Text(
-          value,
+          value.tr,
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
@@ -3771,7 +3772,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           ),
         ),
         Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 10,
             color: Colors.grey.shade500,
@@ -3844,7 +3845,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  message,
+                  message.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -4007,7 +4008,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -4016,7 +4017,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    number,
+                    number.tr,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -4069,7 +4070,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           ],
         ),
         content: Text(
-          'Are you sure you want to call $serviceName ($phoneNumber)?',
+          'Are you sure you want to call {0} ({1})?'.trArgs([serviceName, phoneNumber]),
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
@@ -4132,7 +4133,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFF199A8E),
@@ -4152,7 +4153,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFFFF4757),
@@ -4168,7 +4169,7 @@ Widget _buildModernPatientCard(UpcomingPatient patient) {
   void _showInfoSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: const Color(0xFF199A8E),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(

@@ -298,7 +298,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more time logs: $e'),
+            content: Text('Failed to load more time logs: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -467,7 +467,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
           ),
           const SizedBox(height: 12),
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
@@ -477,7 +477,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            title.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -545,7 +545,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
             ] : null,
           ),
           child: Text(
-            label,
+            label.tr,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -582,7 +582,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
               ),
               const SizedBox(height: 16),
               Text(
-                _errorMessage!,
+                _errorMessage!.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16,
@@ -771,7 +771,7 @@ class _NurseTimeLogsScreenState extends State<NurseTimeLogsScreen> with SingleTi
                 onPressed: _canLoadMore ? _loadMoreTimeLogs : null,
                 icon: const Icon(Icons.expand_more_rounded, size: 20),
                 label: Text(
-                  'Load More (${_totalTimeLogs - timeLogs.length} remaining)',
+                  'Load More ({0} remaining)'.trArgs([_totalTimeLogs - timeLogs.length]),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -885,7 +885,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    logId,
+                                    logId.tr,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w700,
@@ -907,7 +907,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
-                                    status,
+                                    status.tr,
                                     style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -927,7 +927,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  date,
+                                  date.tr,
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey.shade600,
@@ -1090,7 +1090,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
           Icon(icon, color: color, size: 18),
           const SizedBox(height: 6),
           Text(
-            time,
+            time.tr,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -1099,7 +1099,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
           ),
           const SizedBox(height: 2),
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -1126,7 +1126,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
@@ -1135,7 +1135,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
               ),
               const SizedBox(height: 4),
               Text(
-                value,
+                value.tr,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -1473,7 +1473,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                                   Navigator.pop(context);
                                 },
                                 title: Text(
-                                  option,
+                                  option.tr,
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: tempSort == option 
@@ -1507,7 +1507,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            tempSort,
+                            tempSort.tr,
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade800,
@@ -1630,7 +1630,7 @@ Widget _buildTimeLogCard(Map<String, dynamic> log, int index) {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          label,
+          label.tr,
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 13,

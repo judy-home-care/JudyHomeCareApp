@@ -114,7 +114,7 @@ class _ContactPersonLoginScreenState extends State<ContactPersonLoginScreen> {
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(

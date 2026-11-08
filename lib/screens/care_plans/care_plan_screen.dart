@@ -10,6 +10,7 @@ import 'create_care_plan_modal.dart';
 import '../../widgets/searchable_dropdown.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 
 /// Complete Optimized Care Plans Screen with Task Toggle Feature & Pagination
@@ -303,7 +304,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
     if (_lastFetchTime == null) return 'Never';
     final difference = DateTime.now().difference(_lastFetchTime!);
     
-    if (difference.inSeconds < 60) return 'Just now';
+    if (difference.inSeconds < 60) return 'Just now'.tr;
     if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
     if (difference.inHours < 24) return '${difference.inHours}h ago';
     return '${difference.inDays}d ago';
@@ -369,7 +370,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -513,7 +514,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more care plans: $e'),
+            content: Text('Failed to load more care plans: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -541,7 +542,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('Care plans updated • $planCount ${planCount == 1 ? 'plan' : 'plans'}'),
+              child: Text('${'Care plans updated'.tr} • $planCount ${planCount == 1 ? 'plan'.tr : 'plans'.tr}'),
             ),
           ],
         ),
@@ -680,7 +681,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                 const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('Failed to update task: ${e.toString()}'),
+                  child: Text('Failed to update task: {0}'.trArgs([e.toString()])),
                 ),
               ],
             ),
@@ -738,7 +739,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Updated $_cacheAge',
+                    '${'Updated'.tr} $_cacheAge',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade600,
@@ -869,7 +870,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
               ),
               const SizedBox(height: 8),
               Text(
-                _errorMessage!,
+                _errorMessage!.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
@@ -1106,7 +1107,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -1261,7 +1262,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                 child: Icon(Icons.check_circle, color: Colors.white, size: 18),
               ),
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -1325,7 +1326,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                 onPressed: _canLoadMore ? _loadMoreCarePlans : null,
                 icon: const Icon(Icons.expand_more_rounded, size: 20),
                 label: Text(
-                  'Load More (${_totalCarePlans - _carePlans.length} remaining)',
+                  'Load More ({0} remaining)'.trArgs([_totalCarePlans - _carePlans.length]),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1386,7 +1387,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                       ),
                       child: Center(
                         child: Text(
-                          plan.patientInitials,
+                          plan.patientInitials.tr,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -1401,7 +1402,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            plan.patient,
+                            plan.patient.tr,
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
@@ -1423,7 +1424,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                         ),
                       ),
                       child: Text(
-                        plan.status,
+                        plan.status.tr,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -1435,7 +1436,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(
+                TranslatedText(
                   plan.carePlan,
                   style: const TextStyle(
                     fontSize: 16,
@@ -1445,7 +1446,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
+                TranslatedText(
                   plan.description,
                   style: TextStyle(
                     fontSize: 14,
@@ -1489,7 +1490,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            plan.priority,
+                            plan.priority.tr,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -1522,7 +1523,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
-            text,
+            text.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -1592,7 +1593,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                           ),
                           child: Center(
                             child: Text(
-                              plan.patientInitials,
+                              plan.patientInitials.tr,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -1607,7 +1608,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                plan.patient,
+                                plan.patient.tr,
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
@@ -1615,7 +1616,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                 ),
                               ),
                               const SizedBox(height: 4),
-                              Text(
+                              TranslatedText(
                                 plan.carePlan,
                                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                               ),
@@ -1751,7 +1752,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      plan.endDate!,
+                                      plan.endDate!.tr,
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
@@ -1778,7 +1779,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Text(
+                          child: TranslatedText(
                             plan.description,
                             style: TextStyle(
                               fontSize: 14,
@@ -1822,7 +1823,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                   children: [
                                     if (plan.carePlanEntries.length > 1)
                                       Text(
-                                        'Entry ${index + 1}',
+                                        'Entry {0}'.trArgs([index + 1]),
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
@@ -1857,7 +1858,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                           Icon(Icons.calendar_today, size: 12, color: Colors.grey[500]),
                                           const SizedBox(width: 4),
                                           Text(
-                                            entry.entryDateFormatted!,
+                                            entry.entryDateFormatted!.tr,
                                             style: TextStyle(
                                               fontSize: 11,
                                               color: Colors.grey[600],
@@ -1932,7 +1933,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                       Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'By ${entry.nurse!.name}',
+                                        'By {0}'.trArgs([entry.nurse!.name]),
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: Colors.grey[600],
@@ -2005,7 +2006,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    plan.frequency,
+                                    plan.frequency.tr,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -2049,7 +2050,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -2058,7 +2059,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          TranslatedText(
             value?.isNotEmpty == true ? value! : '-',
             style: const TextStyle(
               fontSize: 13,
@@ -2089,7 +2090,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  title,
+                  title.tr,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -2101,7 +2102,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
             ],
           ),
           const SizedBox(height: 8),
-          Text(
+          TranslatedText(
             content?.isNotEmpty == true ? content! : '-',
             style: TextStyle(
               fontSize: 13,
@@ -2140,7 +2141,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            title,
+            title.tr,
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey.shade600,
@@ -2148,7 +2149,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
             ),
           ),
           const SizedBox(height: 4),
-          Text(
+          TranslatedText(
             value,
             style: TextStyle(
               fontSize: 16,
@@ -2179,7 +2180,7 @@ class _CarePlansScreenState extends State<CarePlansScreen>
         ),
         const SizedBox(width: 12),
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,

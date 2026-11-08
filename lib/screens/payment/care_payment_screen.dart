@@ -13,6 +13,7 @@ import '../wallet/wallet_deposit_screen.dart';
 import '../../utils/app_colors.dart';
 import '../patient/widgets/autopay_prompt.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class CarePaymentScreen extends StatefulWidget {
   final CareRequest careRequest;
@@ -256,7 +257,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'You need GHS ${widget.assessmentFee.toStringAsFixed(2)} but only have GHS ${availableBalance.toStringAsFixed(2)} in your wallet.',
+              'You need GHS {0} but only have GHS {1} in your wallet.'.trArgs([widget.assessmentFee.toStringAsFixed(2), availableBalance.toStringAsFixed(2)]),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -282,7 +283,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                     ),
                   ),
                   Text(
-                    'GHS ${shortfall.toStringAsFixed(2)}',
+                    'GHS {0}'.trArgs([shortfall.toStringAsFixed(2)]),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -591,7 +592,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
     Clipboard.setData(ClipboardData(text: text));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('$label copied to clipboard'),
+        content: Text('{0} copied to clipboard'.trArgs([label])),
         backgroundColor: const Color(0xFF199A8E),
         duration: const Duration(seconds: 2),
       ),
@@ -602,7 +603,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 4),
       ),
@@ -613,7 +614,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.green,
         duration: const Duration(seconds: 3),
       ),
@@ -652,7 +653,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
             ),
             const SizedBox(height: 24),
             Text(
-              title,
+              title.tr,
               style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -661,7 +662,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              message,
+              message.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -858,7 +859,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                   Row(
                     children: [
                       Text(
-                        title,
+                        title.tr,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -879,7 +880,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            badgeText,
+                            badgeText.tr,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -892,7 +893,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade500,
@@ -1154,7 +1155,7 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
-                        buttonText,
+                        buttonText.tr,
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -1177,14 +1178,14 @@ class _CarePaymentScreenState extends State<CarePaymentScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 14,
               color: Colors.grey.shade600,
             ),
           ),
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: isHighlighted ? 20 : 14,
               fontWeight: isHighlighted ? FontWeight.bold : FontWeight.w600,

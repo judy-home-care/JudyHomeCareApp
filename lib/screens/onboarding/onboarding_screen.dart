@@ -4,6 +4,7 @@ import '../../models/onboarding/onboarding_data.dart';
 import '../../services/preferences_service.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -484,7 +485,7 @@ Widget build(BuildContext context) {
                   const Spacer(flex: 1), // Flexible spacing
                   
                   // Text content
-                  Text(
+                  TranslatedText(
                     data.title,
                     textAlign: TextAlign.center,
                     style: TextStyle(
@@ -500,7 +501,7 @@ Widget build(BuildContext context) {
                   
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
+                    child: TranslatedText(
                       data.description,
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -587,7 +588,7 @@ class _FeaturePill extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            label,
+            label.tr,
             style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

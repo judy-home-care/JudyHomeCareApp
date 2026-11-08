@@ -6,6 +6,7 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ProgressNoteScreen extends StatefulWidget {
   const ProgressNoteScreen({Key? key}) : super(key: key);
@@ -261,7 +262,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -319,7 +320,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -484,7 +485,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more: ${e.message}'),
+            content: TranslatedText('Failed to load more: ${e.message}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -648,7 +649,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                           items: ['Newest First', 'Oldest First'].map((String item) {
                             return DropdownMenuItem<String>(
                               value: item,
-                              child: Text(item),
+                              child: Text(item.tr),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -800,7 +801,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -971,8 +972,8 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
   
   Widget _buildCleanProgressNoteCard(Map<String, dynamic> note, int index) {
     final visitDate = DateTime.parse(note['visit_date']);
-    final nurseName = note['nurse']?['name'] ?? 'Unknown Nurse';
-    final generalCondition = note['general_condition'] ?? 'N/A';
+    final String nurseName = (note['nurse']?['name'] ?? 'Unknown Nurse').toString();
+    final String generalCondition = (note['general_condition'] ?? 'N/A').toString();
     final painLevel = note['pain_level'] ?? 0;
 
     return Container(
@@ -1082,7 +1083,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              generalCondition,
+                              generalCondition.tr,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -1110,7 +1111,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Pain: $painLevel/10',
+                          'Pain: {0}/10'.trArgs([painLevel]),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -1152,7 +1153,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                nurseName,
+                                nurseName.tr,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -1269,7 +1270,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: TranslatedText(e.message),
             backgroundColor: Colors.red,
           ),
         );
@@ -1516,7 +1517,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                TranslatedText(
                                   noteDetail.generalCondition,
                                   style: const TextStyle(
                                     fontSize: 15,
@@ -1851,7 +1852,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                         if (details != null && details.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
-                            details,
+                            details.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[700],
@@ -1906,7 +1907,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
             Icon(icon, size: 16, color: Colors.grey[600]),
             const SizedBox(width: 6),
             Text(
-              title,
+              title.tr,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -1927,7 +1928,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
               color: borderColor.withOpacity(0.2),
             ),
           ),
-          child: Text(
+          child: TranslatedText(
             content,
             style: TextStyle(
               fontSize: 13,
@@ -1963,7 +1964,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.grey[600],
@@ -1971,7 +1972,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
                 ),
               ),
               Text(
-                value,
+                value.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -2014,11 +2015,11 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
     final difference = now.difference(dateTime);
     
     if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
+      return '{0}d ago'.trArgs([difference.inDays]);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
+      return '{0}h ago'.trArgs([difference.inHours]);
     } else {
-      return '${difference.inMinutes}m ago';
+      return '{0}m ago'.trArgs([difference.inMinutes]);
     }
   }
 
@@ -2159,7 +2160,7 @@ class ProgressNoteScreenState extends State<ProgressNoteScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage,
+              _errorMessage.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

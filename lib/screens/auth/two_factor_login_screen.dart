@@ -6,6 +6,7 @@ import '../nurse/nurse_main_screen.dart';
 import '../therapist/therapist_main_screen.dart';
 import '../patient/patient_main_screen.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class TwoFactorLoginScreen extends StatefulWidget {
   final Map<String, dynamic> twoFactorData;
@@ -162,7 +163,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _errorMessage!,
+                        _errorMessage!.tr,
                         style: TextStyle(
                           color: Colors.red.shade700,
                           fontSize: 14,
@@ -208,7 +209,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            'We sent a 6-digit code to\n$_maskedContact',
+            'We sent a 6-digit code to\n{0}'.trArgs([_maskedContact]),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 15,
@@ -279,7 +280,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _errorMessage!,
+                      _errorMessage!.tr,
                       style: TextStyle(
                         color: Colors.red.shade700,
                         fontSize: 13,
@@ -502,7 +503,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Welcome, ${userData['first_name']}!'),
+        content: Text('Welcome, {0}!'.trArgs([userData['first_name']])),
         backgroundColor: AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -583,7 +584,7 @@ class _TwoFactorLoginScreenState extends State<TwoFactorLoginScreen> {
         // For other roles, show a message and return
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Dashboard for ${userRole}s coming soon!'),
+            content: Text('Dashboard for {0}s coming soon!'.trArgs([userRole])),
             backgroundColor: const Color(0xFF6C63FF),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

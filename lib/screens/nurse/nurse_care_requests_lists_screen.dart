@@ -6,6 +6,7 @@ import '../../utils/string_utils.dart';
 import 'nurse_medical_assessment_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class NurseCareRequestsListScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -249,7 +250,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
+                    TranslatedText(
                       request.description,
                       style: TextStyle(
                         fontSize: 14,
@@ -276,7 +277,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
           SizedBox(
             width: 140,
             child: Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -285,7 +286,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
             ),
           ),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               value,
               style: const TextStyle(
                 fontSize: 14,
@@ -462,7 +463,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Request #${request.id}',
+                                      'Request #{0}'.trArgs([request.id]),
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
@@ -546,7 +547,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                scheduledTimeDisplay,
+                                scheduledTimeDisplay.tr,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -595,7 +596,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Created ${DateFormat('MMM d').format(request.createdAt)}',
+                      'Created {0}'.trArgs([DateFormat('MMM d').format(request.createdAt)]),
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey[500],
@@ -606,7 +607,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
                 
                 const SizedBox(height: 12),
                 
-                Text(
+                TranslatedText(
                   request.description,
                   style: TextStyle(
                     fontSize: 14,
@@ -778,7 +779,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage,
+              _errorMessage.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -861,7 +862,7 @@ class _NurseCareRequestsListScreenState extends State<NurseCareRequestsListScree
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFFFF4757),

@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Welcome, ${user.firstName}!'),
+        content: Text('Welcome, {0}!'.trArgs([user.firstName])),
         backgroundColor: _primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -463,7 +463,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -476,7 +476,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _showInfoMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: const Color(0xFF6C63FF),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -745,12 +745,12 @@ class _PhoneTextField extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      selectedCountryFlag,
+                      selectedCountryFlag.tr,
                       style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      selectedCountryCode,
+                      selectedCountryCode.tr,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -1010,7 +1010,7 @@ class _OptimizedTextFieldState extends State<_OptimizedTextField> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.label,
+            widget.label.tr,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,

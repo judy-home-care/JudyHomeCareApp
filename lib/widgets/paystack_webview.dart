@@ -5,6 +5,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import '../services/i18n/t_text.dart';
+import '../services/i18n/app_language.dart';
+import '../services/i18n/translated_text.dart';
 
 /// Reusable WebView widget for Paystack payments
 ///
@@ -94,7 +96,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
           context: context,
           builder: (context) => AlertDialog(
             title: const TText('Cancel Payment?'),
-            content: Text(widget.cancelMessage),
+            content: Text(widget.cancelMessage.tr),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -117,7 +119,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
         appBar: AppBar(
           backgroundColor: Colors.white,
           elevation: 0,
-          title: Text(
+          title: TranslatedText(
             widget.title,
             style: const TextStyle(
               color: Color(0xFF1A1A1A),
@@ -135,7 +137,7 @@ class _PaystackPaymentWebViewState extends State<PaystackPaymentWebView> {
                     borderRadius: BorderRadius.circular(16),
                   ),
                   title: const TText('Cancel Payment?'),
-                  content: Text(widget.cancelMessage),
+                  content: Text(widget.cancelMessage.tr),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context, false),

@@ -545,7 +545,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: _primaryColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -558,7 +558,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -894,12 +894,12 @@ class _PhoneField extends StatelessWidget {
               child: Row(
                 children: [
                   Text(
-                    selectedCountryFlag,
+                    selectedCountryFlag.tr,
                     style: const TextStyle(fontSize: 20),
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    selectedCountryCode,
+                    selectedCountryCode.tr,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -993,7 +993,7 @@ class _PasswordField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -1129,7 +1129,7 @@ class _OtpHeader extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'We sent a 6-digit code via SMS to\n$phone',
+          'We sent a 6-digit code via SMS to\n{0}'.trArgs([phone]),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14,
@@ -1328,7 +1328,7 @@ class _PasswordStrengthIndicator extends StatelessWidget {
               ),
             ),
             Text(
-              strengthText,
+              strengthText.tr,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -1403,7 +1403,7 @@ class _SimplifiedButton extends StatelessWidget {
                     const SizedBox(width: 12),
                   ],
                   Text(
-                    label,
+                    label.tr,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -1440,7 +1440,7 @@ class _ResendSection extends StatelessWidget {
         ),
         if (countdown > 0)
           Text(
-            'Resend in ${countdown}s',
+            'Resend in {0}s'.trArgs([countdown]),
             style: const TextStyle(
               color: _ForgotPasswordScreenState._primaryColor,
               fontWeight: FontWeight.w600,

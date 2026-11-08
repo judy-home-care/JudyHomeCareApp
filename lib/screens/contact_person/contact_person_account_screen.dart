@@ -204,7 +204,7 @@ class _ContactPersonAccountScreenState
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  widget.contactPerson.name,
+                  widget.contactPerson.name.tr,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -261,7 +261,7 @@ class _ContactPersonAccountScreenState
       color: AppColors.primaryGreen,
       child: Center(
         child: Text(
-          initials,
+          initials.tr,
           style: const TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.bold,
@@ -385,7 +385,7 @@ class _ContactPersonAccountScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        widget.selectedPatient.name,
+                        widget.selectedPatient.name.tr,
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w600,
@@ -395,7 +395,7 @@ class _ContactPersonAccountScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${widget.selectedPatient.age} years old',
+                        '{0} years old'.trArgs([widget.selectedPatient.age]),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey.shade600,
@@ -418,7 +418,7 @@ class _ContactPersonAccountScreenState
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        widget.selectedPatient.relationship,
+                        widget.selectedPatient.relationship.tr,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -488,7 +488,7 @@ class _ContactPersonAccountScreenState
           Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              '${widget.selectedPatient.name.split(' ').first}\'s Wallet',
+              '{0}\'s Wallet'.trArgs([widget.selectedPatient.name.split(' ').first]),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -770,7 +770,7 @@ class _ContactPersonAccountScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -780,7 +780,7 @@ class _ContactPersonAccountScreenState
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -798,7 +798,7 @@ class _ContactPersonAccountScreenState
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  badge,
+                  badge.tr,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -978,7 +978,7 @@ class _ContactPersonAccountScreenState
                     children: [
                       Expanded(
                         child: Text(
-                          patient.name,
+                          patient.name.tr,
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
@@ -1012,7 +1012,7 @@ class _ContactPersonAccountScreenState
                   Row(
                     children: [
                       Text(
-                        patient.relationship,
+                        patient.relationship.tr,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,
@@ -1208,7 +1208,7 @@ class _ContactPersonAccountScreenState
 
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('An error occurred: ${e.toString()}'),
+          content: Text('An error occurred: {0}'.trArgs([e.toString()])),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(

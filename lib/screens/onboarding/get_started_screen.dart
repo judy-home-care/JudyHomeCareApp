@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../auth/registration_screen.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
@@ -230,7 +231,7 @@ class GetStartedScreen extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -253,7 +254,7 @@ class GetStartedScreen extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    item,
+                    item.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade700,

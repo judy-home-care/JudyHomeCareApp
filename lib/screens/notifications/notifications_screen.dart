@@ -3,6 +3,7 @@ import '../../services/notification_service.dart';
 import '../../models/notification/notification_models.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({Key? key}) : super(key: key);
@@ -103,7 +104,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to mark as read: $e')),
+        SnackBar(content: Text('Failed to mark as read: {0}'.trArgs([e]))),
       );
     }
   }
@@ -126,7 +127,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to mark all as read: $e')),
+        SnackBar(content: Text('Failed to mark all as read: {0}'.trArgs([e]))),
       );
     }
   }
@@ -148,7 +149,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to delete: $e')),
+        SnackBar(content: Text('Failed to delete: {0}'.trArgs([e]))),
       );
     }
   }
@@ -163,7 +164,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             const TText('Notifications'),
             if (_unreadCount > 0)
               Text(
-                '$_unreadCount unread',
+                '{0} unread'.trArgs([_unreadCount]),
                 style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
               ),
           ],
@@ -193,7 +194,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
-            Text(_errorMessage),
+            Text(_errorMessage.tr),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => _loadNotifications(),
@@ -290,7 +291,7 @@ class NotificationTile extends StatelessWidget {
             style: const TextStyle(fontSize: 20),
           ),
         ),
-        title: Text(
+        title: TranslatedText(
           notification.title,
           style: TextStyle(
             fontWeight: notification.isRead 
@@ -302,7 +303,7 @@ class NotificationTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text(
+            TranslatedText(
               notification.body,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -311,7 +312,7 @@ class NotificationTile extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  notification.timeAgo,
+                  notification.timeAgo.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],

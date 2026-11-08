@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'translations/fr.dart';
@@ -43,6 +45,7 @@ class AppLanguage {
       final prefs = await SharedPreferences.getInstance();
       final code = prefs.getString(_prefKey) ?? 'en';
       _active = _dictionaryFor(code);
+      await _applyDateLocale(code);
       current.value = isSupported(code) ? code : 'en';
     } catch (_) {
       // Fall back to English; never block startup over a language preference.
@@ -53,10 +56,23 @@ class AppLanguage {
   static Future<void> set(String code) async {
     if (!isSupported(code)) return;
     _active = _dictionaryFor(code);
+    await _applyDateLocale(code);
     current.value = code;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, code);
+    } catch (_) {}
+  }
+
+  /// Make every DateFormat in the app (weekday/month names, etc.) follow the
+  /// selected language. The app never parses locale-formatted dates, so this
+  /// only affects display.
+  static Future<void> _applyDateLocale(String code) async {
+    try {
+      if (code != 'en') {
+        await initializeDateFormatting(code);
+      }
+      Intl.defaultLocale = isSupported(code) ? code : 'en';
     } catch (_) {}
   }
 
@@ -77,9 +93,24 @@ class AppLanguage {
 
   /// Translate an English source string into the active language.
   static String tr(String text) => _active[text] ?? text;
+
+  /// The built-in dictionary entry for [text], or null when there is none.
+  static String? lookup(String text) => _active[text];
 }
 
 /// Shorthand: 'Save Note'.tr
 extension AppLanguageTr on String {
   String get tr => AppLanguage.tr(this);
+
+  /// Translate a template with numbered placeholders, then fill them in:
+  /// 'Question {0} of {1}'.trArgs([3, 10]). String arguments that have a
+  /// dictionary entry (statuses, care types...) are translated too.
+  String trArgs(List<Object?> args) {
+    var out = AppLanguage.tr(this);
+    for (var i = 0; i < args.length; i++) {
+      final a = args[i];
+      out = out.replaceAll('{$i}', a is String ? AppLanguage.tr(a) : '$a');
+    }
+    return out;
+  }
 }

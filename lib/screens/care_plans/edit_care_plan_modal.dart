@@ -420,7 +420,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
+            Expanded(child: Text(message.tr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
           ],
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -444,7 +444,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
+            Expanded(child: Text(message.tr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))),
           ],
         ),
         backgroundColor: const Color(0xFFFF4757),
@@ -560,7 +560,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
                       ),
                     ),
                     Text(
-                      'ID: #${widget.carePlan.id}',
+                      'ID: #{0}'.trArgs([widget.carePlan.id]),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -586,7 +586,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
 
   Widget _buildSectionTitle(String title) {
     return Text(
-      title,
+      title.tr,
       style: const TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
@@ -774,7 +774,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -836,7 +836,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -904,7 +904,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
           Padding(
             padding: const EdgeInsets.only(left: 4),
             child: Text(
-              helperText,
+              helperText.tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey.shade600,
@@ -926,7 +926,7 @@ class _EditCarePlanModalState extends State<EditCarePlanModal> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,

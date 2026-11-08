@@ -1137,7 +1137,7 @@ $description
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Unable to dial $number'),
+            content: Text('Unable to dial {0}'.trArgs([number])),
             backgroundColor: Colors.red,
           ),
         );

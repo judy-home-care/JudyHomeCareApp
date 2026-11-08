@@ -8,6 +8,7 @@ import '../../models/survey/survey_models.dart';
 import 'contact_person_survey_submission_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ContactPersonFeedbackScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -72,7 +73,7 @@ class _ContactPersonFeedbackScreenState
               ),
             ),
             Text(
-              'For ${widget.selectedPatient.name}',
+              'For {0}'.trArgs([widget.selectedPatient.name]),
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.grey.shade600,
@@ -269,7 +270,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Pending (${_pendingSurveys.length})',
+                      'Pending ({0})'.trArgs([_pendingSurveys.length]),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: !_showCompleted
@@ -312,7 +313,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Completed (${_completedSurveys.length})',
+                      'Completed ({0})'.trArgs([_completedSurveys.length]),
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: _showCompleted
@@ -382,7 +383,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          TranslatedText(
                             survey.surveyTitle,
                             style: const TextStyle(
                               fontSize: 16,
@@ -392,7 +393,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${survey.questionsCount} question${survey.questionsCount != 1 ? 's' : ''}',
+                            '{0} question{1}'.trArgs([survey.questionsCount, survey.questionsCount != 1 ? 's' : '']),
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey.shade600,
@@ -423,7 +424,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                 ),
                 if (survey.surveyDescription.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text(
+                  TranslatedText(
                     survey.surveyDescription,
                     style: TextStyle(
                       fontSize: 14,
@@ -454,7 +455,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Nurse: ${survey.nurse!.name}',
+                                'Nurse: {0}'.trArgs([survey.nurse!.name]),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade700,
@@ -499,7 +500,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        survey.expiresInText,
+                        survey.expiresInText.tr,
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -577,7 +578,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TranslatedText(
                     survey.surveyTitle,
                     style: const TextStyle(
                       fontSize: 15,
@@ -588,7 +589,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                   const SizedBox(height: 4),
                   if (survey.nurse != null)
                     Text(
-                      'Nurse: ${survey.nurse!.name}',
+                      'Nurse: {0}'.trArgs([survey.nurse!.name]),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey.shade600,
@@ -604,7 +605,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        'Completed: ${survey.completedAt}',
+                        'Completed: {0}'.trArgs([survey.completedAt]),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade500,
@@ -679,7 +680,7 @@ class _GeneralSurveyTabState extends State<_GeneralSurveyTab>
           ),
           const SizedBox(height: 8),
           Text(
-            'All surveys for ${widget.patientName} have been completed.',
+            'All surveys for {0} have been completed.'.trArgs([widget.patientName]),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -1203,7 +1204,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
           ),
           const SizedBox(height: 8),
           Text(
-            'You can rate nurses after they complete visits with ${widget.patientName}',
+            'You can rate nurses after they complete visits with {0}'.trArgs([widget.patientName]),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,
@@ -1262,7 +1263,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      '$withResponses response${withResponses > 1 ? 's' : ''}',
+                      '{0} response{1}'.trArgs([withResponses, withResponses > 1 ? 's' : '']),
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -1367,7 +1368,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            feedback.displayName,
+                            feedback.displayName.tr,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1376,7 +1377,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            feedback.careDate,
+                            feedback.careDate.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey.shade600,
@@ -1417,7 +1418,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                   ],
                 ),
                 const SizedBox(height: 12),
-                Text(
+                TranslatedText(
                   feedback.feedbackText,
                   style: TextStyle(
                     fontSize: 14,
@@ -1477,7 +1478,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                     ],
                   ),
                   const SizedBox(height: 10),
-                  Text(
+                  TranslatedText(
                     feedback.responseText!,
                     style: TextStyle(
                       fontSize: 14,
@@ -1536,7 +1537,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
       } else if (diff.inDays == 1) {
         return 'Yesterday';
       } else if (diff.inDays < 7) {
-        return '${diff.inDays} days ago';
+        return '{0} days ago'.trArgs([diff.inDays]);
       } else {
         return '${date.day}/${date.month}/${date.year}';
       }
@@ -1741,7 +1742,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            nurse.name,
+                            nurse.name.tr,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -1765,7 +1766,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                             Row(
                               children: [
                                 Text(
-                                  '${nurse.completedSchedules} completed visit${nurse.completedSchedules != 1 ? 's' : ''}',
+                                  '{0} completed visit{1}'.trArgs([nurse.completedSchedules, nurse.completedSchedules != 1 ? 's' : '']),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade500,
@@ -1783,7 +1784,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
-                                      '${nurse.recentSchedules.where((s) => !s.hasFeedback).length} unreviewed',
+                                      '{0} unreviewed'.trArgs([nurse.recentSchedules.where((s) => !s.hasFeedback).length]),
                                       style: const TextStyle(
                                         fontSize: 11,
                                         fontWeight: FontWeight.w600,
@@ -1912,7 +1913,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
             ),
             const SizedBox(height: 16),
             Text(
-              nurse.name,
+              nurse.name.tr,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -1954,14 +1955,14 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  schedule.date,
+                                  schedule.date.tr,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                                 Text(
-                                  schedule.time,
+                                  schedule.time.tr,
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: Colors.grey.shade600,
@@ -1970,7 +1971,7 @@ class _NurseVisitFeedbackTabState extends State<_NurseVisitFeedbackTab>
                                 if (schedule.location != null) ...[
                                   const SizedBox(height: 4),
                                   Text(
-                                    schedule.location!,
+                                    schedule.location!.tr,
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey.shade500,
@@ -2128,7 +2129,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('An error occurred: ${e.toString()}'),
+          content: Text('An error occurred: {0}'.trArgs([e.toString()])),
           backgroundColor: Colors.red,
         ),
       );
@@ -2456,7 +2457,7 @@ class _GeneralFeedbackDialogState extends State<_GeneralFeedbackDialog> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('An error occurred: ${e.toString()}'),
+          content: Text('An error occurred: {0}'.trArgs([e.toString()])),
           backgroundColor: Colors.red,
         ),
       );
@@ -2523,7 +2524,7 @@ class _GeneralFeedbackDialogState extends State<_GeneralFeedbackDialog> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Share your overall experience for ${widget.patientName}',
+                              'Share your overall experience for {0}'.trArgs([widget.patientName]),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: Colors.grey.shade600,

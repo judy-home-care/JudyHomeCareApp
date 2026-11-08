@@ -58,7 +58,7 @@ Future<void> maybePromptForAutopay(BuildContext context) async {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(message),
+            content: Text(message.tr),
             backgroundColor: AppColors.primaryGreen,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -168,7 +168,7 @@ Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card, {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          card.displayName,
+                          card.displayName.tr,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
@@ -177,7 +177,7 @@ Future<bool?> _showAutopaySheet(BuildContext context, SavedPaymentMethod card, {
                         ),
                         if (card.expiryDisplay.isNotEmpty)
                           Text(
-                            'Expires ${card.expiryDisplay}',
+                            'Expires {0}'.trArgs([card.expiryDisplay]),
                             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                           ),
                       ],

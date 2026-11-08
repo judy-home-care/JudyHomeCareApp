@@ -618,7 +618,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
             ),
             const SizedBox(width: 6),
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 11,
                 color: Colors.grey.shade600,
@@ -629,7 +629,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
         ),
         const SizedBox(height: 6),
         Text(
-          value,
+          value.tr,
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -875,7 +875,7 @@ class _NurseCertificationsScreenState extends State<NurseCertificationsScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,

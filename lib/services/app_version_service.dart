@@ -207,7 +207,7 @@ class AppVersionService {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                message,
+                message.tr,
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey.shade700,

@@ -3,6 +3,7 @@ import '../../utils/app_colors.dart';
 import '../auth/login_screen.dart';
 import '../onboarding/get_started_screen.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class LoginSignupScreen extends StatelessWidget {
   const LoginSignupScreen({super.key});
@@ -280,22 +281,22 @@ class _TermsText extends StatelessWidget {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
-        text: 'By continuing, you agree to our ',
+        text: 'By continuing, you agree to our '.tr,
         style: TextStyle(
           fontSize: 12,
           color: Colors.grey.shade500,
         ),
-        children: const [
+        children: [
           TextSpan(
-            text: 'Terms of Service',
+            text: 'Terms of Service'.tr,
             style: TextStyle(
               color: LoginSignupScreen._primaryColor,
               fontWeight: FontWeight.w500,
             ),
           ),
-          TextSpan(text: ' and '),
+          TextSpan(text: ' and '.tr),
           TextSpan(
-            text: 'Privacy Policy',
+            text: 'Privacy Policy'.tr,
             style: TextStyle(
               color: LoginSignupScreen._primaryColor,
               fontWeight: FontWeight.w500,

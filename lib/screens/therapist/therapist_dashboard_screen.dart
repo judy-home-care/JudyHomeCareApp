@@ -11,6 +11,7 @@ import '../../models/dashboard/therapist_dashboard_models.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 /// Dashboard for physiotherapists and speech therapists.
 ///
@@ -349,7 +350,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                   if (data.therapist.staffId != null && data.therapist.staffId!.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Text(
-                      data.therapist.staffId!,
+                      data.therapist.staffId!.tr,
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                   ],
@@ -358,7 +359,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
               if (data.today != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  data.today!,
+                  data.today!.tr,
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
@@ -501,14 +502,14 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    label,
+                    label.tr,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: isSmall ? 11 : 12, color: Colors.grey.shade600, letterSpacing: -0.2),
                   ),
                   SizedBox(height: isSmall ? 1 : 2),
                   Text(
-                    value,
+                    value.tr,
                     style: TextStyle(
                       fontSize: isSmall ? 16 : 18,
                       fontWeight: FontWeight.bold,
@@ -549,7 +550,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
               ),
               const Spacer(),
               Text(
-                '${stats.patientsSeenThisWeek} patient${stats.patientsSeenThisWeek == 1 ? '' : 's'} seen',
+                '{0} patient{1} seen'.trArgs([stats.patientsSeenThisWeek, stats.patientsSeenThisWeek == 1 ? '' : 's']),
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
               ),
             ],
@@ -588,7 +589,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        d.dayLabel,
+                        d.dayLabel.tr,
                         maxLines: 1,
                         style: TextStyle(
                           fontSize: 11,
@@ -674,9 +675,9 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
               child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(height: 12),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
+            Text(title.tr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A))),
             const SizedBox(height: 4),
-            Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: Colors.grey.shade600, height: 1.3)),
+            Text(subtitle.tr, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, color: Colors.grey.shade600, height: 1.3)),
           ],
         ),
       ),
@@ -733,7 +734,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              p.name,
+                              p.name.tr,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
@@ -750,7 +751,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        p.careType,
+                        p.careType.tr,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
@@ -829,7 +830,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          p.name,
+                          p.name.tr,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A), letterSpacing: -0.3),
@@ -861,12 +862,12 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                       Icon(Icons.history, size: 14, color: Colors.grey.shade500),
                       const SizedBox(width: 4),
                       Text(
-                        'Last session: ${p.lastSessionDisplay}',
+                        'Last session: {0}'.trArgs([p.lastSessionDisplay]),
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
                       ),
                       const Spacer(),
                       Text(
-                        '${p.sessionsCount} note${p.sessionsCount == 1 ? '' : 's'}',
+                        '{0} note{1}'.trArgs([p.sessionsCount, p.sessionsCount == 1 ? '' : 's']),
                         style: TextStyle(fontSize: 11, color: _accent, fontWeight: FontWeight.w600),
                       ),
                     ],
@@ -935,7 +936,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
                 ),
               ),
-              Text(when, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+              Text(when.tr, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
             ],
           ),
           const SizedBox(height: 6),
@@ -943,12 +944,12 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(color: _accentBg, borderRadius: BorderRadius.circular(8)),
             child: Text(
-              '${n.therapyTypeLabel} Note',
+              '{0} Note'.trArgs([n.therapyTypeLabel]),
               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: _accent),
             ),
           ),
           const SizedBox(height: 8),
-          Text(
+          TranslatedText(
             n.excerpt,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
@@ -974,7 +975,7 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
       ),
       child: Center(
         child: Text(
-          initial,
+          initial.tr,
           style: TextStyle(fontSize: size * 0.4, fontWeight: FontWeight.bold, color: AppColors.primaryGreen),
         ),
       ),
@@ -1005,9 +1006,9 @@ class _TherapistDashboardScreenState extends State<TherapistDashboardScreen>
         children: [
           Icon(icon, size: 40, color: Colors.grey.shade400),
           const SizedBox(height: 10),
-          Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+          Text(title.tr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
           const SizedBox(height: 4),
-          Text(subtitle, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.4)),
+          Text(subtitle.tr, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.4)),
         ],
       ),
     );

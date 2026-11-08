@@ -5,6 +5,7 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ContactPersonCarePlansScreen extends StatefulWidget {
   final int patientId;
@@ -154,7 +155,7 @@ class ContactPersonCarePlansScreenState
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -223,7 +224,7 @@ class ContactPersonCarePlansScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing',
+                      'Please wait {0}s before refreshing'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -325,7 +326,7 @@ class ContactPersonCarePlansScreenState
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more: $e'),
+            content: Text('Failed to load more: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
           ),
         );
@@ -631,7 +632,7 @@ class ContactPersonCarePlansScreenState
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -842,7 +843,7 @@ class ContactPersonCarePlansScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          TranslatedText(
                             carePlan.carePlan,
                             style: const TextStyle(
                               fontSize: 16,
@@ -950,14 +951,14 @@ class ContactPersonCarePlansScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 10,
                     color: Colors.grey[600],
                   ),
                 ),
                 Text(
-                  value,
+                  value.tr,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1031,7 +1032,7 @@ class ContactPersonCarePlansScreenState
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
+                        child: TranslatedText(
                           carePlan.carePlan,
                           style: const TextStyle(
                             fontSize: 20,
@@ -1066,7 +1067,7 @@ class ContactPersonCarePlansScreenState
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey[200]!),
                         ),
-                        child: Text(
+                        child: TranslatedText(
                           carePlan.description,
                           style: TextStyle(
                             fontSize: 14,
@@ -1113,7 +1114,7 @@ class ContactPersonCarePlansScreenState
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(
+                                child: TranslatedText(
                                   task,
                                   style: TextStyle(
                                     fontSize: 14,

@@ -523,7 +523,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -568,7 +568,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -577,7 +577,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle,
+                  subtitle.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -626,7 +626,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -635,7 +635,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -674,7 +674,7 @@ class _PatientNotificationPreferencesScreenState extends State<PatientNotificati
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

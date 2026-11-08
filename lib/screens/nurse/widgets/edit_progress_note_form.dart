@@ -437,7 +437,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -457,7 +457,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: Colors.red,
@@ -540,7 +540,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'For ${widget.patientDetail.name}',
+                              'For {0}'.trArgs([widget.patientDetail.name]),
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey[600],
@@ -1104,7 +1104,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
               Expanded(
                 child: CheckboxListTile(
                   title: Text(
-                    label,
+                    label.tr,
                     style: TextStyle(
                       fontSize: 14,
                       color: const Color(0xFF1A1A1A),
@@ -1179,7 +1179,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
       children: [
         if (label.isNotEmpty) ...[
           Text(
-            label,
+            label.tr,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -1231,7 +1231,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -1297,7 +1297,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -1362,7 +1362,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -1384,7 +1384,7 @@ class _EditProgressNoteFormState extends State<EditProgressNoteForm> {
             items: items.map((String item) {
               return DropdownMenuItem<String>(
                 value: item,
-                child: Text(item),
+                child: Text(item.tr),
               );
             }).toList(),
             onChanged: onChanged,

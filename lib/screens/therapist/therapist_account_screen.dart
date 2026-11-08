@@ -128,7 +128,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  name,
+                  name.tr,
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -155,7 +155,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
                       Icon(_roleIcon, size: 16, color: Colors.white),
                       const SizedBox(width: 6),
                       Text(
-                        'Verified $_roleLabel',
+                        'Verified {0}'.trArgs([_roleLabel]),
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
                       ),
                     ],
@@ -174,7 +174,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
       color: AppColors.primaryGreen,
       child: Center(
         child: Text(
-          initials,
+          initials.tr,
           style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
@@ -229,11 +229,11 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
           // right-aligned to the same edge.
           SizedBox(
             width: 110,
-            child: Text(label, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+            child: Text(label.tr, style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
           ),
           Expanded(
             child: Text(
-              value,
+              value.tr,
               textAlign: TextAlign.right,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -344,7 +344,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
           Padding(
             padding: const EdgeInsets.all(20),
             child: Text(
-              title,
+              title.tr,
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey.shade700, letterSpacing: 0.5),
             ),
           ),
@@ -380,11 +380,11 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A), letterSpacing: -0.2),
                   ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.3)),
+                  Text(subtitle.tr, style: TextStyle(fontSize: 13, color: Colors.grey.shade600, height: 1.3)),
                 ],
               ),
             ),
@@ -448,7 +448,7 @@ class _TherapistAccountScreenState extends State<TherapistAccountScreen>
       applicationName: 'Judy Home HealthCare',
       applicationIcon: const Icon(Icons.health_and_safety, color: AppColors.primaryGreen, size: 40),
       children: [
-        Text('Signed in as $_roleLabel.', style: TextStyle(color: Colors.grey.shade700)),
+        Text('Signed in as {0}.'.trArgs([_roleLabel]), style: TextStyle(color: Colors.grey.shade700)),
       ],
     );
   }

@@ -6,6 +6,7 @@ import '../../services/patients/nurse_patient_service.dart';
 import 'transport_location_selection_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class TransportPatientSelectionScreen extends StatefulWidget {
   const TransportPatientSelectionScreen({Key? key}) : super(key: key);
@@ -155,7 +156,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
             ),
             const SizedBox(height: 8),
             Text(
-              'Choose the type of transport for ${_selectedPatient!.name}',
+              'Choose the type of transport for {0}'.trArgs([_selectedPatient!.name]),
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -258,7 +259,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -267,7 +268,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -386,7 +387,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Selected: ${_selectedPatient!.name}',
+                            'Selected: {0}'.trArgs([_selectedPatient!.name]),
                             style: TextStyle(
                               fontSize: 13,
                               color: AppColors.primaryGreen,
@@ -555,7 +556,7 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        patient.name,
+                        patient.name.tr,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -565,14 +566,14 @@ class _TransportPatientSelectionScreenState extends State<TransportPatientSelect
                       const SizedBox(height: 4),
                       if (patient.age != null)
                         Text(
-                          '${patient.age} years old',
+                          '${patient.age} ${'years old'.tr}',
                           style: TextStyle(
                             fontSize: 13,
                             color: Colors.grey.shade600,
                           ),
                         ),
                       const SizedBox(height: 4),
-                      Text(
+                      TranslatedText(
                         patient.condition,
                         style: TextStyle(
                           fontSize: 12,

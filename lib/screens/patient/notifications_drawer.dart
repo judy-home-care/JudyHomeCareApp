@@ -4,6 +4,7 @@ import '../../models/notification/notification_models.dart';
 import '../../utils/app_colors.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class NotificationsDrawer extends StatefulWidget {
   const NotificationsDrawer({Key? key}) : super(key: key);
@@ -303,7 +304,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                     ),
                     if (unreadCount > 0)
                       Text(
-                        '$unreadCount unread',
+                        '{0} unread'.trArgs([unreadCount]),
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,
@@ -692,7 +693,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                         Row(
                           children: [
                             Expanded(
-                              child: Text(
+                              child: TranslatedText(
                                 notification.title,
                                 style: TextStyle(
                                   fontSize: 15,
@@ -727,7 +728,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                           ],
                         ),
                         const SizedBox(height: 6),
-                        Text(
+                        TranslatedText(
                           notification.body,
                           style: TextStyle(
                             fontSize: 13,
@@ -758,7 +759,7 @@ class _NotificationsDrawerState extends State<NotificationsDrawer> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                notification.timeAgo,
+                                notification.timeAgo.tr,
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey.shade600,

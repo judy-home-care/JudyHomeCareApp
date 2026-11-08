@@ -11,6 +11,7 @@ import '../../../utils/string_utils.dart';
 import 'installment_section.dart';
 import '../../../services/i18n/t_text.dart';
 import '../../../services/i18n/app_language.dart';
+import '../../../services/i18n/translated_text.dart';
 
 /// A care request card with tabs for Details and Payment
 class TabbedCareRequestCard extends StatefulWidget {
@@ -369,7 +370,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
           ),
           const SizedBox(width: 6),
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 13,
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -453,7 +454,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        scheduledTimeDisplay,
+                        scheduledTimeDisplay.tr,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -470,7 +471,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
         ],
 
         // Description
-        Text(
+        TranslatedText(
           request.description,
           style: TextStyle(
             fontSize: 14,
@@ -498,7 +499,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  request.serviceAddress,
+                  request.serviceAddress.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[700],
@@ -948,7 +949,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                     ),
                   ),
                   Text(
-                    nextDueDate,
+                    nextDueDate.tr,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -1101,7 +1102,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   ),
                 ),
                 Text(
-                  formattedTotal,
+                  formattedTotal.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1337,7 +1338,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      installment.label,
+                      installment.label.tr,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -1346,7 +1347,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                     ),
                     if (installment.paidAt != null)
                       Text(
-                        'Paid on ${_formatDate(installment.paidAt!)}',
+                        'Paid on {0}'.trArgs([_formatDate(installment.paidAt!)]),
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey[600],
@@ -1356,7 +1357,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                 ),
               ),
               Text(
-                installment.formattedAmount,
+                installment.formattedAmount.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1422,7 +1423,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
             Icon(icon, size: 14, color: const Color(0xFF199A8E)),
             const SizedBox(width: 4),
             Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -1479,7 +1480,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
       } else {
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text(response.message.isNotEmpty
+            content: TranslatedText(response.message.isNotEmpty
                 ? response.message
                 : 'Failed to load receipt'),
             backgroundColor: Colors.red,
@@ -1492,7 +1493,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
       scaffoldMessenger.clearSnackBars();
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('Error loading receipt: $e'),
+          content: Text('Error loading receipt: {0}'.trArgs([e])),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1635,7 +1636,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 13,
               color: Colors.grey[600],
@@ -1643,7 +1644,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
           ),
           const SizedBox(width: 16),
           Flexible(
-            child: Text(
+            child: TranslatedText(
               value,
               style: TextStyle(
                 fontSize: 13,
@@ -1711,7 +1712,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  installment.label,
+                  installment.label.tr,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1730,7 +1731,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
             ),
           ),
           Text(
-            installment.formattedAmount,
+            installment.formattedAmount.tr,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
@@ -1801,7 +1802,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        installment.label,
+                        installment.label.tr,
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -1812,7 +1813,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                         children: [
                           if (installment.dueDateFormatted != null) ...[
                             Text(
-                              'Due: ${installment.dueDateFormatted}',
+                              'Due: {0}'.trArgs([installment.dueDateFormatted]),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: isOverdue ? Colors.red : Colors.grey[600],
@@ -1880,7 +1881,7 @@ class _TabbedCareRequestCardState extends State<TabbedCareRequestCard> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      installment.formattedAmount,
+                      installment.formattedAmount.tr,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

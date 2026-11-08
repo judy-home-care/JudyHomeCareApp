@@ -9,6 +9,7 @@ import 'dart:async';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class PatientSchedulesScreen extends StatefulWidget {
   const PatientSchedulesScreen({Key? key}) : super(key: key);
@@ -210,7 +211,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   const Icon(Icons.error_outline, color: Colors.white, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Text('Could not launch phone dialer for $phoneNumber'),
+                    child: Text('Could not launch phone dialer for {0}'.trArgs([phoneNumber])),
                   ),
                 ],
               ),
@@ -262,13 +263,13 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
     final difference = DateTime.now().difference(_lastFetchTime!);
     
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return '{0}m ago'.trArgs([difference.inMinutes]);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return '{0}h ago'.trArgs([difference.inHours]);
     } else {
-      return '${difference.inDays}d ago';
+      return '{0}d ago'.trArgs([difference.inDays]);
     }
   }
 
@@ -384,7 +385,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -786,7 +787,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                               ),
                             ),
                           Text(
-                            filter,
+                            filter.tr,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -856,7 +857,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                               ),
                             ),
                           Text(
-                            filter,
+                            filter.tr,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -947,7 +948,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -1016,7 +1017,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1299,7 +1300,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _selectedFilter,
+                            _selectedFilter.tr,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF1A1A1A),
@@ -1334,7 +1335,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _selectedStatusFilter,
+                            _selectedStatusFilter.tr,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF1A1A1A),
@@ -1380,7 +1381,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Showing care visits for ${DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)}',
+                    'Showing care visits for {0}'.trArgs([DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)]),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1658,7 +1659,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                _errorMessage!,
+                _errorMessage!.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -1819,7 +1820,7 @@ class PatientSchedulesScreenState extends State<PatientSchedulesScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'No ${_selectedTab} care visits for ${DateFormat('MMMM d, yyyy').format(_selectedDate)}',
+                'No {0} care visits for {1}'.trArgs([_selectedTab, DateFormat('MMMM d, yyyy').format(_selectedDate)]),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -1973,7 +1974,7 @@ Widget _buildScheduleCard(ScheduleItem schedule) {
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                'Nurse: ${schedule.patientName}',
+                                'Nurse: {0}'.trArgs([schedule.patientName]),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
@@ -2042,7 +2043,7 @@ Widget _buildScheduleCard(ScheduleItem schedule) {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
+                      child: TranslatedText(
                         schedule.notes,
                         style: const TextStyle(
                           fontSize: 13,
@@ -2219,7 +2220,7 @@ Widget _buildRescheduleStatusCard(ScheduleItem schedule) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    statusText,
+                    statusText.tr,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -2228,7 +2229,7 @@ Widget _buildRescheduleStatusCard(ScheduleItem schedule) {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    statusMessage,
+                    statusMessage.tr,
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade700,
@@ -2303,7 +2304,7 @@ Widget _buildRescheduleStatusCard(ScheduleItem schedule) {
               ),
               const SizedBox(width: 6),
               Text(
-                'Preferred: ${DateFormat('MMM d, yyyy').format(request!.preferredDate!)}${request.preferredTime != null ? ' (${request.preferredTime})' : ''}',
+                'Preferred: {0}{1}'.trArgs([DateFormat('MMM d, yyyy').format(request!.preferredDate!), request.preferredTime != null ? ' (${request.preferredTime})' : '']),
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
@@ -2323,11 +2324,11 @@ String _getTimeAgo(DateTime dateTime) {
   if (difference.inMinutes < 1) {
     return 'just now';
   } else if (difference.inMinutes < 60) {
-    return '${difference.inMinutes}m ago';
+    return '{0}m ago'.trArgs([difference.inMinutes]);
   } else if (difference.inHours < 24) {
-    return '${difference.inHours}h ago';
+    return '{0}h ago'.trArgs([difference.inHours]);
   } else if (difference.inDays < 7) {
-    return '${difference.inDays}d ago';
+    return '{0}d ago'.trArgs([difference.inDays]);
   } else {
     return DateFormat('MMM d').format(dateTime);
   }
@@ -2344,7 +2345,7 @@ String _getTimeAgo(DateTime dateTime) {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
+          child: TranslatedText(
             text,
             style: const TextStyle(
               fontSize: 13,
@@ -2446,7 +2447,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          schedule.patientName,
+                          schedule.patientName.tr,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -2493,7 +2494,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          schedule.shiftType,
+                          schedule.shiftType.tr,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -2638,7 +2639,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
+                                  child: TranslatedText(
                                     schedule.notes,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -2749,7 +2750,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -2781,7 +2782,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
           SizedBox(
             width: 100,
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF636E72),
@@ -2790,7 +2791,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
             ),
           ),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               value,
               style: const TextStyle(
                 fontSize: 14,
@@ -2813,7 +2814,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
           SizedBox(
             width: 100,
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF636E72),
@@ -2826,7 +2827,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
               children: [
                 Expanded(
                   child: Text(
-                    phoneNumber,
+                    phoneNumber.tr,
                     style: const TextStyle(
                       fontSize: 14,
                       color: AppColors.primaryGreen,
@@ -3007,7 +3008,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Visit on ${DateFormat('MMM d, yyyy').format(schedule.date)}',
+                                'Visit on {0}'.trArgs([DateFormat('MMM d, yyyy').format(schedule.date)]),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
@@ -3106,7 +3107,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    schedule.shiftType,
+                                    schedule.shiftType.tr,
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -3165,7 +3166,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                 ),
                               ),
                               child: Text(
-                                reason,
+                                reason.tr,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -3424,7 +3425,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                 ),
                               ),
                               child: Text(
-                                time,
+                                time.tr,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -3592,7 +3593,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
-                                          child: Text(
+                                          child: TranslatedText(
                                             response.message.isNotEmpty
                                                 ? response.message
                                                 : 'Reschedule request submitted successfully!',
@@ -3627,7 +3628,7 @@ void _showScheduleDetails(ScheduleItem schedule) {
                                         size: 20,
                                       ),
                                       const SizedBox(width: 12),
-                                      Expanded(child: Text(e.message)),
+                                      Expanded(child: TranslatedText(e.message)),
                                     ],
                                   ),
                                   backgroundColor: Colors.red,

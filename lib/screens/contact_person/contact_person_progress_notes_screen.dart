@@ -7,6 +7,7 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ContactPersonProgressNotesScreen extends StatefulWidget {
   final int patientId;
@@ -155,7 +156,7 @@ class ContactPersonProgressNotesScreenState
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -376,7 +377,7 @@ class ContactPersonProgressNotesScreenState
                           items: ['Newest First', 'Oldest First'].map((String item) {
                             return DropdownMenuItem<String>(
                               value: item,
-                              child: Text(item),
+                              child: Text(item.tr),
                             );
                           }).toList(),
                           onChanged: (value) {
@@ -527,7 +528,7 @@ class ContactPersonProgressNotesScreenState
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -677,8 +678,8 @@ class ContactPersonProgressNotesScreenState
   Widget _buildProgressNoteCard(Map<String, dynamic> note) {
     final visitDateStr = note['visit_date'] ?? note['date'] ?? '';
     final visitDate = DateTime.tryParse(visitDateStr) ?? DateTime.now();
-    final nurseName = note['nurse']?['name'] ?? 'Unknown Nurse';
-    final generalCondition = note['general_condition'] ?? 'N/A';
+    final String nurseName = (note['nurse']?['name'] ?? 'Unknown Nurse').toString();
+    final String generalCondition = (note['general_condition'] ?? 'N/A').toString();
     final painLevel = note['pain_level'] ?? 0;
     final visitTime = note['visit_time'] ?? '';
 
@@ -787,7 +788,7 @@ class ContactPersonProgressNotesScreenState
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              generalCondition,
+                              generalCondition.tr,
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -814,7 +815,7 @@ class ContactPersonProgressNotesScreenState
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Pain: $painLevel/10',
+                          'Pain: {0}/10'.trArgs([painLevel]),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -854,7 +855,7 @@ class ContactPersonProgressNotesScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                nurseName,
+                                nurseName.tr,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -1242,7 +1243,7 @@ class ContactPersonProgressNotesScreenState
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                Text(
+                                TranslatedText(
                                   noteDetail.generalCondition,
                                   style: const TextStyle(
                                     fontSize: 15,
@@ -1490,7 +1491,7 @@ class ContactPersonProgressNotesScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.grey[600],
@@ -1498,7 +1499,7 @@ class ContactPersonProgressNotesScreenState
                 ),
               ),
               Text(
-                value,
+                value.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -1581,7 +1582,7 @@ class ContactPersonProgressNotesScreenState
                         if (details != null && details.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
-                            details,
+                            details.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[700],
@@ -1612,7 +1613,7 @@ class ContactPersonProgressNotesScreenState
             Icon(icon, size: 16, color: Colors.grey[600]),
             const SizedBox(width: 6),
             Text(
-              title,
+              title.tr,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -1633,7 +1634,7 @@ class ContactPersonProgressNotesScreenState
               color: borderColor.withOpacity(0.2),
             ),
           ),
-          child: Text(
+          child: TranslatedText(
             content,
             style: TextStyle(
               fontSize: 13,
@@ -1675,11 +1676,11 @@ class ContactPersonProgressNotesScreenState
     final difference = now.difference(dateTime);
 
     if (difference.inDays > 0) {
-      return '${difference.inDays}d ago';
+      return '{0}d ago'.trArgs([difference.inDays]);
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
+      return '{0}h ago'.trArgs([difference.inHours]);
     } else {
-      return '${difference.inMinutes}m ago';
+      return '{0}m ago'.trArgs([difference.inMinutes]);
     }
   }
 
@@ -1807,7 +1808,7 @@ class ContactPersonProgressNotesScreenState
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage,
+              _errorMessage.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

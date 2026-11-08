@@ -3,6 +3,8 @@ import '../../services/care_request_service.dart';
 import '../../utils/app_colors.dart';
 import '../../models/care_request/care_request_models.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 import '../payment/care_payment_screen.dart';  // Import the actual payment screen
 
 class CareRequestProcessScreen extends StatefulWidget {
@@ -159,7 +161,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
       ),
     );
@@ -203,7 +205,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
             Icon(Icons.error_outline, size: 64, color: Colors.red.shade300),
             const SizedBox(height: 16),
             Text(
-              _errorMessage!,
+              _errorMessage!.tr,
               style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -489,7 +491,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -498,7 +500,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  description,
+                  description.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -574,7 +576,7 @@ class _CareRequestProcessScreenState extends State<CareRequestProcessScreen> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               text,
               style: TextStyle(
                 fontSize: 13,

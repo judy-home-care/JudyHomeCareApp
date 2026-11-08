@@ -20,6 +20,7 @@ import '../wallet/wallet_screen.dart';
 import '../../main.dart' show routeObserver;
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class PatientDashboardScreen extends StatefulWidget {
   final Map<String, dynamic> patientData;
@@ -347,7 +348,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -398,7 +399,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -580,7 +581,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -809,7 +810,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello, ${widget.patientData['name']?.split(' ')[0] ?? 'Patient'}',
+                'Hello, {0}'.trArgs([widget.patientData['name']?.split(' ')[0] ?? 'Patient']),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -1067,7 +1068,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -1076,7 +1077,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  value,
+                  value.tr,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1351,7 +1352,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              visit.dateRangeDisplay,
+                              visit.dateRangeDisplay.tr,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -1365,7 +1366,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              visit.timeRangeDisplay,
+                              visit.timeRangeDisplay.tr,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isCompleted
@@ -1405,7 +1406,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
               ],
             ),
             const SizedBox(height: 12),
-            Text(
+            TranslatedText(
               visit.carePlanTitle,
               style: TextStyle(
                 fontSize: 20,
@@ -1459,7 +1460,7 @@ class PatientDashboardScreenState extends State<PatientDashboardScreen>
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        visit.timeCompleted!,
+                        visit.timeCompleted!.tr,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1696,7 +1697,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TranslatedText(
                     visit.carePlanTitle,
                     style: const TextStyle(
                       fontSize: 24,
@@ -1892,7 +1893,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                visit.timeCompleted!,
+                                visit.timeCompleted!.tr,
                                 style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
@@ -1922,7 +1923,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                               ),
                               const SizedBox(width: 6),
                               Text(
-                                visit.timeCompleted!,
+                                visit.timeCompleted!.tr,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -1956,7 +1957,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Daily Duration: ${visit.dailyDuration}',
+                              'Daily Duration: {0}'.trArgs([visit.dailyDuration]),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey.shade600,
@@ -2007,7 +2008,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
           ),
           const SizedBox(height: 8),
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
@@ -2016,7 +2017,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
           ),
           const SizedBox(height: 4),
           Text(
-            value,
+            value.tr,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -2229,7 +2230,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      title,
+                      title.tr,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -2643,7 +2644,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                           ),
                           if (assessment.woundDescription != null &&
                               assessment.woundDescription!.isNotEmpty)
-                            Text(
+                            TranslatedText(
                               assessment.woundDescription!,
                               style: TextStyle(
                                 fontSize: 12,
@@ -2696,7 +2697,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    TranslatedText(
                       assessment.presentingCondition!,
                       style: const TextStyle(
                         fontSize: 13,
@@ -2803,7 +2804,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(
+                    TranslatedText(
                       assessment.initialNursingImpression!,
                       style: const TextStyle(
                         fontSize: 13,
@@ -2842,7 +2843,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Assessed by ${assessment.nurse!.name}',
+                          'Assessed by {0}'.trArgs([assessment.nurse!.name]),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade700,
@@ -2886,7 +2887,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
@@ -2896,7 +2897,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
             ],
           ),
           const SizedBox(height: 4),
-          Text(
+          TranslatedText(
             value,
             style: TextStyle(
               fontSize: 14,
@@ -2929,7 +2930,7 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
             ),
           ),
           Text(
-            value,
+            value.tr,
             style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.bold,
@@ -2998,11 +2999,11 @@ void _showScheduleDetailModal(ScheduleVisit visit) {
       final diff = now.difference(date);
 
       if (diff.inDays == 0) {
-        return 'Today at ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        return 'Today at {0}:{1}'.trArgs([date.hour.toString().padLeft(2, '0'), date.minute.toString().padLeft(2, '0')]);
       } else if (diff.inDays == 1) {
         return 'Yesterday';
       } else if (diff.inDays < 7) {
-        return '${diff.inDays} days ago';
+        return '{0} days ago'.trArgs([diff.inDays]);
       } else {
         return '${date.day}/${date.month}/${date.year}';
       }
@@ -3094,7 +3095,7 @@ Widget _buildNurseCard(UpcomingNurse nurseVisit) {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              nurseVisit.nurse.name,
+                              nurseVisit.nurse.name.tr,
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -3213,7 +3214,7 @@ Widget _buildNurseCard(UpcomingNurse nurseVisit) {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                timeDisplay,
+                                timeDisplay.tr,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade800,
@@ -3222,7 +3223,7 @@ Widget _buildNurseCard(UpcomingNurse nurseVisit) {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                nurseVisit.timeUntil,
+                                nurseVisit.timeUntil.tr,
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey.shade600,
@@ -3325,7 +3326,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            nurseVisit.nurse.name,
+                            nurseVisit.nurse.name.tr,
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -3466,7 +3467,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    nurseVisit.dateRangeDisplay,
+                                    nurseVisit.dateRangeDisplay.tr,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -3475,7 +3476,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    nurseVisit.timeRangeDisplay,
+                                    nurseVisit.timeRangeDisplay.tr,
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Colors.grey.shade600,
@@ -3502,7 +3503,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                nurseVisit.timeUntil,
+                                nurseVisit.timeUntil.tr,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
@@ -3520,7 +3521,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  nurseVisit.dailyDuration,
+                                  nurseVisit.dailyDuration.tr,
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -3567,7 +3568,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    nurseVisit.assignmentDuration,
+                                    nurseVisit.assignmentDuration.tr,
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -3654,7 +3655,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                nurseVisit.location,
+                                nurseVisit.location.tr,
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -3748,7 +3749,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    schedule.dateRangeDisplay,
+                                    schedule.dateRangeDisplay.tr,
                                     style: const TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
@@ -3756,7 +3757,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                     ),
                                   ),
                                   Text(
-                                    schedule.timeRangeDisplay,
+                                    schedule.timeRangeDisplay.tr,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade600,
@@ -3775,7 +3776,7 @@ void _showNurseDetailsModal(UpcomingNurse nurseVisit) {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                schedule.dailyDuration,
+                                schedule.dailyDuration.tr,
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -3808,7 +3809,7 @@ Widget _buildVitalDetail(IconData icon, String label, String value) {
       ),
       const SizedBox(height: 8),
       Text(
-        label,
+        label.tr,
         style: TextStyle(
           fontSize: 11,
           color: Colors.grey.shade600,
@@ -3816,7 +3817,7 @@ Widget _buildVitalDetail(IconData icon, String label, String value) {
       ),
       const SizedBox(height: 4),
       Text(
-        value,
+        value.tr,
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.bold,
@@ -3840,7 +3841,7 @@ Widget _buildSectionTitle(String title) {
       ),
       const SizedBox(width: 12),
       Text(
-        title,
+        title.tr,
         style: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
@@ -3861,7 +3862,7 @@ Widget _buildSectionTitle(String title) {
         ),
         const SizedBox(height: 4),
         Text(
-          value,
+          value.tr,
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
@@ -3869,7 +3870,7 @@ Widget _buildSectionTitle(String title) {
           ),
         ),
         Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 10,
             color: Colors.grey.shade500,
@@ -3930,7 +3931,7 @@ Widget _buildSectionTitle(String title) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  message,
+                  message.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -4092,7 +4093,7 @@ Widget _buildSectionTitle(String title) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -4101,7 +4102,7 @@ Widget _buildSectionTitle(String title) {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    number,
+                    number.tr,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey.shade600,
@@ -4154,7 +4155,7 @@ Widget _buildSectionTitle(String title) {
           ],
         ),
         content: Text(
-          'Are you sure you want to call $serviceName ($phoneNumber)?',
+          'Are you sure you want to call {0} ({1})?'.trArgs([serviceName, phoneNumber]),
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
@@ -4225,7 +4226,7 @@ Widget _buildSectionTitle(String title) {
   void _showInfoSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: const Color(0xFF199A8E),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -4238,7 +4239,7 @@ Widget _buildSectionTitle(String title) {
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: const Color(0xFFFF4757),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(

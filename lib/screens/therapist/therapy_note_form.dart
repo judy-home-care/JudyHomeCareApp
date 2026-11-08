@@ -7,6 +7,7 @@ import '../../services/patients/nurse_patient_service.dart';
 import '../../services/drafts/draft_service.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 /// "Daily Notes" tab for physiotherapists and speech therapists.
 ///
@@ -225,7 +226,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
   void _showSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: isError ? Colors.red : AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -347,7 +348,7 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '$_therapyLabel Session Note',
+                  '{0} Session Note'.trArgs([_therapyLabel]),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -417,12 +418,12 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    label,
+                    label.tr,
                     style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    value,
+                    value.tr,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -598,17 +599,17 @@ class _TherapyNoteFormState extends State<TherapyNoteForm>
                   color: _accentBg,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Text(
+                child: TranslatedText(
                   note.title,
                   style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: _accent),
                 ),
               ),
               const Spacer(),
-              Text(when, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+              Text(when.tr, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
+          TranslatedText(
             note.note,
             maxLines: 4,
             overflow: TextOverflow.ellipsis,

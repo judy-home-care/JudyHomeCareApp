@@ -275,7 +275,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
       color: AppColors.primaryGreen,
       child: Center(
         child: Text(
-          initials,
+          initials.tr,
           style: const TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.bold,
@@ -664,7 +664,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                     children: [
                       Expanded(
                         child: Text(
-                          title,
+                          title.tr,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -685,7 +685,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            badge,
+                            badge.tr,
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -698,7 +698,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -1049,7 +1049,7 @@ class _PatientAccountScreenState extends State<PatientAccountScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('An error occurred: ${e.toString()}'),
+            content: Text('An error occurred: {0}'.trArgs([e.toString()])),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

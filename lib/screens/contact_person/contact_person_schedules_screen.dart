@@ -7,6 +7,7 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ContactPersonSchedulesScreen extends StatefulWidget {
   final int patientId;
@@ -200,13 +201,13 @@ class ContactPersonSchedulesScreenState
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
+      return '{0}m ago'.trArgs([difference.inMinutes]);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
+      return '{0}h ago'.trArgs([difference.inHours]);
     } else {
-      return '${difference.inDays}d ago';
+      return '{0}d ago'.trArgs([difference.inDays]);
     }
   }
 
@@ -271,7 +272,7 @@ class ContactPersonSchedulesScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing',
+                      'Please wait {0}s before refreshing'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -557,7 +558,7 @@ class ContactPersonSchedulesScreenState
                               ),
                             ),
                           Text(
-                            filter,
+                            filter.tr,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -623,7 +624,7 @@ class ContactPersonSchedulesScreenState
                               ),
                             ),
                           Text(
-                            filter,
+                            filter.tr,
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
@@ -712,7 +713,7 @@ class ContactPersonSchedulesScreenState
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -781,7 +782,7 @@ class ContactPersonSchedulesScreenState
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1045,7 +1046,7 @@ class ContactPersonSchedulesScreenState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _selectedFilter,
+                            _selectedFilter.tr,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF1A1A1A),
@@ -1081,7 +1082,7 @@ class ContactPersonSchedulesScreenState
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _selectedStatusFilter,
+                            _selectedStatusFilter.tr,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF1A1A1A),
@@ -1127,7 +1128,7 @@ class ContactPersonSchedulesScreenState
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Showing care visits for ${DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)}',
+                    'Showing care visits for {0}'.trArgs([DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)]),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1364,7 +1365,7 @@ class ContactPersonSchedulesScreenState
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
-                                  'Nurse: ${schedule.patientName}',
+                                  'Nurse: {0}'.trArgs([schedule.patientName]),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -1434,7 +1435,7 @@ class ContactPersonSchedulesScreenState
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
+                        child: TranslatedText(
                           schedule.notes,
                           style: const TextStyle(
                             fontSize: 13,
@@ -1514,7 +1515,7 @@ class ContactPersonSchedulesScreenState
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
+          child: TranslatedText(
             text,
             style: const TextStyle(
               fontSize: 13,
@@ -1611,7 +1612,7 @@ class ContactPersonSchedulesScreenState
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          schedule.patientName,
+                          schedule.patientName.tr,
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -1656,7 +1657,7 @@ class ContactPersonSchedulesScreenState
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          schedule.shiftType,
+                          schedule.shiftType.tr,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1758,7 +1759,7 @@ class ContactPersonSchedulesScreenState
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
+                                  child: TranslatedText(
                                     schedule.notes,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -1850,7 +1851,7 @@ class ContactPersonSchedulesScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -1882,7 +1883,7 @@ class ContactPersonSchedulesScreenState
           SizedBox(
             width: 100,
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF636E72),
@@ -1891,7 +1892,7 @@ class ContactPersonSchedulesScreenState
             ),
           ),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               value,
               style: const TextStyle(
                 fontSize: 14,
@@ -2022,7 +2023,7 @@ class ContactPersonSchedulesScreenState
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'No $_selectedTab care visits for ${DateFormat('MMMM d, yyyy').format(_selectedDate)}',
+                'No {0} care visits for {1}'.trArgs([_selectedTab, DateFormat('MMMM d, yyyy').format(_selectedDate)]),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -2335,7 +2336,7 @@ class ContactPersonSchedulesScreenState
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Visit on ${DateFormat('MMM d, yyyy').format(schedule.date)}',
+                                'Visit on {0}'.trArgs([DateFormat('MMM d, yyyy').format(schedule.date)]),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
@@ -2434,7 +2435,7 @@ class ContactPersonSchedulesScreenState
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    schedule.shiftType,
+                                    schedule.shiftType.tr,
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -2493,7 +2494,7 @@ class ContactPersonSchedulesScreenState
                                 ),
                               ),
                               child: Text(
-                                reason,
+                                reason.tr,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -2752,7 +2753,7 @@ class ContactPersonSchedulesScreenState
                                 ),
                               ),
                               child: Text(
-                                time,
+                                time.tr,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

@@ -86,7 +86,7 @@ class TherapistBottomNavigation extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

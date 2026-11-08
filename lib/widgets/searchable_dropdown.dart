@@ -63,7 +63,7 @@ class _SearchableDropdownState extends State<SearchableDropdown> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          widget.label,
+          widget.label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -205,7 +205,7 @@ class _SearchableDropdownModalState extends State<_SearchableDropdownModal> {
                   children: [
                     Expanded(
                       child: Text(
-                        'Select ${widget.label.replaceAll(' *', '')}',
+                        'Select {0}'.trArgs([widget.label.replaceAll(' *', '')]),
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -283,7 +283,7 @@ class _SearchableDropdownModalState extends State<_SearchableDropdownModal> {
               child: Row(
                 children: [
                   Text(
-                    '${_filteredItems.length} result${_filteredItems.length != 1 ? 's' : ''} found',
+                    '{0} result{1} found'.trArgs([_filteredItems.length, _filteredItems.length != 1 ? 's' : '']),
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -378,7 +378,7 @@ class _SearchableDropdownModalState extends State<_SearchableDropdownModal> {
                             ),
                           ),
                           title: Text(
-                            label,
+                            label.tr,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,

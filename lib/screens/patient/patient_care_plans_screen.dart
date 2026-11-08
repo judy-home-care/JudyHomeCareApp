@@ -5,6 +5,7 @@ import '../../services/notification_service.dart';
 import '../modern_notifications_sheet.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class PatientCarePlansScreen extends StatefulWidget {
   const PatientCarePlansScreen({Key? key}) : super(key: key);
@@ -256,7 +257,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -314,7 +315,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -479,7 +480,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more: ${e.message}'),
+            content: TranslatedText('Failed to load more: ${e.message}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -735,7 +736,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -944,7 +945,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
+                          TranslatedText(
                             carePlan.carePlan,
                             style: const TextStyle(
                               fontSize: 16,
@@ -956,7 +957,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            carePlan.careType,
+                            carePlan.careType.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -972,7 +973,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        carePlan.status,
+                        carePlan.status.tr,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -1090,14 +1091,14 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 10,
                     color: Colors.grey[600],
                   ),
                 ),
                 Text(
-                  value,
+                  value.tr,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1137,7 +1138,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message),
+            content: TranslatedText(e.message),
             backgroundColor: Colors.red,
           ),
         );
@@ -1202,7 +1203,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
+                        child: TranslatedText(
                           carePlan.carePlan,
                           style: const TextStyle(
                             fontSize: 20,
@@ -1238,7 +1239,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.grey[200]!),
                         ),
-                        child: Text(
+                        child: TranslatedText(
                           carePlan.description,
                           style: TextStyle(
                             fontSize: 14,
@@ -1285,7 +1286,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                               ),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(
+                                child: TranslatedText(
                                   task,
                                   style: TextStyle(
                                     fontSize: 14,
@@ -1365,7 +1366,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        'Progress: ${(carePlan.progress * 100).toInt()}%',
+                        'Progress: {0}%'.trArgs([(carePlan.progress * 100).toInt()]),
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
@@ -1374,7 +1375,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
                       ),
                     ),
                     Text(
-                      '${carePlan.completedTasks.length}/${carePlan.careTasks.length} tasks',
+                      '{0}/{1} tasks'.trArgs([carePlan.completedTasks.length, carePlan.careTasks.length]),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -1568,7 +1569,7 @@ class PatientCarePlansScreenState extends State<PatientCarePlansScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              _errorMessage,
+              _errorMessage.tr,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,

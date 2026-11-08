@@ -10,6 +10,7 @@ import '../../services/notification_service.dart';
 import 'chat_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ConversationsScreen extends StatefulWidget {
   final Map<String, dynamic>? userData;
@@ -134,7 +135,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
         setState(() => _isLoadingContacts = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load contacts: $e'),
+            content: Text('Failed to load contacts: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
           ),
         );
@@ -241,7 +242,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
         backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
         child: avatarUrl.isEmpty
             ? Text(
-                contact.initials,
+                contact.initials.tr,
                 style: const TextStyle(
                   color: AppColors.primaryGreen,
                   fontWeight: FontWeight.bold,
@@ -250,14 +251,14 @@ class _ConversationsScreenState extends State<ConversationsScreen>
             : null,
       ),
       title: Text(
-        contact.fullName,
+        contact.fullName.tr,
         style: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 15,
         ),
       ),
       subtitle: Text(
-        contact.roleDisplayName,
+        contact.roleDisplayName.tr,
         style: TextStyle(
           fontSize: 13,
           color: Colors.grey[600],
@@ -555,7 +556,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                       backgroundImage: avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                       child: avatarUrl.isEmpty
                           ? Text(
-                              conversation.initials,
+                              conversation.initials.tr,
                               style: const TextStyle(
                                 color: AppColors.primaryGreen,
                                 fontWeight: FontWeight.bold,
@@ -595,7 +596,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                         children: [
                           Expanded(
                             child: Text(
-                              conversation.fullName,
+                              conversation.fullName.tr,
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: conversation.hasUnread
@@ -609,7 +610,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            timeAgo,
+                            timeAgo.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: conversation.hasUnread
@@ -626,7 +627,7 @@ class _ConversationsScreenState extends State<ConversationsScreen>
                       Row(
                         children: [
                           Expanded(
-                            child: Text(
+                            child: TranslatedText(
                               conversation.message,
                               style: TextStyle(
                                 fontSize: 14,
@@ -715,11 +716,11 @@ class _ConversationsScreenState extends State<ConversationsScreen>
     } else if (difference.inDays > 0) {
       return difference.inDays == 1 ? 'Yesterday' : '${difference.inDays}d ago';
     } else if (difference.inHours > 0) {
-      return '${difference.inHours}h ago';
+      return '{0}h ago'.trArgs([difference.inHours]);
     } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}m ago';
+      return '{0}m ago'.trArgs([difference.inMinutes]);
     } else {
-      return 'Just now';
+      return 'Just now'.tr;
     }
   }
 }

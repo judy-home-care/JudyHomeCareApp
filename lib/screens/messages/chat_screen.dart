@@ -12,6 +12,7 @@ import '../../services/auth/auth_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ChatScreen extends StatefulWidget {
   final int userId;
@@ -388,7 +389,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to send message: $e'),
+            content: Text('Failed to send message: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -452,7 +453,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.userName,
+                  widget.userName.tr,
                   style: const TextStyle(
                     color: Color(0xFF1A1A1A),
                     fontWeight: FontWeight.bold,
@@ -683,7 +684,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            dateText,
+            dateText.tr,
             style: TextStyle(
               fontSize: 12,
               color: Colors.grey[600],
@@ -728,7 +729,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-              child: Text(
+              child: TranslatedText(
                 message.message,
                 style: TextStyle(
                   color: isMe ? Colors.white : const Color(0xFF1A1A1A),
@@ -742,7 +743,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  time,
+                  time.tr,
                   style: TextStyle(color: Colors.grey[500], fontSize: 11),
                 ),
                 if (isMe) ...[

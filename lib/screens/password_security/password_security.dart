@@ -473,7 +473,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
               ),
             ),
             Text(
-              strengthText,
+              strengthText.tr,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -674,7 +674,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -685,7 +685,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -726,7 +726,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
       case 'email':
         return 'Email Authentication Active';
       case 'biometric':
-        return '${_getBiometricName()} Authentication Active';
+        return '{0} Authentication Active'.trArgs([_getBiometricName()]);
       default:
         return '2FA Active';
     }
@@ -743,11 +743,11 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
         final email = widget.userData['email'] ?? ''; // ✅ Changed
         if (email.contains('@')) {
           final parts = email.split('@');
-          return 'Email: ${parts[0].substring(0, 2)}***@${parts[1]}';
+          return 'Email: {0}***@{1}'.trArgs([parts[0].substring(0, 2), parts[1]]);
         }
         return 'Email verification enabled';
       case 'biometric':
-        return '${_getBiometricName()} verification enabled';
+        return '{0} verification enabled'.trArgs([_getBiometricName()]);
       default:
         return 'Two-factor authentication enabled';
     }
@@ -825,7 +825,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -868,7 +868,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                title.tr,
                 style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
@@ -877,7 +877,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                subtitle,
+                subtitle.tr,
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,
@@ -956,7 +956,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Enable $methodTitle',
+                'Enable {0}'.trArgs([methodTitle]),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -966,7 +966,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           ],
         ),
         content: Text(
-          methodDescription,
+          methodDescription.tr,
           style: const TextStyle(
             height: 1.5,
             fontSize: 15,
@@ -1076,7 +1076,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'We sent a 6-digit code to\n$maskedContact',
+                'We sent a 6-digit code to\n{0}'.trArgs([maskedContact]),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -1365,7 +1365,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -1385,7 +1385,7 @@ class _PasswordSecurityScreenState extends State<PasswordSecurityScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFFFF4757),

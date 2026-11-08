@@ -4,6 +4,7 @@ import '../../models/incidents/incident_report_models.dart';
 import '../../services/incidents/incident_service.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class AddIncidentReportScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -395,7 +396,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -673,7 +674,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            title,
+            title.tr,
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
@@ -820,7 +821,7 @@ class _AddIncidentReportScreenState extends State<AddIncidentReportScreen> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.message),
+            content: TranslatedText(response.message),
             backgroundColor: Colors.red,
           ),
         );
@@ -1064,7 +1065,7 @@ class _PatientSearchModalState extends State<_PatientSearchModal> {
                             ),
                           ),
                           title: Text(
-                            patient.name,
+                            patient.name.tr,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -1074,7 +1075,7 @@ class _PatientSearchModalState extends State<_PatientSearchModal> {
                             ),
                           ),
                           subtitle: Text(
-                            'Age: ${patient.age}${patient.gender != null ? ' • ${patient.gender}' : ''}',
+                            'Age: {0}{1}'.trArgs([patient.age, patient.gender != null ? ' • ${patient.gender}' : '']),
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey.shade600,

@@ -141,13 +141,13 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
                   const Icon(Icons.credit_card, color: AppColors.primaryGreen, size: 20),
                   const SizedBox(width: 10),
                   Text(
-                    card.displayName,
+                    card.displayName.tr,
                     style: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
                   ),
                   const Spacer(),
                   if (card.expiryDisplay.isNotEmpty)
                     Text(
-                      'Exp ${card.expiryDisplay}',
+                      'Exp {0}'.trArgs([card.expiryDisplay]),
                       style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                     ),
                 ],
@@ -182,7 +182,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
   void _showSnack(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: isError ? Colors.red : AppColors.primaryGreen,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -309,7 +309,7 @@ class _SavedCardsAutopaySectionState extends State<SavedCardsAutopaySection> {
                     Row(
                       children: [
                         Text(
-                          card.displayName,
+                          card.displayName.tr,
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
                         ),
                         if (card.isExpired) ...[

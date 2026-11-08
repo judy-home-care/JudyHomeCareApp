@@ -19,6 +19,7 @@ import 'contact_person_transport_screen.dart';
 import 'patient_selector_screen.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ContactPersonDashboardScreen extends StatefulWidget {
   final ContactPersonUser contactPerson;
@@ -213,7 +214,7 @@ class ContactPersonDashboardScreenState
     final difference = DateTime.now().difference(_lastFetchTime!);
 
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -259,7 +260,7 @@ class ContactPersonDashboardScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -452,7 +453,7 @@ class ContactPersonDashboardScreenState
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -764,7 +765,7 @@ class ContactPersonDashboardScreenState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${widget.selectedPatient.name.split(' ').first}\'s Wallet',
+                    '{0}\'s Wallet'.trArgs([widget.selectedPatient.name.split(' ').first]),
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.white.withOpacity(0.9),
@@ -811,7 +812,7 @@ class ContactPersonDashboardScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Hello, ${widget.contactPerson.name.split(' ').first}',
+                'Hello, {0}'.trArgs([widget.contactPerson.name.split(' ').first]),
                 style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
@@ -821,7 +822,7 @@ class ContactPersonDashboardScreenState
               ),
               const SizedBox(height: 4),
               Text(
-                'Viewing ${widget.selectedPatient.name}\'s care',
+                'Viewing {0}\'s care'.trArgs([widget.selectedPatient.name]),
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,
@@ -983,7 +984,7 @@ class ContactPersonDashboardScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey.shade600,
@@ -992,7 +993,7 @@ class ContactPersonDashboardScreenState
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  value,
+                  value.tr,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1218,7 +1219,7 @@ class ContactPersonDashboardScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              visit.dateRangeDisplay,
+                              visit.dateRangeDisplay.tr,
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w500,
@@ -1232,7 +1233,7 @@ class ContactPersonDashboardScreenState
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              visit.timeRangeDisplay,
+                              visit.timeRangeDisplay.tr,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: isCompleted
@@ -1272,7 +1273,7 @@ class ContactPersonDashboardScreenState
               ],
             ),
             const SizedBox(height: 12),
-            Text(
+            TranslatedText(
               visit.carePlanTitle,
               style: const TextStyle(
                 fontSize: 20,
@@ -1329,7 +1330,7 @@ class ContactPersonDashboardScreenState
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        visit.timeCompleted!,
+                        visit.timeCompleted!.tr,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1535,7 +1536,7 @@ class ContactPersonDashboardScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TranslatedText(
                       visit.carePlanTitle,
                       style: const TextStyle(
                         fontSize: 24,
@@ -1692,7 +1693,7 @@ class ContactPersonDashboardScreenState
           ),
           const SizedBox(height: 8),
           Text(
-            label,
+            label.tr,
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
@@ -1701,7 +1702,7 @@ class ContactPersonDashboardScreenState
           ),
           const SizedBox(height: 4),
           Text(
-            value,
+            value.tr,
             style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -1873,7 +1874,7 @@ class ContactPersonDashboardScreenState
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      title,
+                      title.tr,
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 13,
@@ -1973,7 +1974,7 @@ class ContactPersonDashboardScreenState
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                nurseVisit.nurse.name,
+                                nurseVisit.nurse.name.tr,
                                 style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
@@ -2034,7 +2035,7 @@ class ContactPersonDashboardScreenState
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  timeDisplay,
+                                  timeDisplay.tr,
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey.shade800,
@@ -2043,7 +2044,7 @@ class ContactPersonDashboardScreenState
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  nurseVisit.timeUntil,
+                                  nurseVisit.timeUntil.tr,
                                   style: TextStyle(
                                     fontSize: 11,
                                     color: Colors.grey.shade600,
@@ -2145,7 +2146,7 @@ class ContactPersonDashboardScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              nurseVisit.nurse.name,
+                              nurseVisit.nurse.name.tr,
                               style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -2222,7 +2223,7 @@ class ContactPersonDashboardScreenState
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    nurseVisit.nurse.phone!,
+                                    nurseVisit.nurse.phone!.tr,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -2282,7 +2283,7 @@ class ContactPersonDashboardScreenState
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      nurseVisit.dateRangeDisplay,
+                                      nurseVisit.dateRangeDisplay.tr,
                                       style: const TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -2291,7 +2292,7 @@ class ContactPersonDashboardScreenState
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      nurseVisit.timeRangeDisplay,
+                                      nurseVisit.timeRangeDisplay.tr,
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey.shade600,
@@ -2318,7 +2319,7 @@ class ContactPersonDashboardScreenState
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  nurseVisit.timeUntil,
+                                  nurseVisit.timeUntil.tr,
                                   style: TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w600,
@@ -2337,7 +2338,7 @@ class ContactPersonDashboardScreenState
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    nurseVisit.dailyDuration,
+                                    nurseVisit.dailyDuration.tr,
                                     style: const TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -2419,7 +2420,7 @@ class ContactPersonDashboardScreenState
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  nurseVisit.location,
+                                  nurseVisit.location.tr,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
@@ -2493,7 +2494,7 @@ class ContactPersonDashboardScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  message,
+                  message.tr,
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,

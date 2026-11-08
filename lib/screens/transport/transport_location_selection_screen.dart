@@ -329,7 +329,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                   ),
                 ),
                 Text(
-                  'For ${widget.patientName}',
+                  'For {0}'.trArgs([widget.patientName]),
                   style: TextStyle(
                     fontSize: 13,
                     color: Colors.grey.shade600,
@@ -382,7 +382,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                _currentAddress,
+                                _currentAddress.tr,
                                 style: TextStyle(
                                   fontSize: 15,
                                   color: Colors.grey.shade600,
@@ -392,7 +392,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                           ],
                         )
                       : Text(
-                          _currentAddress,
+                          _currentAddress.tr,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
@@ -641,7 +641,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result.mainText,
+                      result.mainText.tr,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -651,7 +651,7 @@ class _TransportLocationSelectionScreenState extends State<TransportLocationSele
                     if (result.secondaryText.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
-                        result.secondaryText,
+                        result.secondaryText.tr,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,

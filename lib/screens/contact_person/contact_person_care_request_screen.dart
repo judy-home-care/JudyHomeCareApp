@@ -205,7 +205,7 @@ class _ContactPersonCareRequestScreenState
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text(errorMessage.tr),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape:
@@ -377,7 +377,7 @@ class _ContactPersonCareRequestScreenState
             children: [
               const Icon(Icons.info_outline, color: Colors.white, size: 20),
               const SizedBox(width: 12),
-              Expanded(child: Text(message)),
+              Expanded(child: Text(message.tr)),
             ],
           ),
           backgroundColor: const Color(0xFFFF9A00),
@@ -463,7 +463,7 @@ class _ContactPersonCareRequestScreenState
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: Colors.red,
@@ -480,7 +480,7 @@ class _ContactPersonCareRequestScreenState
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFF199A8E),
@@ -520,7 +520,7 @@ class _ContactPersonCareRequestScreenState
                 ),
               ),
               Text(
-                'For ${widget.selectedPatient.name}',
+                'For {0}'.trArgs([widget.selectedPatient.name]),
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,
@@ -607,7 +607,7 @@ class _ContactPersonCareRequestScreenState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'You are requesting care for ${widget.selectedPatient.name}',
+                  'You are requesting care for {0}'.trArgs([widget.selectedPatient.name]),
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ],
@@ -624,7 +624,7 @@ class _ContactPersonCareRequestScreenState
         Icon(icon, size: 20, color: const Color(0xFF199A8E)),
         const SizedBox(width: 8),
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
@@ -1071,7 +1071,7 @@ class _ContactPersonCareRequestScreenState
                 items: regions
                     .map((region) => DropdownMenuItem(
                           value: region,
-                          child: Text(region,
+                          child: Text(region.tr,
                               style: const TextStyle(fontSize: 14)),
                         ))
                     .toList(),
@@ -1122,7 +1122,7 @@ class _ContactPersonCareRequestScreenState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result.mainText,
+                      result.mainText.tr,
                       style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -1131,7 +1131,7 @@ class _ContactPersonCareRequestScreenState
                     if (result.secondaryText.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        result.secondaryText,
+                        result.secondaryText.tr,
                         style: TextStyle(
                             fontSize: 12, color: Colors.grey.shade600),
                         maxLines: 1,
@@ -1217,7 +1217,7 @@ class _ContactPersonCareRequestScreenState
                       ),
                       if (isUrgentOrEmergency && _preferredStartDate == null)
                         Text(
-                          'Required for $_selectedUrgency requests',
+                          'Required for {0} requests'.trArgs([_selectedUrgency]),
                           style:
                               TextStyle(fontSize: 11, color: Colors.red.shade400),
                         ),

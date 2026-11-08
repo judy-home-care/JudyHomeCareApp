@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../utils/app_colors.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PatientHelpCenterScreen extends StatelessWidget {
   const PatientHelpCenterScreen({Key? key}) : super(key: key);
@@ -60,7 +61,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: Colors.red,
@@ -80,7 +81,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
           children: [
             const Icon(Icons.info_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text('$feature coming soon!')),
+            Expanded(child: Text('{0} coming soon!'.trArgs([feature]))),
           ],
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -376,7 +377,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -385,7 +386,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -428,7 +429,7 @@ class PatientHelpCenterScreen extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                title,
+                title.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -452,14 +453,14 @@ class PatientHelpCenterScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          day,
+          day.tr,
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey.shade700,
           ),
         ),
         Text(
-          hours,
+          hours.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,

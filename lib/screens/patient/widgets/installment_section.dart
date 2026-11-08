@@ -7,6 +7,8 @@ import '../../../services/payment_service.dart';
 import '../../../services/wallet_service.dart';
 import '../../../widgets/paystack_webview.dart';
 import '../../../services/i18n/t_text.dart';
+import '../../../services/i18n/app_language.dart';
+import '../../../services/i18n/translated_text.dart';
 
 /// Legacy widget kept for backward compatibility
 /// All installment info is now shown in Care Payment Summary card in TabbedCareRequestCard
@@ -154,7 +156,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
         setState(() => _isProcessing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(response.message ?? 'Payment failed'),
+            content: TranslatedText(response.message ?? 'Payment failed'),
             backgroundColor: Colors.red,
           ),
         );
@@ -166,7 +168,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment failed: $e'),
+            content: Text('Payment failed: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
           ),
         );
@@ -262,14 +264,14 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey[600],
           ),
         ),
         Text(
-          value,
+          value.tr,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
@@ -357,7 +359,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
             print('❌ [InstallmentPayment] Verification failed: ${verifyResponse.message}');
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Payment verification failed: ${verifyResponse.message}'),
+                content: TranslatedText('Payment verification failed: ${verifyResponse.message}'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -371,7 +373,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(response.message),
+              content: TranslatedText(response.message),
               backgroundColor: Colors.red,
             ),
           );
@@ -382,7 +384,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment failed: $e'),
+            content: Text('Payment failed: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
           ),
         );
@@ -530,7 +532,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
             ),
             const SizedBox(height: 12),
             Text(
-              '${widget.installment.label} has been paid successfully. Your payment has been received.',
+              '{0} has been paid successfully. Your payment has been received.'.trArgs([widget.installment.label]),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -546,7 +548,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                widget.installment.formattedAmount,
+                widget.installment.formattedAmount.tr,
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -634,7 +636,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -645,7 +647,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    subtitle,
+                    subtitle.tr,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[600],
@@ -730,7 +732,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                         ),
                       ),
                       Text(
-                        widget.installment.label,
+                        widget.installment.label.tr,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey[600],
@@ -767,7 +769,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    widget.installment.formattedAmount,
+                    widget.installment.formattedAmount.tr,
                     style: const TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -805,7 +807,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                   ] else if (widget.installment.dueDateFormatted != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Due: ${widget.installment.dueDateFormatted}',
+                      'Due: {0}'.trArgs([widget.installment.dueDateFormatted]),
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[600],
@@ -898,7 +900,7 @@ class _InstallmentPaymentSheetState extends State<InstallmentPaymentSheet> {
                           const Icon(Icons.lock_outline, size: 20, color: Colors.white),
                           const SizedBox(width: 8),
                           Text(
-                            'Pay ${widget.installment.formattedAmount}',
+                            'Pay {0}'.trArgs([widget.installment.formattedAmount]),
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

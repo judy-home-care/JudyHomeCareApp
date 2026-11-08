@@ -19,6 +19,7 @@ import '../therapist/therapy_note_form.dart';
 import '../../services/drafts/draft_service.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 /// Optimized Smart Refresh Nurse Patients Screen with:
 /// - Performance optimizations for low-end devices
@@ -385,7 +386,7 @@ Future<void> _confirmAndCall(String? phoneNumber, String contactName) async {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Call $contactName?',
+            'Call {0}?'.trArgs([contactName]),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -408,7 +409,7 @@ Future<void> _confirmAndCall(String? phoneNumber, String contactName) async {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  phoneNumber,
+                  phoneNumber.tr,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -461,7 +462,7 @@ void _showErrorSnackBar(String message) {
         children: [
           const Icon(Icons.error_outline, color: Colors.white),
           const SizedBox(width: 12),
-          Expanded(child: Text(message)),
+          Expanded(child: Text(message.tr)),
         ],
       ),
       backgroundColor: Colors.red,
@@ -562,7 +563,7 @@ void _showErrorSnackBar(String message) {
     final difference = DateTime.now().difference(_lastFetchTime!);
     
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -613,7 +614,7 @@ void _showErrorSnackBar(String message) {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -778,7 +779,7 @@ void _showErrorSnackBar(String message) {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to load more patients: $e'),
+            content: Text('Failed to load more patients: {0}'.trArgs([e])),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -812,7 +813,7 @@ void _showErrorSnackBar(String message) {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                'Patient list updated • $patientCount ${patientCount == 1 ? 'patient' : 'patients'}',
+                '${'Patient list updated'.tr} • $patientCount ${patientCount == 1 ? 'patient'.tr : 'patients'.tr}',
               ),
             ),
           ],
@@ -886,14 +887,14 @@ String _formatTimeAgo(DateTime? dateTime) {
   final difference = normalizedNow.difference(normalizedDate);
   
   if (difference.inDays > 0) {
-    return '${difference.inDays}d ago';
+    return '{0}d ago'.trArgs([difference.inDays]);
   } else {
     // For today's dates, calculate hours/minutes from actual time
     final actualDifference = now.difference(dateTime);
     if (actualDifference.inHours > 0) {
-      return '${actualDifference.inHours}h ago';
+      return '{0}h ago'.trArgs([actualDifference.inHours]);
     } else {
-      return '${actualDifference.inMinutes}m ago';
+      return '{0}m ago'.trArgs([actualDifference.inMinutes]);
     }
   }
 }
@@ -904,11 +905,11 @@ String _formatTimeAgo(DateTime? dateTime) {
     final difference = dateTime.difference(now);
     
     if (difference.inDays > 0) {
-      return 'in ${difference.inDays}d';
+      return 'in {0}d'.trArgs([difference.inDays]);
     } else if (difference.inHours > 0) {
-      return 'in ${difference.inHours}h';
+      return 'in {0}h'.trArgs([difference.inHours]);
     } else if (difference.inMinutes > 0) {
-      return 'in ${difference.inMinutes}m';
+      return 'in {0}m'.trArgs([difference.inMinutes]);
     } else {
       return 'now';
     }
@@ -966,7 +967,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Updated $_cacheAge',
+                    '${'Updated'.tr} $_cacheAge',
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey.shade600,
@@ -1187,7 +1188,7 @@ String _formatTimeAgo(DateTime? dateTime) {
               ),
               const SizedBox(height: 4),
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -1234,7 +1235,7 @@ String _formatTimeAgo(DateTime? dateTime) {
               ),
               const SizedBox(height: 8),
               Text(
-                _errorMessage!,
+                _errorMessage!.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -1322,7 +1323,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                 onPressed: _canLoadMore ? _loadMorePatients : null,
                 icon: const Icon(Icons.expand_more_rounded, size: 20),
                 label: Text(
-                  'Load More (${_totalPatients - _patients.length} remaining)',
+                  'Load More ({0} remaining)'.trArgs([_totalPatients - _patients.length]),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1544,7 +1545,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                           children: [
                             Expanded(
                               child: Text(
-                                patient.name,
+                                patient.name.tr,
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
@@ -1563,7 +1564,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                patient.priority,
+                                patient.priority.tr,
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
@@ -1576,7 +1577,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${patient.age ?? 'N/A'} yrs • ${patient.careType}',
+                          '{0} yrs • {1}'.trArgs([patient.age ?? 'N/A', patient.careType]),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF666666),
@@ -1584,7 +1585,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                           ),
                         ),
                         const SizedBox(height: 6),
-                        Text(
+                        TranslatedText(
                           patient.condition,
                           style: const TextStyle(
                             fontSize: 12,
@@ -1637,7 +1638,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Last: ${_formatTimeAgo(patient.lastVisitDateTime)}',
+                                    'Last: {0}'.trArgs([_formatTimeAgo(patient.lastVisitDateTime)]),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey[600],
@@ -1655,7 +1656,7 @@ String _formatTimeAgo(DateTime? dateTime) {
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    'Next: ${_formatTimeUntil(patient.nextVisitDateTime)}',
+                                    'Next: {0}'.trArgs([_formatTimeUntil(patient.nextVisitDateTime)]),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: Colors.grey[600],
@@ -1696,7 +1697,7 @@ String _formatTimeAgo(DateTime? dateTime) {
           ),
           const SizedBox(width: 3),
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w600,
@@ -1851,7 +1852,7 @@ void _showPatientDetailsModalOld(PatientDetail patientDetail) {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  patientDetail.name,
+                                  patientDetail.name.tr,
                                   style: const TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -1860,7 +1861,7 @@ void _showPatientDetailsModalOld(PatientDetail patientDetail) {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${patientDetail.age ?? 'N/A'} years old • ${patientDetail.gender ?? 'N/A'}',
+                                  '${patientDetail.age ?? 'N/A'} ${'years old'.tr} • ${(patientDetail.gender ?? 'N/A').tr}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Color(0xFF666666),
@@ -1877,7 +1878,7 @@ void _showPatientDetailsModalOld(PatientDetail patientDetail) {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    '${patientDetail.carePlan.priority} Priority',
+                                    ('${patientDetail.carePlan.priority} Priority').tr,
                                     style: const TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
@@ -1901,7 +1902,7 @@ void _showPatientDetailsModalOld(PatientDetail patientDetail) {
                       bottom: BorderSide(color: Colors.grey[200]!, width: 1),
                     ),
                   ),
-                  child: const TabBar(
+                  child: TabBar(
                     indicatorColor: AppColors.primaryGreen,
                     indicatorWeight: 3,
                     labelColor: AppColors.primaryGreen,
@@ -1918,19 +1919,19 @@ void _showPatientDetailsModalOld(PatientDetail patientDetail) {
                     tabs: [
                       Tab(
                         icon: Icon(Icons.info_outline, size: 20),
-                        text: 'Details',
+                        text: 'Details'.tr,
                       ),
                       Tab(
                         icon: Icon(Icons.note_add_outlined, size: 20),
-                        text: 'Daily Note',
+                        text: 'Daily Note'.tr,
                       ),
                       Tab(
                         icon: Icon(Icons.assignment_outlined, size: 20),
-                        text: 'Care Plan',
+                        text: 'Care Plan'.tr,
                       ),
                       Tab(
                         icon: Icon(Icons.history, size: 20),
-                        text: 'History',
+                        text: 'History'.tr,
                       ),
                     ],
                   ),
@@ -2030,7 +2031,7 @@ Future<void> _refreshPatientList() async {
       // Optionally show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to refresh patients: $e'),
+          content: Text('Failed to refresh patients: {0}'.trArgs([e])),
           backgroundColor: Colors.red,
         ),
       );
@@ -2508,7 +2509,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  assessment.assessmentStatusDisplay,
+                  assessment.assessmentStatusDisplay.tr,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
@@ -2636,7 +2637,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                           ),
                         ),
                         if (assessment.woundDescription != null && assessment.woundDescription!.isNotEmpty)
-                          Text(
+                          TranslatedText(
                             assessment.woundDescription!,
                             style: TextStyle(
                               fontSize: 11,
@@ -2730,7 +2731,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  TranslatedText(
                     assessment.initialNursingImpression!,
                     style: const TextStyle(
                       fontSize: 13,
@@ -2751,7 +2752,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
                 Icon(Icons.person_outline, size: 12, color: Colors.grey[500]),
                 const SizedBox(width: 4),
                 Text(
-                  'Assessed by ${assessment.nurse!.name}',
+                  'Assessed by {0}'.trArgs([assessment.nurse!.name]),
                   style: TextStyle(
                     fontSize: 10,
                     color: Colors.grey[500],
@@ -2802,7 +2803,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 10,
                     color: Colors.grey[600],
@@ -2817,7 +2818,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
           ),
           const SizedBox(height: 2),
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.bold,
@@ -2851,7 +2852,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
             ),
           ),
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -2922,7 +2923,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
       } else if (difference.inDays == 1) {
         return 'Yesterday';
       } else if (difference.inDays < 7) {
-        return '${difference.inDays} days ago';
+        return '{0} days ago'.trArgs([difference.inDays]);
       } else {
         return '${date.day}/${date.month}/${date.year}';
       }
@@ -2955,7 +2956,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
               const SizedBox(width: 4), 
               Expanded(
                 child: Text(
-                  label,
+                  label.tr,
                   style: TextStyle(
                     fontSize: 10, 
                     color: Colors.grey[600],
@@ -2970,7 +2971,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
           ),
           const SizedBox(height: 2), 
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: 13, 
               fontWeight: FontWeight.bold,
@@ -2992,7 +2993,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -3025,7 +3026,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
           SizedBox(
             width: 120,
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 13,
                 color: Color(0xFF666666),
@@ -3034,7 +3035,7 @@ Map<String, DateTime?> _getVisitTimes(List<Schedule> schedules) {
             ),
           ),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               value,
               style: const TextStyle(
                 fontSize: 13,
@@ -3145,7 +3146,7 @@ Widget _buildCheckableCareTask({
               const SizedBox(width: 12),
               // Task text
               Expanded(
-                child: Text(
+                child: TranslatedText(
                   task,
                   style: TextStyle(
                     fontSize: 14,
@@ -3287,7 +3288,7 @@ Future<void> _toggleTaskCompletion(
             children: [
               const Icon(Icons.error_outline, color: Colors.white),
               const SizedBox(width: 12),
-              Expanded(child: Text(e.message)),
+              Expanded(child: TranslatedText(e.message)),
             ],
           ),
           backgroundColor: Colors.red,
@@ -3372,7 +3373,7 @@ Future<void> _toggleTaskCompletion(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -3380,7 +3381,7 @@ Future<void> _toggleTaskCompletion(
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
+                TranslatedText(
                   description,
                   style: TextStyle(
                     fontSize: 12,
@@ -3571,7 +3572,7 @@ Widget _buildComprehensiveHistoryNote(
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '${24 - hoursSinceCreation}h to edit',
+                                '{0}h to edit'.trArgs([24 - hoursSinceCreation]),
                                 style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
@@ -3618,7 +3619,7 @@ Widget _buildComprehensiveHistoryNote(
                               color: AppColors.primaryGreen,
                             ),
                             const SizedBox(width: 6),
-                            Text(
+                            TranslatedText(
                               note.generalCondition!,
                               style: const TextStyle(
                                 fontSize: 13,
@@ -3647,7 +3648,7 @@ Widget _buildComprehensiveHistoryNote(
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'Pain: ${note.painLevel}/10',
+                            'Pain: {0}/10'.trArgs([note.painLevel]),
                             style: const TextStyle(
                               fontSize: 13,
                               color: Color(0xFF1A1A1A),
@@ -3716,7 +3717,7 @@ if (isExpanded) ...[
                           ],
                         ),
                         const SizedBox(height: 4),
-                        Text(
+                        TranslatedText(
                           note.generalCondition!,
                           style: const TextStyle(
                             fontSize: 15,
@@ -3879,7 +3880,7 @@ if (isExpanded) ...[
                   color: const Color(0xFF2196F3).withOpacity(0.2),
                 ),
               ),
-              child: Text(
+              child: TranslatedText(
                 note.interventionsProvided!,
                 style: TextStyle(
                   fontSize: 13,
@@ -4110,7 +4111,7 @@ if (isExpanded) ...[
                         if (details != null && details.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Text(
-                            details,
+                            details.tr,
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[700],
@@ -4152,7 +4153,7 @@ if (isExpanded) ...[
             ),
             const SizedBox(width: 6),
             Text(
-              title,
+              title.tr,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
@@ -4173,7 +4174,7 @@ if (isExpanded) ...[
               color: borderColor.withOpacity(0.2),
             ),
           ),
-          child: Text(
+          child: TranslatedText(
             content,
             style: TextStyle(
               fontSize: 13,
@@ -4209,7 +4210,7 @@ if (isExpanded) ...[
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.grey[600],
@@ -4217,7 +4218,7 @@ if (isExpanded) ...[
                 ),
               ),
               Text(
-                value,
+                value.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -4339,7 +4340,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                   ],
                 ),
                 child: Text(
-                  '${widget.carePlans.length} Plans',
+                  '{0} Plans'.trArgs([widget.carePlans.length]),
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -4382,7 +4383,7 @@ class _SwipeableCarePlansState extends State<SwipeableCarePlans> {
                     const SizedBox(height: 8),
                     // Plan counter
                     Text(
-                      'Plan ${_currentPage + 1} of ${widget.carePlans.length}',
+                      'Plan {0} of {1}'.trArgs([_currentPage + 1, widget.carePlans.length]),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -4769,7 +4770,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      TranslatedText(
                         carePlan.title,
                         style: const TextStyle(
                           fontSize: 16,
@@ -4792,7 +4793,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              carePlan.priority,
+                              carePlan.priority.tr,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -4803,7 +4804,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              carePlan.careType,
+                              carePlan.careType.tr,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -4895,7 +4896,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        TranslatedText(
                           carePlan.description!,
                           style: TextStyle(
                             fontSize: 13,
@@ -5276,7 +5277,7 @@ class _CarePlanCardState extends State<CarePlanCard> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Failed to save: $e',
+                  'Failed to save: {0}'.trArgs([e]),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -5400,7 +5401,7 @@ class _CheckableCareTask extends StatelessWidget {
                 const SizedBox(width: 12),
                 // Task text
                 Expanded(
-                  child: Text(
+                  child: TranslatedText(
                     task,
                     style: TextStyle(
                       fontSize: 14,
@@ -6180,7 +6181,7 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -6200,7 +6201,7 @@ class _DailyProgressNoteFormState extends State<DailyProgressNoteForm> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: Colors.red,
@@ -6815,7 +6816,7 @@ Widget _buildVitalFieldWithValidation({
         children: [
           Expanded(
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -6842,7 +6843,7 @@ Widget _buildVitalFieldWithValidation({
       
       // Normal range hint
       Text(
-        'Normal: $normalRange',
+        'Normal: {0}'.trArgs([normalRange]),
         style: TextStyle(
           fontSize: 11,
           color: Colors.grey[500],
@@ -6939,7 +6940,7 @@ Widget _buildVitalFieldWithValidation({
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
+                  child: TranslatedText(
                     validation.message,
                     style: TextStyle(
                       fontSize: 12,
@@ -6971,7 +6972,7 @@ Widget _buildBloodPressureFieldWithValidation({
         children: [
           Expanded(
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -7089,7 +7090,7 @@ Widget _buildBloodPressureFieldWithValidation({
               ),
               const SizedBox(width: 6),
               Expanded(
-                child: Text(
+                child: TranslatedText(
                   validation.message,
                   style: TextStyle(
                     fontSize: 11,
@@ -7199,7 +7200,7 @@ Widget _buildVitalsSummary() {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    summaryText,
+                    summaryText.tr,
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.grey[700],
@@ -7290,7 +7291,7 @@ Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValida
               Expanded(
                 child: CheckboxListTile(
                   title: Text(
-                    label,
+                    label.tr,
                     style: TextStyle(
                       fontSize: 14,
                       color: const Color(0xFF1A1A1A),
@@ -7365,7 +7366,7 @@ Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValida
       children: [
         if (label.isNotEmpty) ...[
           Text(
-            label,
+            label.tr,
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -7416,7 +7417,7 @@ Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValida
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -7480,7 +7481,7 @@ Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValida
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -7544,7 +7545,7 @@ Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValida
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -7566,7 +7567,7 @@ Widget _buildMiniVitalBadge(String label, String value, String unit, VitalValida
             items: items.map((String item) {
               return DropdownMenuItem<String>(
                 value: item,
-                child: Text(item),
+                child: Text(item.tr),
               );
             }).toList(),
             onChanged: onChanged,
@@ -7803,7 +7804,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -7895,7 +7896,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
                         Row(
                           children: [
                             Flexible(
-                              child: Text(
+                              child: TranslatedText(
                                 note.title, // e.g. "Physiotherapy Note"
                                 style: const TextStyle(
                                   fontSize: 15,
@@ -7926,7 +7927,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          when,
+                          when.tr,
                           style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                         ),
                       ],
@@ -7941,7 +7942,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  TranslatedText(
                     note.note,
                     maxLines: isExpanded ? null : 6,
                     overflow: isExpanded ? TextOverflow.visible : TextOverflow.ellipsis,
@@ -8070,7 +8071,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
               Icon(Icons.error_outline, size: 48, color: Colors.grey[400]),
               const SizedBox(height: 16),
               Text(
-                _entriesError!,
+                _entriesError!.tr,
                 style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
@@ -8204,7 +8205,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
             Icon(icon, size: 48, color: Colors.grey[400]),
             const SizedBox(height: 12),
             Text(
-              title,
+              title.tr,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
@@ -8213,7 +8214,7 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
             ),
             const SizedBox(height: 8),
             Text(
-              subtitle,
+              subtitle.tr,
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[500],
@@ -8232,11 +8233,11 @@ class _HistoryTabContentState extends State<_HistoryTabContent>
       final difference = now.difference(date);
 
       if (difference.inDays == 0) {
-        return 'Today at ${_formatTime(date)}';
+        return 'Today at {0}'.trArgs([_formatTime(date)]);
       } else if (difference.inDays == 1) {
-        return 'Yesterday at ${_formatTime(date)}';
+        return 'Yesterday at {0}'.trArgs([_formatTime(date)]);
       } else if (difference.inDays < 7) {
-        return '${difference.inDays} days ago';
+        return '{0} days ago'.trArgs([difference.inDays]);
       } else {
         return '${date.day}/${date.month}/${date.year}';
       }
@@ -8382,7 +8383,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
+                        TranslatedText(
                           firstEntry.carePlanTitle ?? 'Care Plan Entry',
                           style: const TextStyle(
                             fontSize: 14,
@@ -8398,7 +8399,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                             Icon(Icons.calendar_today, size: 12, color: Colors.grey[500]),
                             const SizedBox(width: 4),
                             Text(
-                              formattedDate,
+                              formattedDate.tr,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[600],
@@ -8409,7 +8410,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                               Icon(Icons.access_time, size: 12, color: Colors.grey[500]),
                               const SizedBox(width: 4),
                               Text(
-                                firstEntry.entryTimeFormatted!,
+                                firstEntry.entryTimeFormatted!.tr,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -8471,7 +8472,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
                         Icon(Icons.person_outline, size: 14, color: Colors.grey[500]),
                         const SizedBox(width: 6),
                         Text(
-                          'By ${firstEntry.nurse!.name}',
+                          'By {0}'.trArgs([firstEntry.nurse!.name]),
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey[600],
@@ -8507,7 +8508,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 8),
               Text(
-                title,
+                title.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -8518,7 +8519,7 @@ class _CollapsibleCarePlanEntryCardState extends State<_CollapsibleCarePlanEntry
             ],
           ),
           const SizedBox(height: 8),
-          Text(
+          TranslatedText(
             content?.isNotEmpty == true ? content! : '-',
             style: TextStyle(
               fontSize: 13,
@@ -8725,7 +8726,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      patientDetail.name,
+                      patientDetail.name.tr,
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -8734,7 +8735,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${patientDetail.age ?? 'N/A'} years old • ${patientDetail.gender ?? 'N/A'}',
+                      '${patientDetail.age ?? 'N/A'} ${'years old'.tr} • ${(patientDetail.gender ?? 'N/A').tr}',
                       style: const TextStyle(
                         fontSize: 13,
                         color: Color(0xFF666666),
@@ -8755,7 +8756,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                       child: Text(
                         patientDetail.carePlansCount == 0
                             ? (widget.isTherapist ? 'Therapy Patient' : 'No Care Plan')
-                            : '${patientDetail.carePlan.priority} Priority',
+                            : ('${patientDetail.carePlan.priority} Priority').tr,
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -8801,28 +8802,28 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
           letterSpacing: -0.3,
         ),
         tabs: [
-          const Tab(
+          Tab(
             icon: Icon(Icons.info_outline, size: 20),
-            text: 'Details',
+            text: 'Details'.tr,
           ),
-          const Tab(
+          Tab(
             icon: Icon(Icons.favorite_outline, size: 20),
-            text: 'Vitals',
+            text: 'Vitals'.tr,
           ),
           Tab(
             icon: Icon(
               widget.isTherapist ? Icons.edit_note_rounded : Icons.note_add_outlined,
               size: 20,
             ),
-            text: widget.isTherapist ? 'Daily Notes' : 'Daily Note',
+            text: widget.isTherapist ? 'Daily Notes'.tr : 'Daily Note'.tr,
           ),
-          const Tab(
+          Tab(
             icon: Icon(Icons.assignment_outlined, size: 20),
-            text: 'Care Plan',
+            text: 'Care Plan'.tr,
           ),
-          const Tab(
+          Tab(
             icon: Icon(Icons.history, size: 20),
-            text: 'History',
+            text: 'History'.tr,
           ),
         ],
       ),
@@ -9120,7 +9121,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$total reading${total == 1 ? '' : 's'} from all care team members',
+                  '{0} reading{1} from all care team members'.trArgs([total, total == 1 ? '' : 's']),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -9184,7 +9185,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
                     ),
                   ),
                   Text(
-                    '${day.recordsCount} reading${day.recordsCount == 1 ? '' : 's'}',
+                    '{0} reading{1}'.trArgs([day.recordsCount, day.recordsCount == 1 ? '' : 's']),
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[500],
@@ -9311,7 +9312,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
                       borderRadius: BorderRadius.circular(5),
                     ),
                     child: Text(
-                      record.sourceLabel,
+                      record.sourceLabel.tr,
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w700,
@@ -9397,7 +9398,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 9,
                   color: Colors.grey[600],
@@ -9406,7 +9407,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
                 ),
               ),
               Text(
-                value,
+                value.tr,
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
@@ -9461,7 +9462,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
           ),
           const SizedBox(height: 16),
           Text(
-            title,
+            title.tr,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 16,
@@ -9471,7 +9472,7 @@ class _PatientVitalsTabState extends State<PatientVitalsTab> {
           ),
           const SizedBox(height: 8),
           Text(
-            message,
+            message.tr,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,

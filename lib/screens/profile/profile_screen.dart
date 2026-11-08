@@ -208,7 +208,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       color: AppColors.primaryGreen,
       child: Center(
         child: Text(
-          initials,
+          initials.tr,
           style: const TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.bold,
@@ -401,7 +401,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _licenseController.text,
+                      _licenseController.text.tr,
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -630,7 +630,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  title,
+                  title.tr,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -754,7 +754,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
             ),
             const SizedBox(height: 4),
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -1070,7 +1070,7 @@ class _PersonalInformationScreenState extends State<PersonalInformationScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('Error: {0}'.trArgs([e.toString()])),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class CarePlanHistoryScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -247,7 +248,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
           ),
           const SizedBox(height: 12),
           Text(
-            value,
+            value.tr,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w800,
@@ -257,7 +258,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
           ),
           const SizedBox(height: 4),
           Text(
-            title,
+            title.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -341,7 +342,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
             ] : null,
           ),
           child: Text(
-            label,
+            label.tr,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -768,7 +769,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                           
                           const SizedBox(height: 16),
                           Text(
-                            'Tasks (${(plan['tasks'] as List).where((t) => t['completed'] == true).length}/${plan['tasks'].length})',
+                            'Tasks ({0}/{1})'.trArgs([(plan['tasks'] as List).where((t) => t['completed'] == true).length, plan['tasks'].length]),
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -843,7 +844,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
-            text,
+            text.tr,
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -870,7 +871,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                label,
+                label.tr,
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey.shade600,
@@ -878,7 +879,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
+              TranslatedText(
                 value,
                 style: const TextStyle(
                   fontSize: 13,
@@ -1182,7 +1183,7 @@ class _CarePlanHistoryScreenState extends State<CarePlanHistoryScreen> with Sing
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,

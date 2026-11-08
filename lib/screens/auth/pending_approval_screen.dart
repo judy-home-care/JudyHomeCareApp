@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../services/i18n/t_text.dart';
+import '../../services/i18n/app_language.dart';
 
 class PendingApprovalScreen extends StatelessWidget {
   final String userName;
@@ -196,7 +197,7 @@ class PendingApprovalScreen extends StatelessWidget {
                           const SizedBox(height: 12),
                           _buildInfoItem(
                             icon: Icons.check_circle_outline,
-                            text: 'Once approved, you can',
+                            text: 'Once approved, you can'.tr,
                             highlight: 'sign in immediately',
                           ),
                         ],

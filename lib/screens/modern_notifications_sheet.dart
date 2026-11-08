@@ -22,6 +22,7 @@ import 'schedules/schedule_patients_screen.dart';
 import '../models/contact_person/contact_person_models.dart';
 import '../services/i18n/t_text.dart';
 import '../services/i18n/app_language.dart';
+import '../services/i18n/translated_text.dart';
 
 class ModernNotificationsSheet extends StatefulWidget {
   const ModernNotificationsSheet({Key? key}) : super(key: key);
@@ -231,7 +232,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               child: const Icon(Icons.check, color: Colors.white, size: 16),
             ),
             const SizedBox(width: 12),
-            Text(message),
+            Text(message.tr),
           ],
         ),
         backgroundColor: AppColors.primaryGreen,
@@ -247,7 +248,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: const Color(0xFFFF4757),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -644,7 +645,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          '$unreadCount new',
+                          '{0} new'.trArgs([unreadCount]),
                           style: const TextStyle(
                             fontSize: 12,
                             color: Colors.white,
@@ -1121,7 +1122,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
         Row(
           children: [
             Expanded(
-              child: Text(
+              child: TranslatedText(
                 notification.title,
                 style: TextStyle(
                   fontSize: 16,
@@ -1156,7 +1157,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
           ],
         ),
         const SizedBox(height: 8),
-        Text(
+        TranslatedText(
           notification.body,
           style: TextStyle(
             fontSize: 14,
@@ -1195,7 +1196,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
               ),
               const SizedBox(width: 6),
               Text(
-                notification.timeAgo,
+                notification.timeAgo.tr,
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade600,
@@ -1286,7 +1287,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            TranslatedText(
                               notification.title,
                               style: const TextStyle(
                                 fontSize: 18,
@@ -1315,7 +1316,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                                   ),
                                   const SizedBox(width: 6),
                                   Text(
-                                    notification.timeAgo,
+                                    notification.timeAgo.tr,
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade600,
@@ -1354,7 +1355,7 @@ class _ModernNotificationsSheetState extends State<ModernNotificationsSheet>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    TranslatedText(
                       notification.body,
                       style: TextStyle(
                         fontSize: 15,

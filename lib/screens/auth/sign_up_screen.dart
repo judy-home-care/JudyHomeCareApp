@@ -324,7 +324,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.bold,
@@ -335,7 +335,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          subtitle,
+          subtitle.tr,
           style: TextStyle(
             fontSize: 15,
             color: Colors.grey.shade600,
@@ -393,7 +393,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         RichText(
-          text: const TextSpan(
+          text: TextSpan(
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -401,9 +401,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               letterSpacing: -0.2,
             ),
             children: [
-              TextSpan(text: 'Phone Number '),
+              TextSpan(text: 'Phone Number '.tr),
               TextSpan(
-                text: '(Enter without leading 0)',
+                text: '(Enter without leading 0)'.tr,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -432,12 +432,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: Row(
                   children: [
                     Text(
-                      _selectedCountryFlag,
+                      _selectedCountryFlag.tr,
                       style: const TextStyle(fontSize: 20),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      _selectedCountryCode,
+                      _selectedCountryCode.tr,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -642,7 +642,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
@@ -740,7 +740,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
             Text(
-              _passwordStrengthText,
+              _passwordStrengthText.tr,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -946,7 +946,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    title.tr,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -955,7 +955,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    description,
+                    description.tr,
                     style: TextStyle(
                       fontSize: 13,
                       color: isSelected
@@ -1041,18 +1041,18 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     height: 1.4,
                   ),
                   children: [
-                    const TextSpan(text: 'I agree to the '),
-                    const TextSpan(
-                      text: 'Terms of Service',
+                    TextSpan(text: 'I agree to the '.tr),
+                    TextSpan(
+                      text: 'Terms of Service'.tr,
                       style: TextStyle(
                         color: Color(0xFF199A8E),
                         fontWeight: FontWeight.w600,
                         decoration: TextDecoration.underline,
                       ),
                     ),
-                    const TextSpan(text: ' and '),
-                    const TextSpan(
-                      text: 'Privacy Policy',
+                    TextSpan(text: ' and '.tr),
+                    TextSpan(
+                      text: 'Privacy Policy'.tr,
                       style: TextStyle(
                         color: Color(0xFF199A8E),
                         fontWeight: FontWeight.w600,
@@ -1311,7 +1311,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),

@@ -11,6 +11,7 @@ import '../../services/file_download_service.dart';
 import '../../utils/app_colors.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class ExpensesScreen extends StatefulWidget {
   /// For contact persons viewing a patient's expenses.
@@ -140,7 +141,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             ),
             if (widget.patientName != null)
               Text(
-                widget.patientName!,
+                widget.patientName!.tr,
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,
@@ -269,7 +270,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${summary.totalCount} expenses',
+                  '{0} expenses'.trArgs([summary.totalCount]),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
@@ -289,7 +290,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            'GHS ${summary.totalAmount.toStringAsFixed(2)}',
+            'GHS {0}'.trArgs([summary.totalAmount.toStringAsFixed(2)]),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
@@ -330,11 +331,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
+          Text(label.tr,
               style: TextStyle(
                   fontSize: 11, color: Colors.white.withOpacity(0.8))),
           const SizedBox(height: 2),
-          Text(value,
+          Text(value.tr,
               style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -422,7 +423,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        expense.formattedTotalAmount,
+                        expense.formattedTotalAmount.tr,
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -431,7 +432,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${dateFormatter.format(expense.createdAt)} at ${timeFormatter.format(expense.createdAt)}',
+                        '{0} at {1}'.trArgs([dateFormatter.format(expense.createdAt), timeFormatter.format(expense.createdAt)]),
                         style: TextStyle(
                             fontSize: 12, color: Colors.grey.shade500),
                       ),
@@ -486,7 +487,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                               size: 12, color: Colors.grey.shade500),
                           const SizedBox(width: 4),
                           Text(
-                            '${expense.receipts.isNotEmpty ? expense.receipts.length : expense.receiptsCount} receipt${(expense.receipts.isNotEmpty ? expense.receipts.length : expense.receiptsCount) == 1 ? '' : 's'}',
+                            '{0} receipt{1}'.trArgs([expense.receipts.isNotEmpty ? expense.receipts.length : expense.receiptsCount, (expense.receipts.isNotEmpty ? expense.receipts.length : expense.receiptsCount) == 1 ? '' : 's']),
                             style: TextStyle(
                                 fontSize: 11, color: Colors.grey.shade500),
                           ),
@@ -524,7 +525,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
-                                  item.name,
+                                  item.name.tr,
                                   style: TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey.shade700),
@@ -533,7 +534,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                 ),
                               ),
                               Text(
-                                item.formattedAmount,
+                                item.formattedAmount.tr,
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -547,7 +548,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          '+${expense.items.length - 3} more items',
+                          '+{0} more items'.trArgs([expense.items.length - 3]),
                           style: TextStyle(
                             fontSize: 11,
                             color: Colors.grey.shade500,
@@ -621,7 +622,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            expense.formattedTotalAmount,
+                            expense.formattedTotalAmount.tr,
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -747,7 +748,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  item.name,
+                                  item.name.tr,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -756,7 +757,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                 ),
                               ),
                               Text(
-                                item.formattedAmount,
+                                item.formattedAmount.tr,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.bold,
@@ -789,7 +790,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            expense.formattedTotalAmount,
+                            expense.formattedTotalAmount.tr,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -950,7 +951,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            receipt.displayName,
+            receipt.displayName.tr,
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w500,
@@ -1004,12 +1005,12 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         SizedBox(
           width: 120,
           child: Text(
-            label,
+            label.tr,
             style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
           ),
         ),
         Expanded(
-          child: Text(
+          child: TranslatedText(
             value,
             style: const TextStyle(
               fontSize: 14,
@@ -1177,7 +1178,7 @@ class _RemoteFileShare {
         scaffoldMessenger.clearSnackBars();
         scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text('Could not load receipt (${response.statusCode})'),
+            content: Text('Could not load receipt ({0})'.trArgs([response.statusCode])),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -1206,7 +1207,7 @@ class _RemoteFileShare {
       scaffoldMessenger.clearSnackBars();
       scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('Error: $e'),
+          content: Text('Error: {0}'.trArgs([e])),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),

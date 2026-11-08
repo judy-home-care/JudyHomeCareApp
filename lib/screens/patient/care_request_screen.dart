@@ -176,7 +176,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text(errorMessage.tr),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -349,7 +349,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
             children: [
               const Icon(Icons.info_outline, color: Colors.white, size: 20),
               const SizedBox(width: 12),
-              Expanded(child: Text(message)),
+              Expanded(child: Text(message.tr)),
             ],
           ),
           backgroundColor: const Color(0xFFFF9A00),
@@ -442,7 +442,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: Colors.red,
@@ -459,7 +459,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFF199A8E),
@@ -586,7 +586,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
         Icon(icon, size: 20, color: const Color(0xFF199A8E)),
         const SizedBox(width: 8),
         Text(
-          title,
+          title.tr,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A1A)),
         ),
       ],
@@ -1005,7 +1005,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                 items: regions
                     .map((region) => DropdownMenuItem(
                           value: region,
-                          child: Text(region, style: const TextStyle(fontSize: 14)),
+                          child: Text(region.tr, style: const TextStyle(fontSize: 14)),
                         ))
                     .toList(),
                 onChanged: (value) {
@@ -1054,13 +1054,13 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      result.mainText,
+                      result.mainText.tr,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A)),
                     ),
                     if (result.secondaryText.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        result.secondaryText,
+                        result.secondaryText.tr,
                         style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -1138,7 +1138,7 @@ class _CareRequestScreenState extends State<CareRequestScreen> {
                       ),
                       if (isUrgentOrEmergency && _preferredStartDate == null)
                         Text(
-                          'Required for ${_selectedUrgency} requests',
+                          'Required for {0} requests'.trArgs([_selectedUrgency]),
                           style: TextStyle(fontSize: 11, color: Colors.red.shade400),
                         ),
                     ],

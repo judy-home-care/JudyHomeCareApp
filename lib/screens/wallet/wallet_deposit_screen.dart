@@ -186,7 +186,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: Colors.red,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -519,7 +519,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                'Min: GHS ${_paymentConfig!.minDeposit.toStringAsFixed(0)} | Max: GHS ${_paymentConfig!.maxDeposit.toStringAsFixed(0)}',
+                'Min: GHS {0} | Max: GHS {1}'.trArgs([_paymentConfig!.minDeposit.toStringAsFixed(0), _paymentConfig!.maxDeposit.toStringAsFixed(0)]),
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey.shade500,
@@ -549,7 +549,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
                 ),
                 child: Center(
                   child: Text(
-                    'GHS ${amount.toStringAsFixed(0)}',
+                    'GHS {0}'.trArgs([amount.toStringAsFixed(0)]),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -657,7 +657,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                title.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -666,7 +666,7 @@ class _WalletDepositScreenState extends State<WalletDepositScreen> {
               ),
               const SizedBox(height: 2),
               Text(
-                description,
+                description.tr,
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,

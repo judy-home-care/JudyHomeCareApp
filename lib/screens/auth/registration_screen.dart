@@ -160,7 +160,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             child: Icon(icon, color: _nurseColor, size: 32),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
+          Text(label.tr, style: const TextStyle(fontWeight: FontWeight.w500)),
         ],
       ),
     );
@@ -353,7 +353,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              title,
+              title.tr,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: isSelected ? Colors.white : const Color(0xFF1A1A1A)),
             ),
@@ -432,7 +432,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
+        Text(label.tr, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A1A))),
         const SizedBox(height: 8),
         TextFormField(
           controller: controller,
@@ -476,9 +476,9 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 ),
                 child: Row(
                   children: [
-                    Text(_selectedCountryFlag, style: const TextStyle(fontSize: 18)),
+                    Text(_selectedCountryFlag.tr, style: const TextStyle(fontSize: 18)),
                     const SizedBox(width: 6),
-                    Text(_selectedCountryCode, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                    Text(_selectedCountryCode.tr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                     const Icon(Icons.arrow_drop_down, size: 20, color: Colors.grey),
                   ],
                 ),
@@ -597,7 +597,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           children: [
             Icon(icon, size: 18, color: _nurseColor),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(title.tr, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ],
         ),
         const SizedBox(height: 12),
@@ -649,7 +649,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                         color: Colors.black.withOpacity(0.5),
                         borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(10), bottomRight: Radius.circular(10)),
                       ),
-                      child: Text(label, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500)),
+                      child: Text(label.tr, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500)),
                     ),
                   ),
                 ],
@@ -659,7 +659,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                 children: [
                   Icon(Icons.add_a_photo_outlined, color: Colors.grey.shade400, size: 24),
                   const SizedBox(height: 6),
-                  Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                  Text(label.tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
                 ],
               ),
       ),
@@ -693,11 +693,11 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
               child: RichText(
                 text: TextSpan(
                   style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.4),
-                  children: const [
-                    TextSpan(text: 'I agree to the '),
-                    TextSpan(text: 'Terms of Service', style: TextStyle(color: _primaryColor, fontWeight: FontWeight.w600)),
-                    TextSpan(text: ' and '),
-                    TextSpan(text: 'Privacy Policy', style: TextStyle(color: _primaryColor, fontWeight: FontWeight.w600)),
+                  children: [
+                    TextSpan(text: 'I agree to the '.tr),
+                    TextSpan(text: 'Terms of Service'.tr, style: TextStyle(color: _primaryColor, fontWeight: FontWeight.w600)),
+                    TextSpan(text: ' and '.tr),
+                    TextSpan(text: 'Privacy Policy'.tr, style: TextStyle(color: _primaryColor, fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
@@ -829,7 +829,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   void _showSnackbar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(message.tr),
         backgroundColor: isError ? Colors.red : _primaryColor,
         behavior: SnackBarBehavior.floating,
       ),

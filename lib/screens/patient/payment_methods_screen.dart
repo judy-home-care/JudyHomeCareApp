@@ -289,7 +289,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        title.tr,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -298,7 +298,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        subtitle,
+                        subtitle.tr,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.grey.shade600,
@@ -320,7 +320,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: Text(
-                              feature,
+                              feature.tr,
                               style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w500,
@@ -381,7 +381,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             const SizedBox(height: 24),
             // Title
             Text(
-              title,
+              title.tr,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
@@ -390,7 +390,7 @@ class PaymentMethodsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              subtitle,
+              subtitle.tr,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey.shade600,
@@ -425,7 +425,7 @@ class PaymentMethodsScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    feature,
+                    feature.tr,
                     style: const TextStyle(
                       fontSize: 14,
                       color: Color(0xFF1A1A1A),

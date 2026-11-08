@@ -10,6 +10,7 @@ import '../../utils/app_colors.dart';
 import '../../models/care_request/care_request_models.dart';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 // ==================== VITAL SIGNS VALIDATION ====================
 enum VitalStatus { normal, low, high, critical }
@@ -1060,7 +1061,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
               return DropdownMenuItem<int>(
                 value: patient.id,
                 child: Text(
-                  patientInfo,
+                  patientInfo.tr,
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
@@ -1149,7 +1150,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
             ),
             const SizedBox(height: 4),
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -1442,7 +1443,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              _locationName!,
+                              _locationName!.tr,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -1452,7 +1453,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                             if (_locationDetails != null) ...[
                               const SizedBox(height: 2),
                               Text(
-                                _locationDetails!,
+                                _locationDetails!.tr,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
@@ -2104,7 +2105,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -2114,7 +2115,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
         ),
         const SizedBox(height: 4),
         Text(
-          subtitle,
+          subtitle.tr,
           style: TextStyle(
             fontSize: 14,
             color: Colors.grey.shade600,
@@ -2138,7 +2139,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -2220,7 +2221,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           children: [
             Expanded(
               child: Text(
-                label,
+                label.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -2247,7 +2248,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
 
         // Normal range hint
         Text(
-          'Normal: $normalRange',
+          'Normal: {0}'.trArgs([normalRange]),
           style: TextStyle(
             fontSize: 11,
             color: Colors.grey[500],
@@ -2341,7 +2342,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: TranslatedText(
                       validation.message,
                       style: TextStyle(
                         fontSize: 12,
@@ -2373,7 +2374,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           children: [
             Expanded(
               child: Text(
-                label,
+                label.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -2486,7 +2487,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: TranslatedText(
                       validation.message,
                       style: TextStyle(
                         fontSize: 12,
@@ -2523,7 +2524,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           children: [
             Expanded(
               child: Text(
-                label,
+                label.tr,
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -2625,7 +2626,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -2715,7 +2716,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          label.tr,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -2773,7 +2774,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           children: [
             const Icon(Icons.check_circle, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFF199A8E),
@@ -2792,7 +2793,7 @@ class _NurseMedicalAssessmentScreenState extends State<NurseMedicalAssessmentScr
           children: [
             const Icon(Icons.error_outline, color: Colors.white, size: 20),
             const SizedBox(width: 12),
-            Expanded(child: Text(message)),
+            Expanded(child: Text(message.tr)),
           ],
         ),
         backgroundColor: const Color(0xFFFF4757),

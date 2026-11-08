@@ -466,7 +466,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
               ),
               const SizedBox(height: 20),
               Text(
-                '$title Coming Soon',
+                '{0} Coming Soon'.trArgs([title]),
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -475,7 +475,7 @@ class _AppInitializerState extends State<AppInitializer> with WidgetsBindingObse
               ),
               const SizedBox(height: 10),
               Text(
-                'Welcome, ${user.firstName}!',
+                'Welcome, {0}!'.trArgs([user.firstName]),
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.grey.shade600,

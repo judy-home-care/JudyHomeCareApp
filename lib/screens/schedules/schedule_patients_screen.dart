@@ -8,6 +8,7 @@ import '../modern_notifications_sheet.dart';
 import 'dart:async';
 import '../../services/i18n/t_text.dart';
 import '../../services/i18n/app_language.dart';
+import '../../services/i18n/translated_text.dart';
 
 class SchedulePatientsScreen extends StatefulWidget {
   final Map<String, dynamic> nurseData;
@@ -227,7 +228,7 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
     final difference = DateTime.now().difference(_lastFetchTime!);
     
     if (difference.inSeconds < 60) {
-      return 'Just now';
+      return 'Just now'.tr;
     } else if (difference.inMinutes < 60) {
       return '${difference.inMinutes}m ago';
     } else if (difference.inHours < 24) {
@@ -361,7 +362,7 @@ class _SchedulePatientsScreenState extends State<SchedulePatientsScreen>
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'Please wait ${_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds}s before refreshing again',
+                      'Please wait {0}s before refreshing again'.trArgs([_minRefreshInterval.inSeconds - timeSinceLastAttempt.inSeconds]),
                     ),
                   ),
                 ],
@@ -800,7 +801,7 @@ void _showFilterOptions() {
                             ),
                           ),
                         Text(
-                          filter,
+                          filter.tr,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -871,7 +872,7 @@ void _showFilterOptions() {
                             ),
                           ),
                         Text(
-                          filter,
+                          filter.tr,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -965,7 +966,7 @@ void _showFilterOptions() {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              label,
+              label.tr,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -1033,7 +1034,7 @@ void _showFilterOptions() {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Updated $_cacheAge',
+                        '${'Updated'.tr} $_cacheAge',
                         style: TextStyle(
                           fontSize: 11,
                           color: Colors.grey.shade600,
@@ -1315,7 +1316,7 @@ void _showFilterOptions() {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _selectedFilter,
+                            _selectedFilter.tr,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF1A1A1A),
@@ -1350,7 +1351,7 @@ void _showFilterOptions() {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            _selectedStatusFilter,
+                            _selectedStatusFilter.tr,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF1A1A1A),
@@ -1397,7 +1398,7 @@ void _showFilterOptions() {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Showing schedules for ${DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)}',
+                    '${'Showing schedules for'.tr} ${DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate)}',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -1675,7 +1676,7 @@ void _showFilterOptions() {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                _errorMessage!,
+                _errorMessage!.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -1836,7 +1837,7 @@ void _showFilterOptions() {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
-                'No ${_selectedTab} schedules for ${DateFormat('MMMM d, yyyy').format(_selectedDate)}',
+                '${'No schedules for'.tr} ${DateFormat('MMMM d, yyyy').format(_selectedDate)}',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 15,
@@ -1853,8 +1854,8 @@ void _showFilterOptions() {
               padding: const EdgeInsets.symmetric(horizontal: 32),
               child: Text(
                 _selectedFilter != 'All Shifts' || _selectedStatusFilter != 'All Status'
-                  ? 'Try selecting a different date or removing filters'
-                  : 'Try selecting a different date or check your schedule assignments',
+                  ? 'Try selecting a different date or removing filters'.tr
+                  : 'Try selecting a different date or check your schedule assignments'.tr,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
@@ -1942,7 +1943,7 @@ void _showFilterOptions() {
                             children: [
                               Expanded(
                                 child: Text(
-                                  schedule.patientName,
+                                  schedule.patientName.tr,
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -2012,7 +2013,7 @@ void _showFilterOptions() {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${schedule.patientAge != null ? '${schedule.patientAge} years old • ' : ''}${schedule.careType}',
+                            '${schedule.patientAge != null ? '${schedule.patientAge} ${'years old'.tr} • ' : ''}${schedule.careType}',
                             style: TextStyle(
                               fontSize: 13,
                               color: isCompleted ? Colors.grey[500] : const Color(0xFF636E72),
@@ -2062,7 +2063,7 @@ void _showFilterOptions() {
                       ),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(
+                        child: TranslatedText(
                           schedule.notes,
                           style: const TextStyle(
                             fontSize: 13,
@@ -2092,7 +2093,7 @@ void _showFilterOptions() {
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
+          child: TranslatedText(
             text,
             style: const TextStyle(
               fontSize: 13,
@@ -2151,7 +2152,7 @@ void _showFilterOptions() {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    schedule.patientName,
+                    schedule.patientName.tr,
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -2192,7 +2193,7 @@ void _showFilterOptions() {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          schedule.shiftType,
+                          schedule.shiftType.tr,
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -2272,7 +2273,7 @@ void _showFilterOptions() {
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
-                                  child: Text(
+                                  child: TranslatedText(
                                     schedule.notes,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -2347,7 +2348,7 @@ void _showFilterOptions() {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          title,
+          title.tr,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -2379,7 +2380,7 @@ void _showFilterOptions() {
           SizedBox(
             width: 100,
             child: Text(
-              label,
+              label.tr,
               style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF636E72),
@@ -2388,7 +2389,7 @@ void _showFilterOptions() {
             ),
           ),
           Expanded(
-            child: Text(
+            child: TranslatedText(
               value,
               style: const TextStyle(
                 fontSize: 14,
